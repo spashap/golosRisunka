@@ -1,0 +1,22 @@
+{% extends "_base.html" %}
+{% block title %}Админка — вход{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 380px; padding: 60px 0">
+    <div class="form-card">
+      <h3>Админка</h3>
+      <form method="post" action="/admin/login">
+        <div class="field">
+          <label for="password">Пароль</label>
+          <div class="ctl">
+            <input class="input{% if error %} input--error{% endif %}" type="password"
+                   id="password" name="password" autocomplete="current-password" required autofocus>
+            {% if error %}<div class="err">{{ error }}</div>{% endif %}
+          </div>
+        </div>
+        <button class="btn btn--primary" type="submit" style="width: 100%">Войти</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

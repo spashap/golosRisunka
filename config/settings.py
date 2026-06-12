@@ -12,6 +12,13 @@ load_dotenv(BASE_DIR / ".env")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
 ADMIN_ALERT_EMAIL = os.getenv("ADMIN_ALERT_EMAIL", "spashap@gmail.com")
+# Доступ в админку /admin: отдельный вход по паролю (НЕ смешан с /login клиентов).
+# Пустой ADMIN_PASS = админка полностью выключена (404).
+ADMIN_PASS = os.getenv("ADMIN_PASS", "")
+# Яндекс.Метрика: пока ID пуст — счётчик на страницы не вставляется
+YANDEX_METRIKA_ID = os.getenv("YANDEX_METRIKA_ID", "")
+# Dev-чит: этому email на localhost код входа показывается прямо на странице
+DEV_LOGIN_CODE_EMAIL = "spashap@gmail.com"
 # ЮKassa / Unisender keys land here later (Phase 8):
 YOOKASSA_SHOP_ID = os.getenv("YOOKASSA_SHOP_ID", "")
 YOOKASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY", "")

@@ -1,0 +1,69 @@
+{# Концепт-миниатюры статей блога: инлайн-SVG в стиле детского дудла.
+   Цвета — через CSS-переменные палитры (var(--ink/--accent/--accent2/--badge)).
+   Новая статья без своей миниатюры получает дефолтный «карандаш и лист». #}
+{% macro thumb(slug) %}
+{% if slug == "rebenok-risuet-chernym" %}
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M22 78 C40 50 60 92 78 62 C92 40 108 76 124 56 C134 44 142 60 150 52"
+        fill="none" stroke="var(--ink)" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="160" cy="30" r="13" fill="none" stroke="var(--soft)" stroke-width="3" stroke-dasharray="5 6"/>
+  <g transform="rotate(40 60 95)">
+    <rect x="38" y="88" width="46" height="13" rx="4" fill="var(--ink)"/>
+    <path d="M84 88 L97 94.5 L84 101 Z" fill="var(--ink)"/>
+  </g>
+</svg>
+{% elif slug == "temnye-cveta-v-detskih-risunkah" %}
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M128 24 a24 24 0 1 0 22 34 a19 19 0 0 1 -22 -34 Z"
+        fill="none" stroke="var(--accent)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M52 34 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 Z" fill="var(--accent2)"/>
+  <path d="M22 96 C52 78 88 102 122 88 C146 78 166 90 180 84"
+        fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="86" cy="38" r="3" fill="var(--soft)"/>
+  <circle cx="178" cy="40" r="3" fill="var(--soft)"/>
+</svg>
+{% elif slug == "strashnye-risunki-monstry" %}
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M70 96 C56 78 58 46 100 44 C142 46 144 78 130 96 Z"
+        fill="none" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M84 44 L78 24 L94 38" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M116 44 L122 24 L106 38" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="88" cy="64" r="5" fill="var(--ink)"/>
+  <circle cx="112" cy="64" r="5" fill="var(--ink)"/>
+  <path d="M82 80 L90 86 L98 80 L106 86 L114 80" fill="none" stroke="var(--accent2)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+{% elif slug == "zlye-risunki-silnyj-nazhim" %}
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <g transform="rotate(-18 70 60)">
+    <rect x="30" y="52" width="40" height="14" rx="4" fill="none" stroke="var(--ink)" stroke-width="5"/>
+    <rect x="86" y="52" width="40" height="14" rx="4" fill="none" stroke="var(--ink)" stroke-width="5"/>
+    <path d="M126 52 L139 59 L126 66 Z" fill="var(--ink)"/>
+    <path d="M70 50 L78 59 L70 68 M78 50 L72 59 L78 68" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <path d="M150 26 L138 48 L152 48 L140 70" fill="none" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 92 L62 100 M44 86 L76 96 M58 82 L88 92" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+</svg>
+{% elif slug == "rebenok-risuet-sebya-odnogo" %}
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="36" y="14" width="128" height="92" rx="6" fill="var(--polbg)" stroke="var(--ink)" stroke-width="5"/>
+  <circle cx="100" cy="52" r="10" fill="none" stroke="var(--accent)" stroke-width="5"/>
+  <path d="M100 62 L100 82 M100 68 L88 76 M100 68 L112 76 M100 82 L90 94 M100 82 L110 94"
+        fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/>
+</svg>
+{% elif slug == "rebenok-ne-risuet-litso-ruki" %}
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <circle cx="84" cy="40" r="20" fill="none" stroke="var(--ink)" stroke-width="6"/>
+  <path d="M84 60 L84 88 M84 88 L70 106 M84 88 L98 106 M84 70 L66 80"
+        fill="none" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M84 70 L102 78" fill="none" stroke="var(--soft)" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 9"/>
+  <path d="M130 38 c0 -12 18 -12 18 0 c0 8 -9 7 -9 16 M139 64 l0 1"
+        fill="none" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round"/>
+</svg>
+{% else %}
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="50" y="18" width="100" height="84" rx="6" fill="var(--polbg)" stroke="var(--ink)" stroke-width="5"/>
+  <path d="M64 76 C76 58 92 84 108 64 C120 50 130 68 138 60"
+        fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round"/>
+</svg>
+{% endif %}
+{% endmacro %}

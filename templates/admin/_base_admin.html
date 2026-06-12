@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{# Каркас админки: левый сайдбар разделов + рабочая область. Без сайтовой шапки. #}
+<html lang="ru" class="{{ palette | default('') }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>{% block title %}Админка{% endblock %} — Голос рисунка</title>
+<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+<link rel="stylesheet" href="{{ static }}/css/tokens.css">
+<link rel="stylesheet" href="{{ static }}/css/components.css">
+</head>
+<body class="admin-body">
+<div class="admin-layout">
+  <aside class="admin-side">
+    <a class="logo admin-side__logo" href="/">Голос <b>рисунка</b></a>
+    <nav class="admin-side__nav">
+      {% for endpoint, label in sections %}
+      <a href="{{ url_for(endpoint) }}" class="{% if endpoint == active %}is-active{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+    <form method="post" action="/admin/logout" class="admin-side__logout">
+      <button type="submit">Выйти</button>
+    </form>
+  </aside>
+  <main class="admin-main prose">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

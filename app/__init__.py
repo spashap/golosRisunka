@@ -26,6 +26,8 @@ def create_app() -> Flask:
 
     from app.routes import bp
     app.register_blueprint(bp)
+    from app.admin import bp_admin
+    app.register_blueprint(bp_admin)
 
     @app.errorhandler(404)
     def not_found(e):
@@ -41,6 +43,7 @@ def create_app() -> Flask:
     def inject_globals():
         return {"static": "/static", "palette": settings.PALETTE,
                 "site_name": settings.SITE_NAME,
-                "site_domain": settings.SITE_DOMAIN}
+                "site_domain": settings.SITE_DOMAIN,
+                "metrika_id": settings.YANDEX_METRIKA_ID}
 
     return app

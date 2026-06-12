@@ -1,0 +1,9 @@
+{# Фильтр периода: пилюли «сегодня / 7 / 30 / всё время» #}
+{% macro period_filter(periods, days, base_url) %}
+<div class="admin-periods">
+  {% for val, label in periods %}
+  <a class="status-pill {% if days == val %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+     href="{{ base_url }}?days={{ val }}">{{ label }}</a>
+  {% endfor %}
+</div>
+{% endmacro %}

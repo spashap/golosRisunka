@@ -1,0 +1,30 @@
+{% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
+{% block title %}Заказы{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Заказы</h1>
+  {{ period_filter(periods, days, url_for("admin.orders")) }}
+</div>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>№</th><th>Создан (UTC)</th><th>Email</th><th>Ребёнок</th><th>Продукт</th>
+    <th>Сумма</th><th>Промо</th><th>Рис.</th><th>Источник</th><th>Статус</th><th>Отчёт</th></tr></thead>
+  <tbody>
+  {% for o in orders %}
+  <tr>
+    <td>{{ o.id }}</td><td style="white-space:nowrap">{{ o.created }}</td>
+    <td>{{ o.email }}</td><td>{{ o.child }}</td><td>{{ o.product }}</td>
+    <td style="white-space:nowrap">{{ o.rub }} ₽</td><td>{{ o.coupon }}</td><td>{{ o.drawings }}</td>
+    <td class="hint">{{ o.utm }}</td>
+    <td><span class="admin-status admin-status--{{ o.status }}">{{ o.status }}</span></td>
+    <td>{% if o.token %}<a href="/r/{{ o.token }}" target="_blank">открыть</a>{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="11">Заказов за период нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if orders|length == 300 %}<p class="hint">Показаны последние 300.</p>{% endif %}
+{% endblock %}

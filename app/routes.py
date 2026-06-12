@@ -74,6 +74,8 @@ def landing():
         products=products,
         samples=get_samples(),
         faq=FAQ_ITEMS,
+        testimonials=TESTIMONIALS,
+        blog_posts=get_posts(),
         min_price=min(p["price_rub"] for p in products.values() if p["enabled"]),
         inline_css=_inline_css(),
         schema_jsonld=_schema_jsonld(),
@@ -117,6 +119,18 @@ def login_form():
     return render_template("login.html", step="email", email="", error=None, notice=None)
 
 
+def _dev_code(email: str) -> str | None:
+    """Dev-чит: владельцу на localhost показываем код прямо на странице
+    (почты-то ещё нет). На проде (домен) не срабатывает никогда."""
+    host = request.host.split(":")[0]
+    if email != settings.DEV_LOGIN_CODE_EMAIL or host not in ("localhost", "127.0.0.1"):
+        return None
+    row = get_db().execute(
+        "SELECT code FROM login_codes WHERE email = ? AND used = 0"
+        " ORDER BY id DESC LIMIT 1", (email,)).fetchone()
+    return row["code"] if row else None
+
+
 @bp.post("/login")
 def login_request_code():
     email = (request.form.get("email") or "").strip().lower()
@@ -128,11 +142,12 @@ def login_request_code():
     except AuthError as e:
         # код уже отправлен — сразу шаг ввода кода с пояснением
         return render_template("login.html", step="code", email=email,
-                               error=None, notice=str(e))
+                               error=None, notice=str(e), dev_code=_dev_code(email))
     track_event("login_code_requested")
     return render_template("login.html", step="code", email=email, error=None,
                            notice="Отправили 6-значный код на почту. Он действует "
-                                  f"{settings.LOGIN_CODE_TTL_MINUTES} минут.")
+                                  f"{settings.LOGIN_CODE_TTL_MINUTES} минут.",
+                           dev_code=_dev_code(email))
 
 
 @bp.post("/login/verify")
@@ -143,7 +158,8 @@ def login_verify():
         token = verify_code(email, code)
     except AuthError as e:
         return render_template("login.html", step="code", email=email,
-                               error=str(e), notice=None), 400
+                               error=str(e), notice=None,
+                               dev_code=_dev_code(email)), 400
     track_event("login_success")
     resp = redirect(url_for("main.cabinet"))
     resp.set_cookie(SESSION_COOKIE, token, max_age=settings.SESSION_DAYS * 24 * 3600,
@@ -161,6 +177,10 @@ def logout():
 
 @bp.get("/cabinet")
 def cabinet():
+    """Кабинет. Дизайн-каркас заложен под будущее: профиль (смена email),
+    группировка заказов ПО ДЕТЯМ — потому что Development-отчёт (продукт 2)
+    сравнивает наборы одного ребёнка (orders.base_order_id уже в БД);
+    на готовых отчётах — спящие CTA сравнения («скоро»)."""
     customer = current_customer()
     if customer is None:
         return redirect(url_for("main.login_form"))
@@ -171,26 +191,33 @@ def cabinet():
         " LEFT JOIN children c ON c.id = o.child_id"
         " WHERE o.customer_id = ? AND o.status != 'created'"
         " ORDER BY o.id DESC", (customer["id"],)).fetchall()
-    items = []
     products = settings.get_products()
+    groups: dict[str, dict] = {}    # имя ребёнка -> {name, orders[], delivered_n}
     for o in orders:
+        child = json.loads(o["child_json"] or "{}")
+        name = o["child_name"] or child.get("name") or "Без имени"
+        g = groups.setdefault(name, {"name": name, "orders": [], "delivered_n": 0})
         drawings = db.execute(
             "SELECT id FROM drawings WHERE order_id = ? ORDER BY id",
             (o["id"],)).fetchall()
         label, kind = ORDER_STATUS_LABELS.get(o["status"], ("в обработке", "wait"))
         product = products.get(o["product_code"], {})
-        items.append({
+        ready = bool(o["status"] == "delivered" and o["public_token"])
+        if ready:
+            g["delivered_n"] += 1
+        g["orders"].append({
             "id": o["id"],
             "date": (o["paid_at"] or o["created_at"])[:10],
             "product_title": product.get("title", o["product_code"]),
-            "child_name": o["child_name"] or "",
             "status_label": label, "status_kind": kind,
-            "ready": o["status"] == "delivered" and o["public_token"],
+            "ready": ready,
             "report_url": f"/r/{o['public_token']}" if o["public_token"] else None,
             "drawing_ids": [d["id"] for d in drawings],
         })
     track_event("cabinet_view", customer_id=customer["id"])
-    return render_template("cabinet.html", customer=customer, orders=items)
+    return render_template("cabinet.html", customer=customer,
+                           groups=list(groups.values()),
+                           has_orders=bool(orders))
 
 
 @bp.get("/cabinet/drawing/<int:drawing_id>")
@@ -372,6 +399,7 @@ def robots():
         "Disallow: /order",
         "Disallow: /login",
         "Disallow: /cabinet",
+        "Disallow: /admin",
         f"Sitemap: https://{settings.SITE_DOMAIN}/sitemap.xml",
     ]
     return Response("\n".join(lines), mimetype="text/plain")
@@ -393,6 +421,31 @@ def sitemap():
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
            f"{items}\n</urlset>")
     return Response(xml, mimetype="application/xml")
+
+
+# --- Отзывы лендинга — ПЛЕЙСХОЛДЕРЫ до текстов заказчика (закрытое тестирование) ---
+
+TESTIMONIALS = [
+    ("Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений "
+     "я бы сама никогда не заметила.",
+     "Мария, мама Сони (6 лет) — из закрытого тестирования"),
+    ("Сын месяц рисовал только чёрной ручкой, я успела напридумывать себе всякого. "
+     "Отчёт спокойно показал, что он сейчас осваивает контур — и правда, через месяц "
+     "вернулись цвета.",
+     "Анна, мама Миши (5 лет)"),
+    ("Скептик во мне искал общие фразы — и не нашёл. Каждое наблюдение привязано "
+     "к конкретной детали: штриховка, линия, как построена фигура.",
+     "Дмитрий, папа Веры (7 лет)"),
+    ("Распечатали отчёт и повесили рядом с рисунком. Дочка ходит гордая: "
+     "«это про меня написали».",
+     "Ольга, мама Кати (6 лет)"),
+    ("Полезнее всего — занятия в конце: конкретные, по десять минут. Сын теперь сам "
+     "просит «поиграть в художника».",
+     "Наталья, мама Егора (4 года)"),
+    ("Отправила три рисунка — получила один связный рассказ: что повторяется из работы "
+     "в работу, а что появилось впервые. Совсем не то, что я ждала от «анализа по фото».",
+     "Светлана, мама Маши (8 лет)"),
+]
 
 
 # --- FAQ (spec §4.1.7) — текст конфигурируем здесь, рендер в шаблоне ---

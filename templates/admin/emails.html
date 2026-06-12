@@ -1,0 +1,28 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Письма{% endblock %}
+{% block content %}
+<div class="admin-head"><h1 class="h2">Письма</h1></div>
+<p class="hint">Сейчас письма не отправляются по-настоящему, а складываются в
+<code>data/outbox/</code> (до подключения Unisender в Phase 8). Здесь — исходящие:
+доставка отчётов, коды входа, алерты. Email-маркетинг (рассылки, upsell-напоминания
+«добавьте свежий рисунок») появится в этом разделе после Phase 8.</p>
+
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Когда</th><th>Кому</th><th>Тема</th><th></th></tr></thead>
+  <tbody>
+  {% for f in files %}
+  <tr>
+    <td style="white-space:nowrap">{{ f.when }}</td>
+    <td>{{ f.to }}</td>
+    <td>{{ f.subject }}</td>
+    <td><a href="/admin/emails/{{ f.name }}" target="_blank">открыть</a></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4">Писем пока нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if files|length == 200 %}<p class="hint">Показаны последние 200.</p>{% endif %}
+{% endblock %}

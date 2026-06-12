@@ -1,0 +1,90 @@
+{% extends "_base.html" %}
+{% block title %}Админка — Голос рисунка{% endblock %}
+{% block body %}
+<div class="section" style="padding-top: 40px">
+  <div class="wrap prose" style="max-width: 1100px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px">
+      <h1 class="h2" style="margin: 0">Админка</h1>
+      <div class="admin-periods">
+        {% for val, label in periods %}
+        <a class="status-pill {% if days == val %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+           href="/admin/?days={{ val }}">{{ label }}</a>
+        {% endfor %}
+        <form method="post" action="/admin/logout" style="display: inline">
+          <button class="status-pill status-pill--warn" type="submit">выйти</button>
+        </form>
+      </div>
+    </div>
+    {% if not metrika_configured %}
+    <p class="hint" style="margin-top: 6px">Яндекс.Метрика: счётчик не подключён —
+      добавьте <code>YANDEX_METRIKA_ID</code> в <code>.env</code>, и тег появится на всех страницах.</p>
+    {% endif %}
+
+    <div class="admin-kpis">
+      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.visitors }}</div><div class="admin-kpi__l">посетителей</div></div>
+      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.orders }}</div><div class="admin-kpi__l">заказов создано</div></div>
+      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.paid }}</div><div class="admin-kpi__l">оплачено</div></div>
+      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.revenue_rub }} ₽</div><div class="admin-kpi__l">выручка</div></div>
+      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.conversion }}</div><div class="admin-kpi__l">посетитель → оплата</div></div>
+    </div>
+
+    <h2>Воронка</h2>
+    <table>
+      <thead><tr><th>Шаг</th><th>Уникальных</th><th>От пред. шага</th><th>От лендинга</th></tr></thead>
+      <tbody>
+      {% for f in funnel %}
+      <tr><td>{{ f.label }}</td><td><b>{{ f.n }}</b></td><td>{{ f.pct_prev }}</td><td>{{ f.pct_top }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Источники (first-touch UTM)</h2>
+    <table>
+      <thead><tr><th>Источник</th><th>Посетителей</th><th>Заказов</th><th>Оплат</th><th>Выручка</th></tr></thead>
+      <tbody>
+      {% for name, s in sources %}
+      <tr><td>{{ name }}</td><td>{{ s.visitors }}</td><td>{{ s.orders }}</td><td>{{ s.paid }}</td><td>{{ s.rub }} ₽</td></tr>
+      {% else %}
+      <tr><td colspan="5">Пока пусто</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Заказы {% if orders|length == 200 %}<span class="hint">(последние 200)</span>{% endif %}</h2>
+    <div class="admin-scroll">
+    <table>
+      <thead><tr><th>№</th><th>Создан (UTC)</th><th>Email</th><th>Ребёнок</th><th>Продукт</th>
+        <th>Сумма</th><th>Промо</th><th>Рис.</th><th>Статус</th><th>Отчёт</th></tr></thead>
+      <tbody>
+      {% for o in orders %}
+      <tr>
+        <td>{{ o.id }}</td><td style="white-space:nowrap">{{ o.created }}</td>
+        <td>{{ o.email }}</td><td>{{ o.child }}</td><td>{{ o.product }}</td>
+        <td style="white-space:nowrap">{{ o.rub }} ₽</td><td>{{ o.coupon }}</td><td>{{ o.drawings }}</td>
+        <td><span class="admin-status admin-status--{{ o.status }}">{{ o.status }}</span></td>
+        <td>{% if o.token %}<a href="/r/{{ o.token }}">открыть</a>{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="10">Заказов за период нет</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+
+    <h2>Последние события <span class="hint">(до 60)</span></h2>
+    <div class="admin-scroll">
+    <table>
+      <thead><tr><th>Время (UTC)</th><th>Событие</th><th>Кто</th><th>Данные</th></tr></thead>
+      <tbody>
+      {% for e in events %}
+      <tr><td style="white-space:nowrap">{{ e.time }}</td><td>{{ e.type }}</td>
+          <td><code>{{ e.who }}</code></td><td><code style="font-size:12px">{{ e.payload }}</code></td></tr>
+      {% else %}
+      <tr><td colspan="4">Событий за период нет</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

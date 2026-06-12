@@ -1,3 +1,4 @@
+{% from "_blog_thumb.html" import thumb %}
 <!DOCTYPE html>
 <html lang="ru" class="{{ palette }}">
 <head>
@@ -18,6 +19,7 @@
 {# Критический CSS инлайном: токены + компоненты (перфоманс, spec §4.2) #}
 <style>{{ inline_css }}</style>
 <script type="application/ld+json">{{ schema_jsonld | safe }}</script>
+{% include "_metrika.html" %}
 </head>
 <body>
 
@@ -97,11 +99,26 @@
   </div>
 </section>
 
-<!-- 5. Отзывы (тексты заменит заказчик после закрытого тестирования) -->
-<section class="section section--alt">
-  <div class="wrap quote">
-    <div class="quote__text">«Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений я бы сама никогда не заметила.»</div>
-    <div class="quote__who">Мария, мама Сони (6 лет) — из закрытого тестирования</div>
+<!-- 5. Отзывы — узкая лента-ротатор (тексты заменит заказчик после закрытого тестирования) -->
+<section class="section section--alt section--strip">
+  <div class="wrap quote-rotator" data-interval="7000">
+    <div class="strip-title">Что говорят родители</div>
+    <button class="car-btn car-btn--prev" type="button" aria-label="Предыдущий отзыв" data-rot="-1">‹</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="Следующий отзыв" data-rot="1">›</button>
+    <div class="quote-rotator__stage">
+      {% for text, who in testimonials %}
+      <figure class="quote-slim{% if loop.first %} is-active{% endif %}">
+        <blockquote class="quote-slim__text">«{{ text }}»</blockquote>
+        <figcaption class="quote-slim__who">{{ who }}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    <div class="rot-dots" role="tablist" aria-label="Отзывы">
+      {% for t in testimonials %}
+      <button class="rot-dot{% if loop.first %} is-active{% endif %}" type="button"
+              data-dot="{{ loop.index0 }}" aria-label="Отзыв {{ loop.index }}"></button>
+      {% endfor %}
+    </div>
   </div>
 </section>
 
@@ -117,18 +134,8 @@
   </div>
 </section>
 
-<!-- 7. FAQ -->
-<section class="section section--alt" id="faq">
-  <div class="wrap">
-    <h2>Частые вопросы</h2>
-    {% for q, a in faq %}
-    <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
-    {% endfor %}
-  </div>
-</section>
-
-<!-- 8. Финальный CTA: выбор продукта (2 продукта, цены из config/products.json) -->
-<section class="section" id="ceny">
+<!-- 7. Выбор продукта (2 продукта, цены из config/products.json) -->
+<section class="section section--alt" id="ceny">
   <div class="wrap">
     <h2>Выберите отчёт</h2>
     <div class="sub">Один отчёт охватывает до 3 рисунков — загрузите несколько работ, и мы сведём наблюдения воедино.</div>
@@ -156,6 +163,42 @@
   </div>
 </section>
 
+<!-- 8. FAQ — снятие возражений сразу после цен -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <h2>Частые вопросы</h2>
+    {% for q, a in faq %}
+    <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
+    {% endfor %}
+  </div>
+</section>
+
+{% if blog_posts %}
+<!-- 9. Блог: прогрев недокупивших + внутренняя перелинковка (SEO) -->
+<section class="section section--alt" id="blog">
+  <div class="wrap">
+    <h2>Разбираемся в детском рисунке</h2>
+    <div class="sub">Спокойные ответы на частые родительские вопросы — в нашем блоге.</div>
+    <div class="carousel-wrap">
+      <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1">‹</button>
+      <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1">›</button>
+      <div class="carousel">
+        {% for p in blog_posts %}
+        <a class="blog-card" href="/blog/{{ p.slug }}">
+          <div class="blog-card__thumb">{{ thumb(p.slug) }}</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">{{ p.title }}</h3>
+            <p class="blog-card__descr">{{ p.description }}</p>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    <p style="text-align: center; margin-top: 22px"><a class="btn btn--ghost" href="/blog">Все статьи →</a></p>
+  </div>
+</section>
+{% endif %}
+
 <footer class="foot wrap">
   Голос рисунка · Образовательное наблюдение, не медицинская и не психологическая диагностика<br>
   <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
@@ -164,13 +207,42 @@
 </footer>
 
 <script>
-document.querySelectorAll(".car-btn").forEach(function (b) {
+// стрелки горизонтальных каруселей (примеры отчётов, блог)
+document.querySelectorAll(".car-btn[data-car]").forEach(function (b) {
   b.addEventListener("click", function () {
     var c = b.closest(".carousel-wrap").querySelector(".carousel");
-    var card = c.querySelector(".report-card");
+    if (!c) return;
+    var card = c.firstElementChild;
     var step = (card ? card.offsetWidth : 320) + 14;
     c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
   });
+});
+
+// ротатор отзывов: одна цитата, автосмена + стрелки + точки, пауза при наведении
+document.querySelectorAll(".quote-rotator").forEach(function (r) {
+  var qs = r.querySelectorAll(".quote-slim");
+  var dots = r.querySelectorAll(".rot-dot");
+  if (qs.length < 2) return;
+  var i = 0, timer;
+  function show(n) {
+    qs[i].classList.remove("is-active");
+    if (dots[i]) dots[i].classList.remove("is-active");
+    i = (n + qs.length) % qs.length;
+    qs[i].classList.add("is-active");
+    if (dots[i]) dots[i].classList.add("is-active");
+  }
+  function play() { timer = setInterval(function () { show(i + 1); }, +r.dataset.interval || 7000); }
+  function stop() { clearInterval(timer); }
+  function jump(n) { stop(); show(n); play(); }
+  r.querySelectorAll(".car-btn[data-rot]").forEach(function (b) {
+    b.addEventListener("click", function () { jump(i + (+b.dataset.rot)); });
+  });
+  dots.forEach(function (d) {
+    d.addEventListener("click", function () { jump(+d.dataset.dot); });
+  });
+  r.addEventListener("mouseenter", stop);
+  r.addEventListener("mouseleave", play);
+  play();
 });
 </script>
 </body>

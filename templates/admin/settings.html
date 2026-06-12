@@ -1,0 +1,47 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Настройки сайта{% endblock %}
+{% block content %}
+<div class="admin-head"><h1 class="h2">Настройки сайта</h1></div>
+
+{% if saved == "ok" %}<p class="admin-flash admin-flash--ok">Сохранено — лендинг и форма заказа уже отдают новые цены (без рестарта).</p>{% endif %}
+{% if saved == "err" %}<p class="admin-flash admin-flash--err">Не сохранено: проверьте, что цены — целые числа и включён хотя бы один продукт.</p>{% endif %}
+
+<h2>Продукты и цены</h2>
+<p class="hint">Источник — <code>config/products.json</code>. Кнопка «Заказать» и цена
+на лендинге, форма заказа и schema.org обновляются сразу после сохранения.</p>
+
+<form method="post" action="/admin/settings/products">
+  <div class="admin-products">
+    {% for code, p in products.items() %}
+    <div class="form-card">
+      <h3><code>{{ code }}</code></h3>
+      <div class="field"><label>Включён (виден и продаётся)</label>
+        <div class="ctl"><label class="hint"><input type="checkbox" name="{{ code }}_enabled" {% if p.enabled %}checked{% endif %}> да</label></div></div>
+      <div class="field"><label>Название</label>
+        <div class="ctl"><input class="input" name="{{ code }}_title" value="{{ p.title }}"></div></div>
+      <div class="field"><label>Подзаголовок</label>
+        <div class="ctl"><input class="input" name="{{ code }}_subtitle" value="{{ p.subtitle }}"></div></div>
+      <div class="field"><label>Цена, ₽</label>
+        <div class="ctl"><input class="input" name="{{ code }}_price_rub" type="number" min="1" value="{{ p.price_rub }}"></div></div>
+      <div class="field"><label>Старая цена (зачёркнутая), ₽</label>
+        <div class="ctl"><input class="input" name="{{ code }}_old_price_rub" type="number" min="1" value="{{ p.old_price_rub }}"></div></div>
+      <div class="field"><label>Пункты с галочками (по одному в строке)</label>
+        <div class="ctl"><textarea class="input" name="{{ code }}_features" rows="5">{{ p.features | join("\n") }}</textarea></div></div>
+    </div>
+    {% endfor %}
+  </div>
+  <button class="btn btn--primary" type="submit">Сохранить продукты</button>
+</form>
+
+<h2 style="margin-top: 40px">Подключения</h2>
+<table style="max-width: 720px">
+  <tbody>
+  <tr><td>Яндекс.Метрика</td>
+      <td>{% if metrika_id %}<span class="admin-status admin-status--delivered">подключена (ID {{ metrika_id }})</span>
+          {% else %}<span class="admin-status admin-status--created">нет ID</span> — добавьте <code>YANDEX_METRIKA_ID</code> в <code>.env</code>{% endif %}</td></tr>
+  <tr><td>ЮKassa</td><td><span class="admin-status admin-status--created">stub</span> — реальный аккаунт подключается в Phase 8 (<code>.env</code>)</td></tr>
+  <tr><td>Unisender</td><td><span class="admin-status admin-status--created">outbox</span> — письма пишутся в <code>data/outbox/</code> до Phase 8</td></tr>
+  </tbody>
+</table>
+<p class="hint">Секреты (ключи API, пароль админки) редактируются только в <code>.env</code> на сервере — из веб-интерфейса недоступны намеренно.</p>
+{% endblock %}

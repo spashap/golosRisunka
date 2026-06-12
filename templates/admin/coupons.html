@@ -1,0 +1,37 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Промокоды{% endblock %}
+{% block content %}
+<div class="admin-head"><h1 class="h2">Промокоды</h1></div>
+
+<div class="form-card" style="max-width: 560px">
+  <h3>Новый промокод</h3>
+  {% if error %}<p class="err" style="color:#C0392B; font-weight:600">{{ error }}</p>{% endif %}
+  <form method="post" action="/admin/coupons/create" class="admin-inline-form">
+    <input class="input" name="code" placeholder="КОД (латиница/цифры)" required maxlength="24">
+    <input class="input" name="percent" type="number" min="1" max="100" placeholder="Скидка %" required style="max-width: 110px">
+    <label class="hint" style="white-space:nowrap"><input type="checkbox" name="multi_use" checked> многоразовый</label>
+    <button class="btn btn--primary" type="submit">Создать</button>
+  </form>
+</div>
+
+<table style="max-width: 720px">
+  <thead><tr><th>Код</th><th>Скидка</th><th>Тип</th><th>Использован</th><th>Статус</th><th></th></tr></thead>
+  <tbody>
+  {% for c in coupons %}
+  <tr>
+    <td><code>{{ c.code }}</code></td><td>{{ c.percent_off }}%</td>
+    <td>{{ "многоразовый" if c.multi_use else "одноразовый" }}</td>
+    <td>{{ c.uses_count }} раз</td>
+    <td><span class="admin-status admin-status--{{ 'delivered' if c.active else 'failed' }}">{{ "активен" if c.active else "выключен" }}</span></td>
+    <td>
+      <form method="post" action="/admin/coupons/{{ c.code }}/toggle">
+        <button class="status-pill status-pill--wait" type="submit">{{ "выключить" if c.active else "включить" }}</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6">Промокодов нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

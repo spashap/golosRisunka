@@ -3,47 +3,80 @@
 {% block body %}
 <div class="section">
   <div class="wrap" style="max-width: 720px; padding-bottom: 60px">
-    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap">
-      <h2>Ваши отчёты</h2>
+
+    {# --- Профиль: каркас под смену email (Phase «улучшения») --- #}
+    <div class="cab-profile">
+      <div>
+        <h2 style="margin: 0">Кабинет</h2>
+        <div class="hint" style="margin-top: 4px">{{ customer.email }}
+          <button class="cab-link-soon" type="button"
+                  title="Появится в ближайшем обновлении">изменить email · скоро</button>
+        </div>
+      </div>
       <form method="post" action="/logout">
-        <button class="btn btn--ghost" type="submit">Выйти ({{ customer.email }})</button>
+        <button class="btn btn--ghost" type="submit">Выйти</button>
       </form>
     </div>
 
-    {% if not orders %}
+    {% if not has_orders %}
     <div class="form-card" style="margin-top: 24px; text-align: center">
       <p class="sub">Пока здесь пусто — закажите первый отчёт, и он появится в кабинете.</p>
       <a class="btn btn--primary" href="/order" style="margin-top: 16px">Заказать отчёт</a>
     </div>
     {% endif %}
 
-    {% for o in orders %}
-    <div class="order-card">
-      <div class="order-card__head">
-        <div>
-          <b>{{ o.product_title }}</b>{% if o.child_name %} · {{ o.child_name }}{% endif %}
-          <div class="hint">заказ №{{ o.id }} от {{ o.date }}</div>
+    {# --- Заказы, сгруппированные по детям: основа будущего Development-флоу --- #}
+    {% for g in groups %}
+    <section class="cab-child">
+      <h3 class="cab-child__name">{{ g.name }}</h3>
+
+      {% for o in g.orders %}
+      <div class="order-card">
+        <div class="order-card__head">
+          <div>
+            <b>{{ o.product_title }}</b>
+            <div class="hint">заказ №{{ o.id }} от {{ o.date }}</div>
+          </div>
+          <span class="status-pill status-pill--{{ o.status_kind }}">{{ o.status_label }}</span>
         </div>
-        <span class="status-pill status-pill--{{ o.status_kind }}">{{ o.status_label }}</span>
+        {% if o.drawing_ids %}
+        <div class="order-card__thumbs">
+          {% for did in o.drawing_ids %}
+          <img class="thumb" src="/cabinet/drawing/{{ did }}" alt="Рисунок {{ loop.index }}" loading="lazy">
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if o.ready %}
+        <div class="order-card__actions">
+          <a class="btn btn--primary" href="{{ o.report_url }}">Открыть отчёт</a>
+          <a class="btn btn--ghost" href="/cabinet/order/{{ o.id }}/report.pdf">Скачать PDF</a>
+          <button class="btn btn--ghost btn--soon" type="button"
+                  title="Отчёт о развитии: добавите свежие рисунки — сравним с этим отчётом. Скоро">
+            📈 Сравнить с новыми рисунками · скоро</button>
+        </div>
+        {% elif o.status_kind == "wait" %}
+        <p class="hint" style="margin-top: 12px">Обычно отчёт готов в течение часа после
+          оплаты — пришлём на почту и он появится здесь.</p>
+        {% endif %}
       </div>
-      {% if o.drawing_ids %}
-      <div class="order-card__thumbs">
-        {% for did in o.drawing_ids %}
-        <img class="thumb" src="/cabinet/drawing/{{ did }}" alt="Рисунок {{ loop.index }}" loading="lazy">
-        {% endfor %}
+      {% endfor %}
+
+      {# подсказка-тизер Development-отчёта: место уже зарезервировано в дизайне #}
+      {% if g.delivered_n >= 2 %}
+      <div class="cab-dev-teaser">
+        📈 У {{ g.name }} уже {{ g.delivered_n }} готовых отчёта — скоро здесь можно будет
+        выбрать два (с разницей от 6 месяцев) и заказать <b>отчёт о развитии</b>:
+        что выросло, что появилось нового.
+      </div>
+      {% elif g.delivered_n == 1 %}
+      <div class="cab-dev-teaser">
+        💡 Сохраняйте рисунки: через полгода можно будет добавить новые работы
+        {{ g.name }} и заказать <b>отчёт о развитии</b> — сравнение с этим отчётом.
       </div>
       {% endif %}
-      {% if o.ready %}
-      <div class="order-card__actions">
-        <a class="btn btn--primary" href="{{ o.report_url }}">Открыть отчёт</a>
-        <a class="btn btn--ghost" href="/cabinet/order/{{ o.id }}/report.pdf">Скачать PDF</a>
-      </div>
-      {% elif o.status_kind == "wait" %}
-      <p class="hint" style="margin-top: 12px">Обычно отчёт готов в течение часа после
-        оплаты — пришлём на почту и он появится здесь.</p>
-      {% endif %}
-    </div>
+    </section>
     {% endfor %}
+
   </div>
 </div>
 {% endblock %}

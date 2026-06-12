@@ -1,0 +1,16 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Клиенты{% endblock %}
+{% block content %}
+<div class="admin-head"><h1 class="h2">Клиенты</h1></div>
+<table>
+  <thead><tr><th>№</th><th>Email</th><th>С нами с</th><th>Дети</th><th>Заказов</th><th>Оплачено</th></tr></thead>
+  <tbody>
+  {% for c in clients %}
+  <tr><td>{{ c.id }}</td><td>{{ c.email }}</td><td>{{ c.created }}</td>
+      <td>{{ c.kids }}</td><td>{{ c.orders }}</td><td>{{ c.rub }} ₽</td></tr>
+  {% else %}
+  <tr><td colspan="6">Клиентов пока нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
