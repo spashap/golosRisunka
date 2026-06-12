@@ -112,6 +112,7 @@ def connect() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA busy_timeout = 5000")  # воркер + веб пишут в одну БД
     return conn
 
 
@@ -137,10 +138,11 @@ def new_token(nbytes: int = 32) -> str:
 
 def track(event_type: str, visitor_id: str | None = None,
           customer_id: int | None = None, payload: dict | None = None,
-          utm: dict | None = None) -> None:
-    """Серверное событие аналитики. Никогда не роняет запрос."""
+          utm: dict | None = None, conn: sqlite3.Connection | None = None) -> None:
+    """Серверное событие аналитики. Никогда не роняет запрос.
+    conn — явное соединение для процессов без Flask (воркер)."""
     try:
-        db = get_db()
+        db = conn if conn is not None else get_db()
         db.execute(
             "INSERT INTO events (visitor_id, customer_id, type, payload_json, utm_json, created_at)"
             " VALUES (?, ?, ?, ?, ?, ?)",

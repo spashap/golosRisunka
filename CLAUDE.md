@@ -18,6 +18,8 @@
 ## Команды
 ```
 venv\Scripts\python.exe run.py                                  # dev-сервер :5000
+venv\Scripts\python.exe worker.py [--once]                      # воркер отчётов (paid -> delivered)
+venv\Scripts\python.exe scripts\regenerate_report.py ORDER_ID   # ручной перезапуск заказа
 venv\Scripts\python.exe scripts\generate_report.py IMG [IMG2] --context C1.txt [C2.txt] [--common X.txt] [-o DIR]
 venv\Scripts\python.exe scripts\render_sample.py                # отчёт из fake JSON (шаблон)
 venv\Scripts\python.exe scripts\render_gallery.py [dk|pu|cl]    # галерея компонентов
@@ -50,7 +52,7 @@ venv\Scripts\python.exe scripts\hello_pdf.py                    # smoke-тест
   перезаписывает его старым аккумулированным списком — восстанавливать широкую версию.
 
 ## Состояние на вечер 12.06.2026 (детали в DevelopmentStatus.md)
-- **Фазы 0–5 построены и одобрены заказчиком**: дизайн-система; промпт v2.0 (M3R: сводный отчёт по
+- **Фазы 0–6 построены; 0–5 одобрены заказчиком (M5 ✅), M6 ждёт проверки**: дизайн-система; промпт v2.0 (M3R: сводный отчёт по
   2 реальным рисункам одного ребёнка — честные противоречия, ссылки на номера рисунков — sign-off);
   лендинг с 4 сэмплами (сводный по 2 рисункам — в центре карусели, стрелки ‹ ›, мобайл-адаптация);
   единая sticky-шапка с навигацией и «Войти» (заглушка /login до Phase 7);
@@ -58,6 +60,12 @@ venv\Scripts\python.exe scripts\hello_pdf.py                    # smoke-тест
   форма (конфиг полей; комбобоксы; ym-селекты; черновик в localStorage 4ч; email-опечатки; промокоды
   со скидкой; guard кнопки добавления рисунка; защита от двойного сабмита; серверные проверки дат),
   stub-оплата через идемпотентный mark_paid() (ЮKassa воткнётся туда же в Phase 8), сессия при оплате.
+- **Phase 6: фоновый воркер** — `worker.py` (поллер paid-заказов, `--once`; systemd в Phase 9),
+  `app/jobs.py` (run_order: paid→generating→delivered/insufficient/failed; возраст на дату
+  рисунка считаем сами; public_token живёт при regenerate), `app/mailer.py` (send_email —
+  единая точка; backend 'outbox' = HTML-файлы в data/outbox/, Unisender = Phase 8),
+  `scripts/regenerate_report.py ORDER_ID`. ⚠️ ЮKassa/Unisender аккаунтов всё ещё нет —
+  всё строится «фундаментом»: заглушки за абстракциями, подключение = один backend.
 - **Git**: https://github.com/spashap/golosRisunka (PUBLIC — рекомендация private остаётся), запушено.
   **Vercel**: статический экспорт dist/ (scripts/export_static.py, noindex), деплой через дашборд.
 - **Дальше по плану**: Phase 6 (фоновый воркер: orders paid → пайплайн отчёта → доставка/статусы,

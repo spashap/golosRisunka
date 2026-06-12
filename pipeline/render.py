@@ -8,6 +8,7 @@ HTML рендерится дважды с разным префиксом static
 from __future__ import annotations
 
 import base64
+import datetime
 import mimetypes
 from pathlib import Path
 
@@ -17,6 +18,14 @@ from config import settings
 from pipeline.schema import Report
 
 _env = Environment(loader=FileSystemLoader(settings.BASE_DIR / "templates"))
+
+RU_MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня",
+             "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+
+
+def ru_date(d: datetime.date) -> str:
+    """«12 июня 2026» — дата генерации в шапке отчёта."""
+    return f"{d.day} {RU_MONTHS[d.month - 1]} {d.year}"
 
 
 def drawing_to_data_uri(path: Path) -> str:

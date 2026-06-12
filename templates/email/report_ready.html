@@ -1,0 +1,20 @@
+{% extends "_email_base.html" %}
+{# Доставка готового отчёта: PDF во вложении + ссылка на онлайн-версию. #}
+{% block content %}
+<h2 style="font-size:22px; margin:0 0 14px">Отчёт готов: {{ child_name }}</h2>
+<p style="font-size:15px; line-height:1.6; margin:0 0 18px">
+  Мы внимательно изучили {{ 'рисунки' if drawings_count > 1 else 'рисунок' }} и подготовили
+  отчёт о навыках, которые видны в {{ 'работах' if drawings_count > 1 else 'работе' }}.
+  PDF-файл приложен к этому письму, онлайн-версия — по кнопке:
+</p>
+<p style="text-align:center; margin:0 0 18px">
+  <a href="{{ report_url }}" style="display:inline-block; background:#2b6cb0; color:#ffffff;
+     text-decoration:none; font-size:15px; font-weight:bold; padding:12px 28px; border-radius:10px">
+    Открыть отчёт
+  </a>
+</p>
+<p style="font-size:13px; color:#5a6b84; line-height:1.6; margin:0">
+  Отчёт также сохранён в вашем личном кабинете: <a href="{{ base_url }}/cabinet"
+  style="color:#2b6cb0">{{ base_url }}/cabinet</a>
+</p>
+{% endblock %}

@@ -61,16 +61,29 @@ COUPON_FIELD = {"key": "coupon", "label": "Промокод", "type": "text",
                 "hint": "Скидка применится сразу к сумме оплаты"}
 
 
-def context_to_story(child: dict, drawing: dict) -> str:
-    """Поля формы → свободный текст «истории» для промпта (тот же формат,
-    что родители давали в тестах)."""
-    lines = [
+GENDER_LABELS = {"ж": "девочка", "м": "мальчик"}
+
+
+def child_to_common(child: dict) -> str:
+    """Блок «общие данные о ребёнке» → common_context промпта (build_user_prompt)."""
+    gender = child.get("gender", "")
+    return "\n".join([
         f"Имя художника: {child.get('name', '')}",
-        f"Пол: {child.get('gender', '')}",
+        f"Пол: {GENDER_LABELS.get(gender, gender)}",
         f"Месяц/год рождения: {child.get('birth_ym', '')}",
+    ])
+
+
+def drawing_to_story(drawing: dict, age_display: str | None = None) -> str:
+    """Поля формы по одному рисунку → свободный текст «истории» для промпта
+    (тот же формат, что родители давали в тестах M3). age_display — посчитанный
+    возраст на дату рисунка (модели не доверяем арифметику дат)."""
+    lines = [
         f"Дата рисунка: {drawing.get('drawn_at', '')}",
         f"Тема рисунка: {drawing.get('theme', '')}",
     ]
+    if age_display:
+        lines.insert(1, f"Возраст ребёнка на момент рисунка: {age_display}")
     optional = [("Материалы", "materials"), ("Время рисования", "time_spent"),
                 ("Что бросилось в глаза родителю", "noticed"),
                 ("Дополнительно", "extra")]

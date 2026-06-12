@@ -253,3 +253,57 @@ M3R sign-off: «looks great for MVP step» (сессия улучшений — 
 1. **Шрифты не грузились в браузере** (всё serif): instancer оставлял STAT-таблицу при удалённом fvar → Chrome OTS тихо отвергал woff2. WeasyPrint не санитайзит — поэтому PDF были ок и мы не заметили. Фикс: build_fonts.py дропает STAT/avar/gvar/…; проверка headless-Chrome скриншотом. **UseCase #10.** Правило: проверки шрифтов — и PDF, и браузер.
 2. **Цитаты карточек обрывались на инициалах** («В рисунке Никиты Н.»): наивный split по '. '. Фикс: `_first_sentence()` — конец предложения только после строчной буквы. **UseCase #11.**
 - Отступ CTA↔заметка в hero был починен ранее (22px) — скриншот заказчика был до фикса.
+
+---
+
+## 2026-06-12 — Phase 6: Background worker + delivery (M5 подтверждён заказчиком)
+
+### Контекст-решение заказчика
+ЮKassa-аккаунта для проекта и Unisender-домена ПОКА НЕТ — всё строим как «фундамент»:
+рабочие заглушки за чистыми абстракциями, чтобы при получении аккаунтов подключение
+свелось к реализации одного backend'а (Phase 8), без переделок вызывающего кода.
+
+### Steps done
+1. **`app/mailer.py`** — email за абстракцией: `send_email()` — единая точка отправки
+   (Unisender в Phase 8 = смена MAIL_BACKEND, интерфейс тот же). Backend 'outbox':
+   письмо → HTML-файл в `data/outbox/` (комментарий-шапка To/Subject/Attach, открывается
+   в браузере) + ASCII-строка в лог. `send_admin_alert()` — алерты администратору туда же.
+   Шаблоны: `templates/email/` (_email_base с дисклеймером и «ответьте на письмо» во ВСЕХ
+   письмах, report_ready с кнопкой /r/<token>, insufficient с просьбой переснять/возвратом).
+2. **`app/jobs.py`** — `run_order(conn, order_id)`: paid → generating → пайплайн →
+   delivered | insufficient | failed. Без Flask (соединение явно) — общий код воркера и CLI.
+   Детали: возраст на дату рисунка считаем САМИ (`_age_display`: birth_ym+drawn_at →
+   «5 лет 11 месяцев», русские плюралы; модели арифметику дат не доверяем); пол в промпт
+   словом («девочка»), не буквой; common_context = блок о ребёнке, contexts = истории по
+   рисункам (`child_to_common`/`drawing_to_story` в form_fields.py — бывший context_to_story);
+   failed: error.log + traceback + attempts_log в `data/reports/{id}/`, алерт админу,
+   событие report_failed; insufficient: insufficient.json, письмо клиенту + алерт,
+   событие order_insufficient; delivered: reports row (UPSERT — **public_token сохраняется
+   при regenerate**, ссылка клиента не меняется), письмо с PDF-вложением, report_delivered.
+3. **`worker.py`** (корень) — поллер `status='paid'` (ORDER BY paid_at), `--once` для
+   тестов/cron; на старте сбрасывает зависшие 'generating'→'paid' (убитый воркер);
+   лог: консоль ASCII + `data/worker.log` UTF-8; шумные либы (fontTools/weasyprint/httpx) →
+   WARNING. На VPS станет systemd-юнитом (Phase 9).
+4. **`scripts/regenerate_report.py ORDER_ID`** — ручной перезапуск из любого статуса
+   кроме 'created' (тем же jobs.run_order).
+5. Сопутствующее: `db.track(conn=...)` для процессов без Flask; `PRAGMA busy_timeout=5000`
+   (воркер+веб пишут в одну БД); пути в БД — POSIX-слэши (`as_posix()` — переезд на VPS);
+   `ru_date` переехал в pipeline/render.py (был дубль в CLI); settings: PUBLIC_BASE_URL
+   (ссылки в письмах), WORKER_POLL_SECONDS, MAIL_BACKEND, OUTBOX_DIR, WORKER_LOG.
+
+### Machine checks (29/29 passed + 2 live-прогона)
+- Мок-пайплайн: delivered (файлы, reports row, /r/<token> 200, письмо с Attach и ссылкой,
+  событие, возраст в контексте промпта, «девочка» в common); regenerate (token не сменился,
+  reports row один); insufficient (статус, insufficient.json, письмо+алерт, причина в обоих);
+  failed (статус, error.log, алерт, событие); guard на несуществующий/неоплаченный заказ;
+  _age_display (5 кейсов с плюралами).
+- **Live Gemini #1**: заказ 6 (failed) → `regenerate_report.py 6` → delivered (attempts 1, repair 1).
+- **Live Gemini #2**: заказ 7 (2 рисунка set1, оплачен стабом) → `worker.py --once` подобрал →
+  сводный отчёт delivered → письмо в outbox → выход по пустой очереди.
+
+### 🧪 Milestone M6 — USER ACTION
+1. Запустить в двух консолях: `venv\Scripts\python.exe run.py` и `venv\Scripts\python.exe worker.py`.
+2. Пройти покупку на http://localhost:5000 → в течение ~2 минут заказ станет delivered,
+   «письмо» появится в `data/outbox/` (открыть HTML, перейти по кнопке «Открыть отчёт»).
+3. Саботаж: выключить интернет (или подложить битый файл рисунка) → заказ failed,
+   алерт в outbox → `scripts/regenerate_report.py <id>` после починки → delivered, ссылка та же.

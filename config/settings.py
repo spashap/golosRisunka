@@ -45,12 +45,20 @@ def get_products() -> dict:
 # --- Site ---
 SITE_NAME = "Голос рисунка"
 SITE_DOMAIN = "golosrisunka.ru"
+# Базовый URL для ссылок в письмах (на VPS станет https://golosrisunka.ru)
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:5000")
 PALETTE = ""  # css class on <html>: "" = Синий (default), "pu" = Фиолет, "dk" = Тёмный, "cl" = Облака
 
 # --- Report generation ---
 GEMINI_MAX_ATTEMPTS = 5          # spec §7.2
 IMAGE_MAX_LONG_SIDE = 2000       # px, resize before sending to Gemini
 UPLOAD_MAX_BYTES = 15 * 1024 * 1024
+
+# --- Worker / email (Phase 6) ---
+WORKER_POLL_SECONDS = 5                # период опроса orders.status='paid'
+WORKER_LOG = DATA_DIR / "worker.log"   # UTF-8 лог воркера (консоль — только ASCII!)
+MAIL_BACKEND = os.getenv("MAIL_BACKEND", "outbox")  # 'outbox' сейчас | 'unisender' (Phase 8)
+OUTBOX_DIR = DATA_DIR / "outbox"       # backend 'outbox': письма как HTML-файлы
 
 # --- Auth (spec §9) ---
 SESSION_DAYS = 30

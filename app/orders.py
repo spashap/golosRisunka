@@ -131,7 +131,7 @@ def validate_and_create_order(form: dict, files: list[FileStorage],
         db.execute(
             "INSERT INTO drawings (order_id, file_path, drawn_at, context_json, uploaded_at)"
             " VALUES (?, ?, ?, ?, ?)",
-            (order_id, str(path.relative_to(settings.BASE_DIR)),
+            (order_id, path.relative_to(settings.BASE_DIR).as_posix(),
              d["context"].get("drawn_at"),
              json.dumps(d["context"], ensure_ascii=False), now()),
         )

@@ -21,15 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
 from pipeline.gemini import ReportGenerationError, generate_report
-from pipeline.render import render_report_files
+from pipeline.render import render_report_files, ru_date
 from pipeline.schema import InsufficientReport
-
-RU_MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня",
-             "июля", "августа", "сентября", "октября", "ноября", "декабря"]
-
-
-def ru_date(d: datetime.date) -> str:
-    return f"{d.day} {RU_MONTHS[d.month - 1]} {d.year}"
 
 
 def main() -> int:
