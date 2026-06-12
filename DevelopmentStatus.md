@@ -206,6 +206,10 @@ Dev server: `venv\Scripts\python.exe run.py` → http://localhost:5000 (already 
 - `vercel.json`: outputDirectory=dist, cleanUrls. dist/ закоммичен.
 - Деплой: Vercel dashboard → Import Git Repository → spashap/golosRisunka → Framework "Other" → деплой (build command пустой). Адрес вида golos-risunka.vercel.app.
 
+### Архитектурная проверка по запросу заказчика (12.06): дата рисунка + upsell + Development-на-базе-существующего-отчёта
+Вердикт: архитектура выдерживает без переделок; три дешёвых поля закладываются в Phase 5 СРАЗУ:
+`drawings.drawn_at` (YYYY-MM, обязательное), `children.birth_ym` (дата рождения раз на ребёнка вместо «возраста» в каждой заявке), `orders.base_order_id` (nullable — Development-заказ ссылается на прежний заказ; отчёт строится на его report_json + рисунках + новом наборе). Upsell-напоминания (drawn_at ≥ 5–6 мес.) — post-MVP cron, чистое дополнение. План (Phase 5, 11.3, новый 11.4) и память обновлены. Тестовые данные: set1 (2 рисунка этой недели) → M3R; devtest (рисунок годичной давности того же ребёнка) — зарезервирован для Development report.
+
 ### Баги из projectSpec/errors/ (скриншоты заказчика 11.06)
 1. **Шрифты не грузились в браузере** (всё serif): instancer оставлял STAT-таблицу при удалённом fvar → Chrome OTS тихо отвергал woff2. WeasyPrint не санитайзит — поэтому PDF были ок и мы не заметили. Фикс: build_fonts.py дропает STAT/avar/gvar/…; проверка headless-Chrome скриншотом. **UseCase #10.** Правило: проверки шрифтов — и PDF, и браузер.
 2. **Цитаты карточек обрывались на инициалах** («В рисунке Никиты Н.»): наивный split по '. '. Фикс: `_first_sentence()` — конец предложения только после строчной буквы. **UseCase #11.**

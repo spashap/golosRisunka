@@ -68,6 +68,8 @@ Locked decisions reflected here: Gemini 2.5 Pro · report pipeline built first a
 - [ ] 3R.3 Regression: 1-image reports must stay as good as M3
 - [ ] 3R.4 Multi-image tests on synthetic set (8yr + crop) — mechanics + cross-referencing
 - [ ] 3R.5 **⛔ USER INPUT: 2–3 real drawings of the SAME child (same period) + story per drawing** — the only honest test of consolidation quality
+  - Naming: `set1-img1.png/.txt`, `set1-img2.png/.txt`, `set1-common.txt` (child data + birth month/year); each story includes month/year the drawing was made
+  - The user's 1-year-old drawing of the same child = reserved Development-report test material (`devtest-*`), NOT for the snapshot test
 
 **🧪 Milestone M3R — you test:** read the consolidated PDF from a real multi-drawing set: does it feel like ONE report about one child (not three glued summaries)? do observations reference specific drawings? does the score feel justified across works?
 
@@ -87,9 +89,10 @@ Locked decisions reflected here: Gemini 2.5 Pro · report pipeline built first a
 
 ## Phase 5 — Order flow: form, upload, DB, payment-stub (2 days)
 
-- [ ] 5.1 SQLite schema per spec §5 (customers, children, orders, drawings, reports, sessions, login_codes, coupons) + tiny migration/init script
+- [ ] 5.1 SQLite schema per spec §5 (customers, children, orders, drawings, reports, sessions, login_codes, coupons) + tiny migration/init script.
+  **Upsell/Development groundwork (decided 12.06):** `drawings.drawn_at` (YYYY-MM, required), `children.birth_ym` (birth month/year — collected once, age per drawing computed), `orders.base_order_id` (nullable FK — Development order references the prior order whose stored report_json + drawings it builds on)
 - [ ] 5.2 Context-form **config** (spec §5 flexibility rule): field list as Python/JSON config (key, label, type, required); form render + server validation generated from it
-- [ ] 5.3 Order form page: product choice (1/2/3 drawings, prices from config) → email + child fields + per-drawing upload & context. Vanilla JS only for file picking/preview
+- [ ] 5.3 Order form page: product = snapshot (price from config/products.json) → email + child block (имя, пол, **дата рождения месяц/год** — вместо возраста) + per-drawing upload & story incl. **«когда нарисован» (месяц/год, required)**. Vanilla JS only for file picking/preview
 - [ ] 5.4 Upload handling: client+server validation, 15MB limit, heic conversion, files → `/data/drawings/{order_id}/`
 - [ ] 5.5 Payment abstraction with **stub provider**: "pay" button → fake checkout page → simulated webhook → order `created → paid`. Real ЮKassa drops into the same interface later (§ Phase 8)
 - [ ] 5.6 Success page: «Отчёт придёт на почту в течение часа» + cabinet link; session cookie issued on payment (30 days)
@@ -149,7 +152,10 @@ Locked decisions reflected here: Gemini 2.5 Pro · report pipeline built first a
 
 1. [ ] Blog: markdown files in `content/blog/` → `/blog`, `/blog/{slug}`, Article schema, sitemap (~half day)
 2. [ ] Coupons + minimal admin (env-password login, coupon CRUD, orders list, regenerate button)
-3. [ ] Development Report — explicitly post-launch unless everything above is done early
+3. [ ] Development Report — explicitly post-launch unless everything above is done early.
+   Design (decided 12.06): **builds on the client's EXISTING stored report** — input = prior order's report_json + prior drawings + new 1–3 drawing set; new prompt variant («тогда/сейчас», динамика по 8 направлениям); `orders.base_order_id` links the orders. Test material already reserved: user's `devtest-*` drawing (1 year older than set1).
+
+4. [ ] **Upsell reminders (post-MVP, спроектировано 12.06):** cron job scans children whose latest `drawings.drawn_at` ≥ 5–6 months ago → email «добавьте свежий рисунок — увидите, как развился ребёнок» → Development report flow with base_order_id. Needs: drawn_at/birth_ym fields (Phase 5 ✓ planned), email-consent line in privacy policy (Phase 9), Unisender template. No architecture change — pure addition.
 
 ---
 
