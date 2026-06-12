@@ -73,6 +73,12 @@ def hosted_report(token: str):
     abort(404)
 
 
+@bp.get("/login")
+def login_stub():
+    # Phase 7: вход по email-коду. Пока — заглушка для пункта «Войти» в шапке.
+    return render_template("login_stub.html")
+
+
 @bp.get("/order")
 def order_form():
     # Phase 5: полноценная форма заказа. Пока — заглушка, чтобы CTA не вели в 404.

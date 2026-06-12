@@ -21,12 +21,7 @@
 </head>
 <body>
 
-<div class="wrap">
-  <nav class="nav">
-    <div class="logo"><b>Голос</b> <i>рисунка</i></div>
-    <a class="btn" href="/order">Получить отчёт</a>
-  </nav>
-</div>
+{% include "_header.html" %}
 
 <!-- 2. Hero -->
 <div class="wrap">
@@ -42,7 +37,7 @@
       </div>
     </div>
     <div class="pol-table" aria-hidden="true">
-      {% for s in samples %}
+      {% for s in samples if s.hero %}
       <div class="polaroid {{ ['polaroid--tilt-l', 'polaroid--tilt-r', 'polaroid--tilt-sl'][loop.index0] }}"
            style="width: {{ [242, 222, 204][loop.index0] }}px; {{ ['top:0;left:3%', 'top:128px;right:2%', 'bottom:0;left:28%'][loop.index0] }}">
         <div class="badge badge--corner">{{ s.badge }}</div>
@@ -62,7 +57,7 @@
     <div class="carousel">
       {% for s in samples %}
       <article class="report-card">
-        <span class="badge badge--flat report-card__badge">пример отчёта</span>
+        <span class="badge badge--flat report-card__badge">{% if s.n_drawings > 1 %}пример · {{ s.n_drawings }} рисунка{% else %}пример отчёта{% endif %}</span>
         <div class="report-card__top">
           <div class="report-card__draw"><img src="{{ s.thumb_url }}" alt="Рисунок — {{ s.caption }}" loading="lazy" width="84" height="84"></div>
           <div class="report-card__name">{{ s.name }}</div>
@@ -86,7 +81,7 @@
 </section>
 
 <!-- 4. Как это работает -->
-<section class="section">
+<section class="section" id="kak">
   <div class="wrap">
     <h2>Как это работает</h2>
     <div class="sub">Три шага — и отчёт у вас на почте.</div>

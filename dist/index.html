@@ -220,6 +220,26 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .logo b { color: var(--accent); font-weight: 700; }
 .logo i { color: var(--accent2); font-style: normal; }
 
+/* --- Шапка-полоса сайта (sticky, единая для всех страниц) --- */
+.site-header { position: sticky; top: 0; z-index: 50;
+               background: var(--bg); border-bottom: 1px solid var(--alt);
+               box-shadow: 0 2px 12px rgba(0, 0, 0, .04); }
+.site-header__row { display: flex; align-items: center; gap: 28px; padding-top: 12px;
+                    padding-bottom: 12px; }
+.site-header .logo { font-size: 30px; margin-right: auto; }
+.site-nav { display: flex; gap: 22px; }
+.site-nav a { font-weight: 600; font-size: 15px; color: var(--muted); transition: .15s; }
+.site-nav a:hover { color: var(--accent); }
+.site-header__actions { display: flex; align-items: center; gap: 16px; }
+.site-nav__login { font-weight: 600; font-size: 15px; color: var(--accent); }
+.site-nav__login:hover { text-decoration: underline; }
+.site-header .btn { padding: 10px 22px; font-size: 15px; }
+@media (max-width: 880px) {
+  .site-nav { display: none; }           /* мобайл: лого + Войти + CTA, без JS-бургера */
+  .site-header__row { gap: 14px; }
+  .site-header .logo { font-size: 26px; }
+}
+
 /* --- FAQ (details/summary, без JS) --- */
 .faq { border-bottom: 2px dashed rgba(0, 0, 0, .1); padding: 18px 0; }
 .faq summary { font-family: var(--font-head); font-weight: 800; font-size: 17px;
@@ -298,12 +318,22 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 </head>
 <body>
 
-<div class="wrap">
-  <nav class="nav">
-    <div class="logo"><b>Голос</b> <i>рисунка</i></div>
-    <a class="btn" href="/order">Получить отчёт</a>
-  </nav>
-</div>
+
+<header class="site-header">
+  <div class="wrap site-header__row">
+    <a class="logo" href="/"><b>Голос</b> <i>рисунка</i></a>
+    <nav class="site-nav">
+      <a href="/#primery">Примеры</a>
+      <a href="/#kak">Как это работает</a>
+      <a href="/#ceny">Цены</a>
+      <a href="/blog">Блог</a>
+    </nav>
+    <div class="site-header__actions">
+      <a class="site-nav__login" href="/login">Войти</a>
+      <a class="btn" href="/order">Получить отчёт</a>
+    </div>
+  </div>
+</header>
 
 <!-- 2. Hero -->
 <div class="wrap">
@@ -385,6 +415,38 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
       </article>
       
       <article class="report-card">
+        <span class="badge badge--flat report-card__badge">пример · 2 рисунка</span>
+        <div class="report-card__top">
+          <div class="report-card__draw"><img src="/static/img/samples/primer-2-risunka.webp" alt="Рисунок — «Стич», Алиса, 6 лет" loading="lazy" width="84" height="84"></div>
+          <div class="report-card__name">Алиса</div>
+          <div class="report-card__age">6 лет</div>
+        </div>
+        <div class="report-card__body">
+          
+          <div class="score-bar">
+            <span>Уверенность исполнения</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
+            <b>9</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Эмоциональная выразительность</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Решение задач</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+        </div>
+        <div class="report-card__quote">«Рисунки Алисы демонстрируют высокий для её возраста уровень развития изобразительных навыков.»</div>
+        <a class="report-card__link" href="/r/primer-2-risunka">Смотреть полный отчёт →</a>
+      </article>
+      
+      <article class="report-card">
         <span class="badge badge--flat report-card__badge">пример отчёта</span>
         <div class="report-card__top">
           <div class="report-card__draw"><img src="/static/img/samples/primer-6-let.webp" alt="Рисунок — «Семья», Никита, 6 лет" loading="lazy" width="84" height="84"></div>
@@ -453,7 +515,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 </section>
 
 <!-- 4. Как это работает -->
-<section class="section">
+<section class="section" id="kak">
   <div class="wrap">
     <h2>Как это работает</h2>
     <div class="sub">Три шага — и отчёт у вас на почте.</div>

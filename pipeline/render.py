@@ -28,13 +28,15 @@ def drawing_to_data_uri(path: Path) -> str:
 
 
 def render_html(report: Report, drawings: list[dict], generated_date: str,
-                static_prefix: str = "/static") -> str:
-    """drawings: [{"src": data-URI (см. drawing_to_data_uri), "caption": подпись}, ...]"""
+                static_prefix: str = "/static", site_header: bool = False) -> str:
+    """drawings: [{"src": data-URI (см. drawing_to_data_uri), "caption": подпись}, ...]
+    site_header=True — шапка сайта (только hosted-вариант, в PDF её нет)."""
     return _env.get_template("report.html").render(
         report=report,
         drawings=drawings,
         generated_date=generated_date,
         static=static_prefix,
+        site_header=site_header,
     )
 
 
@@ -51,7 +53,8 @@ def render_report_files(report: Report, drawings: list[dict], generated_date: st
     """Сохраняет обе версии. Возвращает (html_path, pdf_path)."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    html_hosted = render_html(report, drawings, generated_date, static_prefix="/static")
+    html_hosted = render_html(report, drawings, generated_date,
+                              static_prefix="/static", site_header=True)
     html_path = out_dir / f"{basename}.html"
     html_path.write_text(html_hosted, encoding="utf-8")
 

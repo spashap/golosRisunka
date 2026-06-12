@@ -7,9 +7,11 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="{{ static }}/css/fonts.css">
 <link rel="stylesheet" href="{{ static }}/css/tokens.css">
+{% if site_header %}<link rel="stylesheet" href="{{ static }}/css/components.css">{% endif %}
 <link rel="stylesheet" href="{{ static }}/css/report.css">
 </head>
 <body class="report">
+{% if site_header %}{% include "_header.html" %}{% endif %}
 <div class="report-page">
 
   <!-- Обложка -->
