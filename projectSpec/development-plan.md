@@ -96,6 +96,7 @@ Locked decisions reflected here: Gemini 2.5 Pro · report pipeline built first a
 - [ ] 5.4 Upload handling: client+server validation, 15MB limit, heic conversion, files → `/data/drawings/{order_id}/`
 - [ ] 5.5 Payment abstraction with **stub provider**: "pay" button → fake checkout page → simulated webhook → order `created → paid`. Real ЮKassa drops into the same interface later (§ Phase 8)
 - [ ] 5.6 Success page: «Отчёт придёт на почту в течение часа» + cabinet link; session cookie issued on payment (30 days)
+- [ ] 5.7 **Analytics groundwork (decided 12.06, для будущей админки):** `events` table, anonymous visitor cookie, first-touch UTM capture (on visitor + on order), server-side `track()` at funnel steps: landing_view → sample_view → order_form_view → order_created → checkout_view → order_paid → report_delivered. No JS analytics libs.
 
 **🧪 Milestone M5 — you test:** full purchase walk-through on localhost: pick product → fill form → upload your real photos (try a HEIC from an iPhone) → fake-pay → success page. Check `data/drawings/` and the DB rows. Try breaking it: oversized file, wrong type, missing required field.
 

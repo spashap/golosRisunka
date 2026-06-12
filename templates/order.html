@@ -1,0 +1,94 @@
+{% extends "_base.html" %}
+{% block title %}Заказ отчёта — Голос рисунка{% endblock %}
+
+{% macro render_field(f, prefix, values, errors) %}
+{% set name = prefix ~ f.key %}
+<div class="field">
+  <label for="{{ name }}">{{ f.label }}{% if f.required %} *{% endif %}</label>
+  {% if f.type == "textarea" %}
+  <textarea class="input{% if errors.get(name) %} input--error{% endif %}" id="{{ name }}" name="{{ name }}"
+            placeholder="{{ f.placeholder or '' }}">{{ values.get(name, '') }}</textarea>
+  {% elif f.type == "select" %}
+  <select class="input{% if errors.get(name) %} input--error{% endif %}" id="{{ name }}" name="{{ name }}">
+    <option value="">—</option>
+    {% for val, label in f.options %}
+    <option value="{{ val }}" {% if values.get(name) == val %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  {% elif f.type == "month" %}
+  <input class="input{% if errors.get(name) %} input--error{% endif %}" type="month" id="{{ name }}" name="{{ name }}"
+         value="{{ values.get(name, '') }}" max="{{ current_month }}">
+  {% else %}
+  <input class="input{% if errors.get(name) %} input--error{% endif %}" type="{{ f.type }}" id="{{ name }}" name="{{ name }}"
+         value="{{ values.get(name, '') }}" placeholder="{{ f.placeholder or '' }}">
+  {% endif %}
+  {% if errors.get(name) %}<div class="err">{{ errors[name] }}</div>
+  {% elif f.hint %}<div class="hint">{{ f.hint }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 720px">
+    <h2>Заказ отчёта</h2>
+    <p class="sub">{{ product.title }} — до {{ product.drawings_max }} рисунков одного периода ·
+      <s style="color:var(--soft)">{{ product.old_price_rub }} ₽</s>
+      <b style="color:var(--accent)">{{ product.price_rub }} ₽</b></p>
+
+    {% if errors %}
+    <div class="form-card" style="border: 2px solid #C0392B">
+      Проверьте выделенные поля — не всё заполнено корректно.
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="order-form">
+      <input type="hidden" name="product" value="{{ product_code }}">
+
+      <div class="form-card">
+        <h3>О ребёнке</h3>
+        <div class="form-grid-2">
+          {% for f in child_fields %}{{ render_field(f, "child_", values, errors) }}{% endfor %}
+        </div>
+      </div>
+
+      <div id="drawings">
+        {% for i in [1, 2, 3] %}
+        <div class="form-card drawing-block" data-n="{{ i }}" {% if i > 1 %}hidden{% endif %}>
+          <a class="db-remove" href="#" data-remove="{{ i }}" {% if i == 1 %}hidden{% endif %}>убрать</a>
+          <h3><span class="db-num">{{ i }}</span> · Рисунок</h3>
+          <div class="field">
+            <label>Фото рисунка *</label>
+            <label class="file-drop" for="d{{ i }}_file">
+              <img class="preview" hidden alt="">
+              <div class="fd-icon">🖼️</div>
+              <div class="fd-text">Нажмите и выберите фото — JPG, PNG или HEIC, до 15 МБ</div>
+              <input type="file" id="d{{ i }}_file" name="d{{ i }}_file"
+                     accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*">
+            </label>
+            {% if errors.get("d" ~ i ~ "_file") %}<div class="err">{{ errors["d" ~ i ~ "_file"] }}</div>{% endif %}
+          </div>
+          <div class="form-grid-2">
+            {% for f in drawing_fields %}{{ render_field(f, "d" ~ i ~ "_", values, errors) }}{% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if errors.get("drawings") %}<div class="err" style="margin-bottom:12px">{{ errors["drawings"] }}</div>{% endif %}
+      <p><button type="button" class="btn--ghost" id="add-drawing">+ Добавить ещё рисунок</button></p>
+
+      <div class="form-card">
+        {{ render_field(email_field, "", values, errors) }}
+        <button type="submit" class="btn btn--primary" style="width:100%">
+          Перейти к оплате — {{ product.price_rub }} ₽
+        </button>
+        <p class="hint" style="margin-top: 12px; text-align: center">
+          Оплата через защищённый сервис. Отчёт придёт на почту в течение часа.<br>
+          Образовательное наблюдение, не медицинская диагностика.
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
+<script src="{{ static }}/js/order.js" defer></script>
+{% endblock %}

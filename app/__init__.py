@@ -1,6 +1,8 @@
 """Flask-приложение «Голос рисунка». Один процесс, серверный HTML (spec §2)."""
-from flask import Flask, render_template
+from flask import Flask, g, render_template
 
+from app import track
+from app.db import init_db
 from config import settings
 
 
@@ -11,6 +13,16 @@ def create_app() -> Flask:
         template_folder=str(settings.BASE_DIR / "templates"),
     )
     app.config["MAX_CONTENT_LENGTH"] = settings.UPLOAD_MAX_BYTES * 3 + 1_000_000
+
+    init_db()
+    app.before_request(track.before_request)
+    app.after_request(track.after_request)
+
+    @app.teardown_appcontext
+    def close_db(exc):
+        db = g.pop("db", None)
+        if db is not None:
+            db.close()
 
     from app.routes import bp
     app.register_blueprint(bp)

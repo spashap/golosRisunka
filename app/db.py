@@ -1,0 +1,154 @@
+"""SQLite-слой: stdlib sqlite3, без ORM (закон простоты). Схема — spec §5
++ решения 12.06: drawn_at / birth_ym / base_order_id (Development, upsell)
++ events / visitor / UTM (аналитика будущей админки).
+"""
+from __future__ import annotations
+
+import datetime
+import json
+import secrets
+import sqlite3
+
+from flask import g
+
+from config import settings
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS customers (
+    id INTEGER PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS children (
+    id INTEGER PRIMARY KEY,
+    customer_id INTEGER NOT NULL REFERENCES customers(id),
+    name TEXT NOT NULL,
+    gender TEXT,                          -- 'м' / 'ж' (авторитетный источник пола)
+    birth_ym TEXT,                        -- 'YYYY-MM' (возраст вычисляется на дату рисунка)
+    birth_info TEXT,                      -- как введено родителем (spec §5)
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL,                  -- введён в форме; customer создаётся при оплате
+    customer_id INTEGER REFERENCES customers(id),
+    child_id INTEGER REFERENCES children(id),
+    product_code TEXT NOT NULL,           -- 'snapshot' / 'development'
+    price_kopecks INTEGER NOT NULL,
+    coupon_code TEXT,
+    status TEXT NOT NULL DEFAULT 'created',
+        -- created / paid / generating / failed / delivered / insufficient
+    yookassa_payment_id TEXT,
+    base_order_id INTEGER REFERENCES orders(id),  -- Development: на каком заказе основан
+    child_json TEXT,                      -- данные ребёнка из формы (до создания child)
+    visitor_id TEXT,                      -- аналитика: кто купил
+    utm_json TEXT,                        -- first-touch UTM на момент заказа
+    created_at TEXT NOT NULL,
+    paid_at TEXT
+);
+CREATE TABLE IF NOT EXISTS drawings (
+    id INTEGER PRIMARY KEY,
+    order_id INTEGER NOT NULL REFERENCES orders(id),
+    file_path TEXT NOT NULL,
+    drawn_at TEXT,                        -- 'YYYY-MM' (обязателен в форме; upsell-триггер)
+    context_json TEXT,                    -- все поля формы по этому рисунку
+    uploaded_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS reports (
+    id INTEGER PRIMARY KEY,
+    order_id INTEGER NOT NULL REFERENCES orders(id),
+    html_path TEXT,
+    pdf_path TEXT,
+    report_json_path TEXT,                -- сырой JSON Gemini — хранить обязательно
+    public_token TEXT UNIQUE,
+    generated_at TEXT,
+    attempts INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY,
+    customer_id INTEGER NOT NULL REFERENCES customers(id),
+    token TEXT UNIQUE NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS login_codes (
+    id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used INTEGER DEFAULT 0,
+    attempts INTEGER DEFAULT 0,
+    requested_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS coupons (
+    code TEXT PRIMARY KEY,
+    percent_off INTEGER NOT NULL,
+    multi_use INTEGER DEFAULT 0,
+    active INTEGER DEFAULT 1,
+    uses_count INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY,
+    visitor_id TEXT,
+    customer_id INTEGER,
+    type TEXT NOT NULL,
+    payload_json TEXT,
+    utm_json TEXT,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_events_type ON events(type, created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_drawings_order ON drawings(order_id);
+"""
+
+
+def now() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
+
+
+def connect() -> sqlite3.Connection:
+    settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(settings.DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    return conn
+
+
+def init_db() -> None:
+    conn = connect()
+    try:
+        conn.executescript(SCHEMA)
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_db() -> sqlite3.Connection:
+    """Per-request соединение (Flask g). Закрывается в teardown (app/__init__)."""
+    if "db" not in g:
+        g.db = connect()
+    return g.db
+
+
+def new_token(nbytes: int = 32) -> str:
+    return secrets.token_urlsafe(nbytes)
+
+
+def track(event_type: str, visitor_id: str | None = None,
+          customer_id: int | None = None, payload: dict | None = None,
+          utm: dict | None = None) -> None:
+    """Серверное событие аналитики. Никогда не роняет запрос."""
+    try:
+        db = get_db()
+        db.execute(
+            "INSERT INTO events (visitor_id, customer_id, type, payload_json, utm_json, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (visitor_id, customer_id, event_type,
+             json.dumps(payload, ensure_ascii=False) if payload else None,
+             json.dumps(utm, ensure_ascii=False) if utm else None,
+             now()),
+        )
+        db.commit()
+    except Exception:
+        pass

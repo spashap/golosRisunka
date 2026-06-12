@@ -227,6 +227,18 @@ M3R sign-off: «looks great for MVP step» (сессия улучшений — 
 4. /login — страница-заглушка кабинета.
 Проверено: headless-скриншоты лендинга и /r/primer-2-risunka; карусель: 3-goda → **2-risunka** → 6-let → 8-let; dist/ переэкспортирован (33 файла).
 
+### 12.06 — Phase 5: Order flow построен (M5 ждёт проверки заказчика)
+1. **БД** `app/db.py` (sqlite3 stdlib, без ORM): customers, children (gender/birth_ym), orders (child_json, base_order_id, visitor_id, utm_json), drawings (drawn_at, context_json), reports, sessions, login_codes, coupons, **events** + индексы. WAL, FK on. init_db() идемпотентен.
+2. **Аналитика** (для будущей админки): `app/track.py` — visitor-cookie (httpOnly, 1 год), first-touch UTM cookie, серверный track(). Воронка: landing_view → sample_view → order_form_view → order_created → checkout_view → order_paid (только при реальном переходе статуса — дубль webhook не шумит). UTM заказа сохраняется в orders.utm_json — проверено (vk/june_test).
+3. **Форма заказа** `config/form_fields.py` (поля = конфиг): блок ребёнка (имя/пол/месяц-год рождения) + до 3 блоков рисунка (фото, drawn_at, тема, материалы, настроение, время, «что бросилось в глаза», доп.) + email. `context_to_story()` → свободный текст для промпта (тот же формат, что в тестах M3). Рендер по конфигу (macro), сохранение значений при ошибках, server-side валидация всего.
+4. **Загрузка**: jpg/png/heic/webp, ≤15МБ, до 3 файлов → data/drawings/{order_id}/; vanilla JS (order.js): динамические блоки 1–3, превью, клиентский лимит размера.
+5. **Оплата за абстракцией** `app/payments.py`: create_payment() → stub-чекаут; **mark_paid() — единая идемпотентная точка** (стане webhook ЮKassa): customer find-or-create, child переиспользуется по имени (spec §5), сессия 30 дней (cookie gr_s httpOnly), status=paid. Дубль подтверждения безопасен (проверено).
+6. Роуты: GET/POST /order, /pay/stub/<id> (+confirm), /order/success/<id>, /cabinet (заглушка до Phase 7); /r/<token> теперь ищет и в reports по public_token (готово для Phase 6).
+7. Тесты пройдены: полный флоу (UTM-лендинг → форма → 2 рисунка → стаб-оплата → success, cookie сессии); БД-состояние (paid, 299900 коп., файлы на диске, drawn_at, воронка событий); ошибки валидации (400, поля подсвечены, значения сохранены); 16МБ файл отклонён; идемпотентность оплаты. UseCase #12 (MultiDict.to_dict + curl-кириллица).
+
+### 🧪 Milestone M5 — USER ACTION
+На http://localhost:5000: пройти покупку руками — лендинг → «Заказать» → форма (попробуйте добавить/убрать рисунки, отправить с ошибками, HEIC с телефона) → тест-оплата → success. Кабинет — заглушка (Phase 7).
+
 ### Баги из projectSpec/errors/ (скриншоты заказчика 11.06)
 1. **Шрифты не грузились в браузере** (всё serif): instancer оставлял STAT-таблицу при удалённом fvar → Chrome OTS тихо отвергал woff2. WeasyPrint не санитайзит — поэтому PDF были ок и мы не заметили. Фикс: build_fonts.py дропает STAT/avar/gvar/…; проверка headless-Chrome скриншотом. **UseCase #10.** Правило: проверки шрифтов — и PDF, и браузер.
 2. **Цитаты карточек обрывались на инициалах** («В рисунке Никиты Н.»): наивный split по '. '. Фикс: `_first_sentence()` — конец предложения только после строчной буквы. **UseCase #11.**

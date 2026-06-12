@@ -56,6 +56,10 @@ Chronological build log lives in `DevelopmentStatus.md`.
 **Problem:** landing quotes extracted as «В рисунке Никиты Н.» — `conclusion.split('. ')[0]` saw the initial's period as a sentence end.
 **Solution:** sentence boundary = period preceded by a lowercase letter/quote/paren: `re.search(r"^(.*?[а-яёa-z»\)])\.(?=\s|$)", text)` (`app/samples.py::_first_sentence`).
 
+## #12 · Two Phase-5 form gotchas: MultiDict→dict gives lists; curl mangles Cyrillic multipart
+**Problem A:** re-rendered form after validation errors didn't preserve values: `dict(request.form)` (Werkzeug MultiDict) yields LIST values → `['ж'] == 'ж'` false in templates. **Fix:** `request.form.to_dict()`.
+**Problem B:** even after the fix, curl-based tests showed gender not re-selected. The app was correct — Git-bash curl on Windows sends Cyrillic `-F` values as cp1252 bytes, breaking comparisons server-side. **Rule:** test Cyrillic form submissions with Flask test client (`app.test_client()`), not curl; curl is fine for ASCII/status/flow checks.
+
 ## #5 · gwfh variant id for weight 400 is "regular", not "400"
 **Problem:** `KeyError: '400'` when picking Inter variants from gwfh API JSON.
 **Cause:** the API names the normal-weight variant `regular` (and italic `italic`), numeric ids only for other weights.

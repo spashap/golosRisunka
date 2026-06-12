@@ -5,11 +5,17 @@ import datetime
 import json
 from functools import lru_cache
 
-from flask import Blueprint, Response, abort, render_template
+from flask import (Blueprint, Response, abort, g, redirect, render_template,
+                   request, url_for)
 
 from app.blog import get_post, get_posts
+from app.db import get_db
+from app.orders import FormError, validate_and_create_order
+from app.payments import create_payment, mark_paid
 from app.samples import get_sample_by_token, get_samples
+from app.track import track_event
 from config import settings
+from config.form_fields import CHILD_FIELDS, DRAWING_FIELDS, EMAIL_FIELD
 
 bp = Blueprint("main", __name__)
 
@@ -53,6 +59,7 @@ def _schema_jsonld() -> str:
 @bp.get("/")
 def landing():
     products = settings.get_products()
+    track_event("landing_view")
     return render_template(
         "landing.html",
         products=products,
@@ -66,10 +73,17 @@ def landing():
 
 @bp.get("/r/<token>")
 def hosted_report(token: str):
-    # Сначала образцы лендинга; заказы из БД подключатся в Phase 5 тем же роутом.
+    # Образцы лендинга; отчёты заказов (Phase 6) подключатся сюда же по public_token.
     sample = get_sample_by_token(token)
     if sample and sample.html_path.exists():
+        track_event("sample_view", {"token": token})
         return Response(sample.html_path.read_text(encoding="utf-8"), mimetype="text/html")
+    row = get_db().execute(
+        "SELECT html_path FROM reports WHERE public_token = ?", (token,)).fetchone()
+    if row and row["html_path"]:
+        path = settings.BASE_DIR / row["html_path"]
+        if path.exists():
+            return Response(path.read_text(encoding="utf-8"), mimetype="text/html")
     abort(404)
 
 
@@ -79,11 +93,90 @@ def login_stub():
     return render_template("login_stub.html")
 
 
+@bp.get("/cabinet")
+def cabinet_stub():
+    # Phase 7: настоящий кабинет. Пока — заглушка (success-страница ссылается сюда).
+    return render_template("login_stub.html")
+
+
+# --- Заказ (Phase 5) ---
+
+def _render_order_form(values: dict, errors: dict, status: int = 200):
+    products = settings.get_products()
+    code = request.args.get("product", values.get("product", "snapshot"))
+    if code not in products or not products[code]["enabled"]:
+        code = "snapshot"
+    return render_template(
+        "order.html",
+        product_code=code,
+        product=products[code],
+        child_fields=CHILD_FIELDS,
+        drawing_fields=DRAWING_FIELDS,
+        email_field=EMAIL_FIELD,
+        values=values,
+        errors=errors,
+        current_month=datetime.date.today().strftime("%Y-%m"),
+    ), status
+
+
 @bp.get("/order")
 def order_form():
-    # Phase 5: полноценная форма заказа. Пока — заглушка, чтобы CTA не вели в 404.
-    products = {c: p for c, p in settings.get_products().items() if p["enabled"]}
-    return render_template("order_stub.html", products=products)
+    track_event("order_form_view", {"product": request.args.get("product", "snapshot")})
+    return _render_order_form(values={}, errors={})
+
+
+@bp.post("/order")
+def order_submit():
+    files = [request.files[f"d{i}_file"] for i in (1, 2, 3)
+             if request.files.get(f"d{i}_file") and request.files[f"d{i}_file"].filename]
+    try:
+        order_id = validate_and_create_order(
+            request.form, files,
+            visitor_id=getattr(g, "visitor_id", None),
+            utm=getattr(g, "utm", None),
+        )
+    except FormError as e:
+        track_event("order_form_errors", {"fields": list(e.errors)})
+        # to_dict(), не dict(): werkzeug MultiDict при dict() даёт списки значений
+        return _render_order_form(values=request.form.to_dict(), errors=e.errors, status=400)
+    track_event("order_created", {"order_id": order_id, "drawings": len(files)})
+    db = get_db()
+    order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+    return redirect(create_payment(order_id, order["price_kopecks"]))
+
+
+@bp.get("/pay/stub/<int:order_id>")
+def stub_checkout(order_id: int):
+    order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if order is None:
+        abort(404)
+    track_event("checkout_view", {"order_id": order_id})
+    product = settings.get_products()[order["product_code"]]
+    return render_template("checkout_stub.html", order=order, product=product)
+
+
+@bp.post("/pay/stub/<int:order_id>/confirm")
+def stub_confirm(order_id: int):
+    """Stub-аналог webhook ЮKassa: единая точка mark_paid (идемпотентно)."""
+    result = mark_paid(order_id)
+    if result is None:
+        abort(404)
+    if not result["already_paid"]:   # дубль webhook не шумит в аналитике
+        track_event("order_paid", {"order_id": order_id}, customer_id=result["customer_id"])
+    resp = redirect(url_for("main.order_success", order_id=order_id))
+    if result["session_token"]:
+        resp.set_cookie("gr_s", result["session_token"],
+                        max_age=settings.SESSION_DAYS * 24 * 3600,
+                        httponly=True, samesite="Lax")
+    return resp
+
+
+@bp.get("/order/success/<int:order_id>")
+def order_success(order_id: int):
+    order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if order is None:
+        abort(404)
+    return render_template("order_success.html", email=order["email"])
 
 
 # --- Блог (скелет, spec §4.3) ---
