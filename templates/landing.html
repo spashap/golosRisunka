@@ -54,6 +54,9 @@
   <div class="wrap">
     <h2>Посмотрите настоящие отчёты</h2>
     <div class="sub">Эти отчёты сгенерированы нашей системой по реальным рисункам — листайте и открывайте полные версии.</div>
+    <div class="carousel-wrap">
+    <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1">‹</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1">›</button>
     <div class="carousel">
       {% for s in samples %}
       <article class="report-card">
@@ -76,6 +79,7 @@
         <a class="report-card__link" href="/r/{{ s.token }}">Смотреть полный отчёт →</a>
       </article>
       {% endfor %}
+    </div>
     </div>
   </div>
 </section>
@@ -159,5 +163,15 @@
   golosrisunka.ru
 </footer>
 
+<script>
+document.querySelectorAll(".car-btn").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var c = b.closest(".carousel-wrap").querySelector(".carousel");
+    var card = c.querySelector(".report-card");
+    var step = (card ? card.offsetWidth : 320) + 14;
+    c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
+  });
+});
+</script>
 </body>
 </html>

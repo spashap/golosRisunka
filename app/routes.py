@@ -15,17 +15,24 @@ from app.payments import create_payment, mark_paid
 from app.samples import get_sample_by_token, get_samples
 from app.track import track_event
 from config import settings
-from config.form_fields import CHILD_FIELDS, DRAWING_FIELDS, EMAIL_FIELD
+from config.form_fields import CHILD_FIELDS, COUPON_FIELD, DRAWING_FIELDS, EMAIL_FIELD
 
 bp = Blueprint("main", __name__)
 
 
-@lru_cache(maxsize=1)
+_css_cache: tuple[tuple[float, float], str] | None = None
+
+
 def _inline_css() -> str:
-    """Критический CSS лендинга: токены + компоненты одним инлайном (spec §4.2)."""
+    """Критический CSS лендинга одним инлайном (spec §4.2). Кэш по mtime:
+    правки css видны без рестарта (lru_cache их «замораживал» — ловушка!)."""
+    global _css_cache
     css_dir = settings.BASE_DIR / "static" / "css"
-    return (css_dir / "tokens.css").read_text(encoding="utf-8") + \
-           (css_dir / "components.css").read_text(encoding="utf-8")
+    files = (css_dir / "tokens.css", css_dir / "components.css")
+    stamp = tuple(f.stat().st_mtime for f in files)
+    if _css_cache is None or _css_cache[0] != stamp:
+        _css_cache = (stamp, "".join(f.read_text(encoding="utf-8") for f in files))
+    return _css_cache[1]
 
 
 def _schema_jsonld() -> str:
@@ -113,6 +120,7 @@ def _render_order_form(values: dict, errors: dict, status: int = 200):
         child_fields=CHILD_FIELDS,
         drawing_fields=DRAWING_FIELDS,
         email_field=EMAIL_FIELD,
+        coupon_field=COUPON_FIELD,
         values=values,
         errors=errors,
         current_year=datetime.date.today().year,
@@ -143,6 +151,13 @@ def order_submit():
     db = get_db()
     order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     return redirect(create_payment(order_id, order["price_kopecks"]))
+
+
+@bp.post("/track/form-started")
+def track_form_started():
+    """Маяк из JS: пользователь начал заполнять форму (гранулярность воронки)."""
+    track_event("form_started")
+    return "", 204
 
 
 @bp.get("/pay/stub/<int:order_id>")

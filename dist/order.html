@@ -34,24 +34,740 @@
 </header>
 
 <div class="section">
-  <div class="wrap" style="text-align:center; padding: 40px 0">
-    <h2>Форма заказа</h2>
-    <p class="sub">Скоро здесь будет форма заказа отчёта.<br>
-      (Заглушка — полная форма с загрузкой рисунков появится на следующем этапе разработки.)</p>
-    <div class="price-grid" style="max-width: 440px">
-      
-      <div class="card price-card">
-        <div class="p-title">Отчёт по рисункам</div>
-        <div class="p-sub">1–3 рисунка одного периода</div>
-        <div class="p-prices">
-          <span class="p-old">4900 ₽</span>
-          <span class="p-price">2999 ₽</span>
-        </div>
-      </div>
-      
-    </div>
+  <div class="wrap" style="max-width: 720px">
+    <h2>Заказ отчёта</h2>
+    <p class="sub">Отчёт по рисункам — до 3 рисунков одного периода ·
+      <s style="color:var(--soft)">4900 ₽</s>
+      <b style="color:var(--accent)">2999 ₽</b></p>
+
+    
+
+    <form method="post" enctype="multipart/form-data" id="order-form">
+      <input type="hidden" name="product" value="snapshot">
+
+      <div class="form-card">
+        <h3>О ребёнке</h3>
+        <div class="form-grid-2">
+          
+
+
+<div class="field">
+  <label for="child_name" title="Имя появится в отчёте — так мы будем называть юного художника">Имя ребёнка *</label>
+  <div class="hint">Имя появится в отчёте — так мы будем называть юного художника</div>
+  <div class="ctl">
+  
+  <input class="input" type="text" id="child_name" name="child_name"
+         value="" placeholder="" title="Имя появится в отчёте — так мы будем называть юного художника">
+  
+  
   </div>
 </div>
+
+
+
+<div class="field">
+  <label for="child_gender" title="Чтобы правильно обращаться к ребёнку в тексте отчёта">Пол *</label>
+  <div class="hint">Чтобы правильно обращаться к ребёнку в тексте отчёта</div>
+  <div class="ctl">
+  
+  <select class="input" id="child_gender" name="child_gender">
+    <option value="">—</option>
+    
+    <option value="ж" >Девочка</option>
+    
+    <option value="м" >Мальчик</option>
+    
+  </select>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="child_birth_ym" title="Навыки оцениваются относительно возраста — это ключевая информация">Месяц и год рождения *</label>
+  <div class="hint">Навыки оцениваются относительно возраста — это ключевая информация</div>
+  <div class="ctl">
+  
+  <div class="ym-row">
+    <select class="input" id="child_birth_ym_m" name="child_birth_ym_m" aria-label="Месяц">
+      <option value="">Месяц</option>
+      
+      <option value="01" >1</option>
+      
+      <option value="02" >2</option>
+      
+      <option value="03" >3</option>
+      
+      <option value="04" >4</option>
+      
+      <option value="05" >5</option>
+      
+      <option value="06" >6</option>
+      
+      <option value="07" >7</option>
+      
+      <option value="08" >8</option>
+      
+      <option value="09" >9</option>
+      
+      <option value="10" >10</option>
+      
+      <option value="11" >11</option>
+      
+      <option value="12" >12</option>
+      
+    </select>
+    <select class="input" id="child_birth_ym_y" name="child_birth_ym_y" aria-label="Год">
+      <option value="">Год</option>
+      
+      <option value="2026" >2026</option>
+      
+      <option value="2025" >2025</option>
+      
+      <option value="2024" >2024</option>
+      
+      <option value="2023" >2023</option>
+      
+      <option value="2022" >2022</option>
+      
+      <option value="2021" >2021</option>
+      
+      <option value="2020" >2020</option>
+      
+      <option value="2019" >2019</option>
+      
+      <option value="2018" >2018</option>
+      
+      <option value="2017" >2017</option>
+      
+      <option value="2016" >2016</option>
+      
+      <option value="2015" >2015</option>
+      
+      <option value="2014" >2014</option>
+      
+      <option value="2013" >2013</option>
+      
+      <option value="2012" >2012</option>
+      
+      <option value="2011" >2011</option>
+      
+      <option value="2010" >2010</option>
+      
+      <option value="2009" >2009</option>
+      
+      <option value="2008" >2008</option>
+      
+    </select>
+  </div>
+  
+  
+  </div>
+</div>
+
+        </div>
+      </div>
+
+      <div id="drawings">
+        
+        <div class="form-card drawing-block" data-n="1" >
+          <a class="db-remove" href="#" data-remove="1" hidden>убрать</a>
+          <h3><span class="db-num">1</span> · Рисунок</h3>
+          <div class="field">
+            <label>Фото рисунка *</label>
+            <label class="file-drop" for="d1_file">
+              <img class="preview" hidden alt="">
+              <div class="fd-icon">🖼️</div>
+              <div class="fd-text">Нажмите и выберите фото — JPG, PNG или HEIC, до 15 МБ</div>
+              <input type="file" id="d1_file" name="d1_file"
+                     accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*">
+            </label>
+            
+            <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа — мы не публикуем работы и не передаём их третьим лицам.</div>
+          </div>
+          <div class="form-grid-2">
+            
+
+
+<div class="field">
+  <label for="d1_drawn_at" title="Поможет отслеживать развитие со временем">Когда нарисован (месяц и год) *</label>
+  <div class="hint">Поможет отслеживать развитие со временем</div>
+  <div class="ctl">
+  
+  <div class="ym-row">
+    <select class="input" id="d1_drawn_at_m" name="d1_drawn_at_m" aria-label="Месяц">
+      <option value="">Месяц</option>
+      
+      <option value="01" >1</option>
+      
+      <option value="02" >2</option>
+      
+      <option value="03" >3</option>
+      
+      <option value="04" >4</option>
+      
+      <option value="05" >5</option>
+      
+      <option value="06" >6</option>
+      
+      <option value="07" >7</option>
+      
+      <option value="08" >8</option>
+      
+      <option value="09" >9</option>
+      
+      <option value="10" >10</option>
+      
+      <option value="11" >11</option>
+      
+      <option value="12" >12</option>
+      
+    </select>
+    <select class="input" id="d1_drawn_at_y" name="d1_drawn_at_y" aria-label="Год">
+      <option value="">Год</option>
+      
+      <option value="2026" selected>2026</option>
+      
+      <option value="2025" >2025</option>
+      
+      <option value="2024" >2024</option>
+      
+      <option value="2023" >2023</option>
+      
+      <option value="2022" >2022</option>
+      
+      <option value="2021" >2021</option>
+      
+      <option value="2020" >2020</option>
+      
+      <option value="2019" >2019</option>
+      
+      <option value="2018" >2018</option>
+      
+    </select>
+  </div>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d1_theme" title="Что попросили нарисовать — или ребёнок выбрал тему сам?">Что было задано / тема рисунка *</label>
+  <div class="hint">Что попросили нарисовать — или ребёнок выбрал тему сам?</div>
+  <div class="ctl">
+  
+  <input class="input" type="text" id="d1_theme" name="d1_theme"
+         value="" placeholder="Выберите или напишите своё"
+         list="d1_theme_list" autocomplete="off" title="Что попросили нарисовать — или ребёнок выбрал тему сам?">
+  <datalist id="d1_theme_list">
+    <option value="Свободная тема — рисовал(а) что хотел(а)"><option value="Нарисовать семью"><option value="Нарисовать человека"><option value="Любимый герой или персонаж мультфильма"><option value="Животное"><option value="Дом"><option value="Природа, пейзаж"><option value="Задание в школе или садике"><option value="Срисовывал(а) с образца или с натуры">
+  </datalist>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d1_materials" title="Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка">Чем рисовал(а) <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка</div>
+  <div class="ctl">
+  
+  <input class="input input--optional" type="text" id="d1_materials" name="d1_materials"
+         value="" placeholder="Выберите или напишите своё"
+         list="d1_materials_list" autocomplete="off" title="Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка">
+  <datalist id="d1_materials_list">
+    <option value="Фломастеры"><option value="Цветные карандаши"><option value="Простой карандаш"><option value="Восковые мелки"><option value="Краски (гуашь, акварель)"><option value="Ручка"><option value="Пастель"><option value="Смешанные материалы">
+  </datalist>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d1_time_spent" title="5 минут на бегу и полчаса увлечённой работы — разные истории">Сколько времени рисовал(а) <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">5 минут на бегу и полчаса увлечённой работы — разные истории</div>
+  <div class="ctl">
+  
+  <select class="input input--optional" id="d1_time_spent" name="d1_time_spent">
+    <option value="">—</option>
+    
+    <option value="до 5 минут" >до 5 минут</option>
+    
+    <option value="около 10 минут" >около 10 минут</option>
+    
+    <option value="около 20 минут" >около 20 минут</option>
+    
+    <option value="около 30 минут" >около 30 минут</option>
+    
+    <option value="около часа" >около часа</option>
+    
+    <option value="больше часа" >больше часа</option>
+    
+  </select>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d1_noticed" title="Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков">Что бросилось вам в глаза <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков</div>
+  <div class="ctl">
+  
+  <div class="ta-slot">
+    <textarea class="input input--optional" id="d1_noticed" name="d1_noticed"
+              placeholder="Например: впервые нарисовала глаза с ресницами" title="Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков"></textarea>
+  </div>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d1_extra" title="Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…">Дополнительный контекст <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…</div>
+  <div class="ctl">
+  
+  <div class="ta-slot">
+    <textarea class="input input--optional" id="d1_extra" name="d1_extra"
+              placeholder="Всё, что считаете важным рассказать" title="Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…"></textarea>
+  </div>
+  
+  
+  </div>
+</div>
+
+          </div>
+        </div>
+        
+        <div class="form-card drawing-block" data-n="2" hidden>
+          <a class="db-remove" href="#" data-remove="2" >убрать</a>
+          <h3><span class="db-num">2</span> · Рисунок</h3>
+          <div class="field">
+            <label>Фото рисунка *</label>
+            <label class="file-drop" for="d2_file">
+              <img class="preview" hidden alt="">
+              <div class="fd-icon">🖼️</div>
+              <div class="fd-text">Нажмите и выберите фото — JPG, PNG или HEIC, до 15 МБ</div>
+              <input type="file" id="d2_file" name="d2_file"
+                     accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*">
+            </label>
+            
+            <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа — мы не публикуем работы и не передаём их третьим лицам.</div>
+          </div>
+          <div class="form-grid-2">
+            
+
+
+<div class="field">
+  <label for="d2_drawn_at" title="Поможет отслеживать развитие со временем">Когда нарисован (месяц и год) *</label>
+  <div class="hint">Поможет отслеживать развитие со временем</div>
+  <div class="ctl">
+  
+  <div class="ym-row">
+    <select class="input" id="d2_drawn_at_m" name="d2_drawn_at_m" aria-label="Месяц">
+      <option value="">Месяц</option>
+      
+      <option value="01" >1</option>
+      
+      <option value="02" >2</option>
+      
+      <option value="03" >3</option>
+      
+      <option value="04" >4</option>
+      
+      <option value="05" >5</option>
+      
+      <option value="06" >6</option>
+      
+      <option value="07" >7</option>
+      
+      <option value="08" >8</option>
+      
+      <option value="09" >9</option>
+      
+      <option value="10" >10</option>
+      
+      <option value="11" >11</option>
+      
+      <option value="12" >12</option>
+      
+    </select>
+    <select class="input" id="d2_drawn_at_y" name="d2_drawn_at_y" aria-label="Год">
+      <option value="">Год</option>
+      
+      <option value="2026" selected>2026</option>
+      
+      <option value="2025" >2025</option>
+      
+      <option value="2024" >2024</option>
+      
+      <option value="2023" >2023</option>
+      
+      <option value="2022" >2022</option>
+      
+      <option value="2021" >2021</option>
+      
+      <option value="2020" >2020</option>
+      
+      <option value="2019" >2019</option>
+      
+      <option value="2018" >2018</option>
+      
+    </select>
+  </div>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d2_theme" title="Что попросили нарисовать — или ребёнок выбрал тему сам?">Что было задано / тема рисунка *</label>
+  <div class="hint">Что попросили нарисовать — или ребёнок выбрал тему сам?</div>
+  <div class="ctl">
+  
+  <input class="input" type="text" id="d2_theme" name="d2_theme"
+         value="" placeholder="Выберите или напишите своё"
+         list="d2_theme_list" autocomplete="off" title="Что попросили нарисовать — или ребёнок выбрал тему сам?">
+  <datalist id="d2_theme_list">
+    <option value="Свободная тема — рисовал(а) что хотел(а)"><option value="Нарисовать семью"><option value="Нарисовать человека"><option value="Любимый герой или персонаж мультфильма"><option value="Животное"><option value="Дом"><option value="Природа, пейзаж"><option value="Задание в школе или садике"><option value="Срисовывал(а) с образца или с натуры">
+  </datalist>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d2_materials" title="Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка">Чем рисовал(а) <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка</div>
+  <div class="ctl">
+  
+  <input class="input input--optional" type="text" id="d2_materials" name="d2_materials"
+         value="" placeholder="Выберите или напишите своё"
+         list="d2_materials_list" autocomplete="off" title="Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка">
+  <datalist id="d2_materials_list">
+    <option value="Фломастеры"><option value="Цветные карандаши"><option value="Простой карандаш"><option value="Восковые мелки"><option value="Краски (гуашь, акварель)"><option value="Ручка"><option value="Пастель"><option value="Смешанные материалы">
+  </datalist>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d2_time_spent" title="5 минут на бегу и полчаса увлечённой работы — разные истории">Сколько времени рисовал(а) <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">5 минут на бегу и полчаса увлечённой работы — разные истории</div>
+  <div class="ctl">
+  
+  <select class="input input--optional" id="d2_time_spent" name="d2_time_spent">
+    <option value="">—</option>
+    
+    <option value="до 5 минут" >до 5 минут</option>
+    
+    <option value="около 10 минут" >около 10 минут</option>
+    
+    <option value="около 20 минут" >около 20 минут</option>
+    
+    <option value="около 30 минут" >около 30 минут</option>
+    
+    <option value="около часа" >около часа</option>
+    
+    <option value="больше часа" >больше часа</option>
+    
+  </select>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d2_noticed" title="Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков">Что бросилось вам в глаза <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков</div>
+  <div class="ctl">
+  
+  <div class="ta-slot">
+    <textarea class="input input--optional" id="d2_noticed" name="d2_noticed"
+              placeholder="Например: впервые нарисовала глаза с ресницами" title="Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков"></textarea>
+  </div>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d2_extra" title="Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…">Дополнительный контекст <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…</div>
+  <div class="ctl">
+  
+  <div class="ta-slot">
+    <textarea class="input input--optional" id="d2_extra" name="d2_extra"
+              placeholder="Всё, что считаете важным рассказать" title="Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…"></textarea>
+  </div>
+  
+  
+  </div>
+</div>
+
+          </div>
+        </div>
+        
+        <div class="form-card drawing-block" data-n="3" hidden>
+          <a class="db-remove" href="#" data-remove="3" >убрать</a>
+          <h3><span class="db-num">3</span> · Рисунок</h3>
+          <div class="field">
+            <label>Фото рисунка *</label>
+            <label class="file-drop" for="d3_file">
+              <img class="preview" hidden alt="">
+              <div class="fd-icon">🖼️</div>
+              <div class="fd-text">Нажмите и выберите фото — JPG, PNG или HEIC, до 15 МБ</div>
+              <input type="file" id="d3_file" name="d3_file"
+                     accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*">
+            </label>
+            
+            <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа — мы не публикуем работы и не передаём их третьим лицам.</div>
+          </div>
+          <div class="form-grid-2">
+            
+
+
+<div class="field">
+  <label for="d3_drawn_at" title="Поможет отслеживать развитие со временем">Когда нарисован (месяц и год) *</label>
+  <div class="hint">Поможет отслеживать развитие со временем</div>
+  <div class="ctl">
+  
+  <div class="ym-row">
+    <select class="input" id="d3_drawn_at_m" name="d3_drawn_at_m" aria-label="Месяц">
+      <option value="">Месяц</option>
+      
+      <option value="01" >1</option>
+      
+      <option value="02" >2</option>
+      
+      <option value="03" >3</option>
+      
+      <option value="04" >4</option>
+      
+      <option value="05" >5</option>
+      
+      <option value="06" >6</option>
+      
+      <option value="07" >7</option>
+      
+      <option value="08" >8</option>
+      
+      <option value="09" >9</option>
+      
+      <option value="10" >10</option>
+      
+      <option value="11" >11</option>
+      
+      <option value="12" >12</option>
+      
+    </select>
+    <select class="input" id="d3_drawn_at_y" name="d3_drawn_at_y" aria-label="Год">
+      <option value="">Год</option>
+      
+      <option value="2026" selected>2026</option>
+      
+      <option value="2025" >2025</option>
+      
+      <option value="2024" >2024</option>
+      
+      <option value="2023" >2023</option>
+      
+      <option value="2022" >2022</option>
+      
+      <option value="2021" >2021</option>
+      
+      <option value="2020" >2020</option>
+      
+      <option value="2019" >2019</option>
+      
+      <option value="2018" >2018</option>
+      
+    </select>
+  </div>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d3_theme" title="Что попросили нарисовать — или ребёнок выбрал тему сам?">Что было задано / тема рисунка *</label>
+  <div class="hint">Что попросили нарисовать — или ребёнок выбрал тему сам?</div>
+  <div class="ctl">
+  
+  <input class="input" type="text" id="d3_theme" name="d3_theme"
+         value="" placeholder="Выберите или напишите своё"
+         list="d3_theme_list" autocomplete="off" title="Что попросили нарисовать — или ребёнок выбрал тему сам?">
+  <datalist id="d3_theme_list">
+    <option value="Свободная тема — рисовал(а) что хотел(а)"><option value="Нарисовать семью"><option value="Нарисовать человека"><option value="Любимый герой или персонаж мультфильма"><option value="Животное"><option value="Дом"><option value="Природа, пейзаж"><option value="Задание в школе или садике"><option value="Срисовывал(а) с образца или с натуры">
+  </datalist>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d3_materials" title="Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка">Чем рисовал(а) <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка</div>
+  <div class="ctl">
+  
+  <input class="input input--optional" type="text" id="d3_materials" name="d3_materials"
+         value="" placeholder="Выберите или напишите своё"
+         list="d3_materials_list" autocomplete="off" title="Материал определяет характер линий — без него легко оценить инструмент вместо ребёнка">
+  <datalist id="d3_materials_list">
+    <option value="Фломастеры"><option value="Цветные карандаши"><option value="Простой карандаш"><option value="Восковые мелки"><option value="Краски (гуашь, акварель)"><option value="Ручка"><option value="Пастель"><option value="Смешанные материалы">
+  </datalist>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d3_time_spent" title="5 минут на бегу и полчаса увлечённой работы — разные истории">Сколько времени рисовал(а) <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">5 минут на бегу и полчаса увлечённой работы — разные истории</div>
+  <div class="ctl">
+  
+  <select class="input input--optional" id="d3_time_spent" name="d3_time_spent">
+    <option value="">—</option>
+    
+    <option value="до 5 минут" >до 5 минут</option>
+    
+    <option value="около 10 минут" >около 10 минут</option>
+    
+    <option value="около 20 минут" >около 20 минут</option>
+    
+    <option value="около 30 минут" >около 30 минут</option>
+    
+    <option value="около часа" >около часа</option>
+    
+    <option value="больше часа" >больше часа</option>
+    
+  </select>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d3_noticed" title="Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков">Что бросилось вам в глаза <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков</div>
+  <div class="ctl">
+  
+  <div class="ta-slot">
+    <textarea class="input input--optional" id="d3_noticed" name="d3_noticed"
+              placeholder="Например: впервые нарисовала глаза с ресницами" title="Особенно ценно «впервые»: новые детали — маркеры появляющихся навыков"></textarea>
+  </div>
+  
+  
+  </div>
+</div>
+
+
+
+<div class="field">
+  <label for="d3_extra" title="Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…">Дополнительный контекст <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…</div>
+  <div class="ctl">
+  
+  <div class="ta-slot">
+    <textarea class="input input--optional" id="d3_extra" name="d3_extra"
+              placeholder="Всё, что считаете важным рассказать" title="Обстоятельства меняют оценку: рисовал с натуры, торопился, левша, только начал рисовать…"></textarea>
+  </div>
+  
+  
+  </div>
+</div>
+
+          </div>
+        </div>
+        
+      </div>
+
+      
+      <p class="add-row"><button type="button" class="btn--ghost" id="add-drawing">+ Добавить ещё рисунок</button></p>
+      <div class="add-msg" id="add-drawing-msg" hidden></div>
+
+      <div class="form-card">
+        
+
+
+<div class="field">
+  <label for="email" title="Сюда придёт PDF-отчёт и доступ в личный кабинет">Email для отчёта *</label>
+  <div class="hint">Сюда придёт PDF-отчёт и доступ в личный кабинет</div>
+  <div class="ctl">
+  
+  <input class="input" type="email" id="email" name="email"
+         value="" placeholder="you@example.com" title="Сюда придёт PDF-отчёт и доступ в личный кабинет">
+  
+  
+  </div>
+</div>
+
+        <div class="email-suggest" id="email-suggest" hidden>
+          Возможно, опечатка: вы имели в виду <b id="email-suggest-val"></b>?
+          <span class="es-actions">
+            <button type="button" class="es-yes" id="email-suggest-yes">Да, исправить</button>
+            <button type="button" class="es-no" id="email-suggest-no">Нет, оставить</button>
+          </span>
+        </div>
+        
+
+
+<div class="field">
+  <label for="coupon" title="Скидка применится сразу к сумме оплаты">Промокод <span class="opt-mark">(необязательно)</span></label>
+  <div class="hint">Скидка применится сразу к сумме оплаты</div>
+  <div class="ctl">
+  
+  <input class="input input--optional" type="text" id="coupon" name="coupon"
+         value="" placeholder="Если есть" title="Скидка применится сразу к сумме оплаты">
+  
+  
+  </div>
+</div>
+
+        <button type="submit" class="btn btn--primary" style="width:100%">
+          Перейти к оплате — 2999 ₽
+        </button>
+        <p class="hint" style="margin-top: 12px; text-align: center">
+          Оплата через защищённый сервис. Отчёт придёт на почту в течение часа.<br>
+          Образовательное наблюдение, не медицинская диагностика.
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
+<script src="/static/js/order.js" defer></script>
 
 <footer class="foot wrap">
   

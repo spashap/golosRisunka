@@ -85,14 +85,39 @@ def validate_and_create_order(form: dict, files: list[FileStorage],
         ctx = _validate_block(DRAWING_FIELDS, form, f"d{i}_", errors)
         drawings.append({"ext": ext, "file": fs, "context": ctx})
 
+    # здравый смысл дат: рисунок не раньше рождения и не из будущего
+    import datetime
+    this_month = datetime.date.today().strftime("%Y-%m")
+    birth = child.get("birth_ym", "")
+    if birth and birth > this_month:
+        errors["child_birth_ym"] = "Дата рождения в будущем?"
+    for i, d in enumerate(drawings, start=1):
+        da = d["context"].get("drawn_at", "")
+        if da:
+            if da > this_month:
+                errors[f"d{i}_drawn_at"] = "Дата рисунка в будущем"
+            elif birth and da < birth:
+                errors[f"d{i}_drawn_at"] = "Рисунок раньше рождения ребёнка — проверьте даты"
+
+    # промокод: пустой ок; непустой должен существовать, быть активным и не исчерпанным
+    db = get_db()
+    price_kopecks = product["price_rub"] * 100
+    coupon_code = (form.get("coupon") or "").strip().upper() or None
+    if coupon_code:
+        c = db.execute("SELECT * FROM coupons WHERE upper(code) = ?", (coupon_code,)).fetchone()
+        if c is None or not c["active"] or (not c["multi_use"] and c["uses_count"] > 0):
+            errors["coupon"] = "Промокод не найден или уже использован"
+        else:
+            price_kopecks = price_kopecks * (100 - c["percent_off"]) // 100
+
     if errors:
         raise FormError(errors)
 
-    db = get_db()
     cur = db.execute(
-        "INSERT INTO orders (email, product_code, price_kopecks, status, child_json,"
-        " visitor_id, utm_json, created_at) VALUES (?, ?, ?, 'created', ?, ?, ?, ?)",
-        (email, product_code, product["price_rub"] * 100,
+        "INSERT INTO orders (email, product_code, price_kopecks, coupon_code, status,"
+        " child_json, visitor_id, utm_json, created_at)"
+        " VALUES (?, ?, ?, ?, 'created', ?, ?, ?, ?)",
+        (email, product_code, price_kopecks, coupon_code,
          json.dumps(child, ensure_ascii=False),
          visitor_id, json.dumps(utm, ensure_ascii=False) if utm else None, now()),
     )

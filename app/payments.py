@@ -72,5 +72,8 @@ def mark_paid(order_id: int) -> dict | None:
 
     db.execute("UPDATE orders SET status = 'paid', customer_id = ?, child_id = ?, paid_at = ?"
                " WHERE id = ?", (customer_id, child_id, now(), order_id))
+    if order["coupon_code"]:
+        db.execute("UPDATE coupons SET uses_count = uses_count + 1 WHERE upper(code) = ?",
+                   (order["coupon_code"],))
     db.commit()
     return {"customer_id": customer_id, "session_token": token, "already_paid": False}

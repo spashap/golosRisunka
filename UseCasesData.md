@@ -60,6 +60,20 @@ Chronological build log lives in `DevelopmentStatus.md`.
 **Problem A:** re-rendered form after validation errors didn't preserve values: `dict(request.form)` (Werkzeug MultiDict) yields LIST values → `['ж'] == 'ж'` false in templates. **Fix:** `request.form.to_dict()`.
 **Problem B:** even after the fix, curl-based tests showed gender not re-selected. The app was correct — Git-bash curl on Windows sends Cyrillic `-F` values as cp1252 bytes, breaking comparisons server-side. **Rule:** test Cyrillic form submissions with Flask test client (`app.test_client()`), not curl; curl is fine for ASCII/status/flow checks.
 
+## #13 · lru_cache на инлайн-CSS лендинга «замораживает» правки стилей
+**Problem:** мобильные CSS-правки не появлялись на лендинге — страница инлайнит tokens+components через `@lru_cache`, а werkzeug-reloader перезапускает процесс только при изменении .py, не .css.
+**Solution:** кэш по mtime файлов (`_inline_css` в app/routes.py) — правки видны сразу. Правило: любые серверные кэши контента — только с mtime/версией.
+
+## #14 · Headless Chrome на этой машине врёт про мобильную вёрстку (Windows DPI 125%)
+**Problem:** скриншоты `--window-size=375` выглядели как горизонтальный overflow (обрезанные заголовки/шапка); часы ушли на «починку» несуществующего бага.
+**Cause:** системный масштаб Windows 125% — headless рендерит CSS-вьюпорт 469px и отдаёт левый кроп 375px. `--force-device-scale-factor=1` в старом headless не работает.
+**Solution/ground truth:** DOM-проба (`document.documentElement.scrollWidth == clientWidth` → overflow нет). Правило: мобильную вёрстку проверяет ЗАКАЗЧИК на реальном телефоне; headless-скриншоты здесь — только по явной просьбе и с поправкой на кроп.
+
+## #15 · Правки .claude/settings.local.json не действуют в живой сессии
+**Problem:** широкие permissions записаны в файл, но промпты продолжались, а каждое одобрение ПЕРЕЗАПИСЫВАЛО файл старым накопленным списком (война за файл, deny-список с защитой .env терялся).
+**Cause:** сессия читает permissions при старте и держит в памяти; файл-вотчер не следит за .claude/ этого проекта; при одобрении сессия пишет свой stale-снимок поверх.
+**Solution:** восстановить файл и НЕ воевать с ним до перезапуска сессии; активация — только рестарт Claude Code или /permissions reload. После рестарта война прекращается (промптов нет — нечего дописывать).
+
 ## #5 · gwfh variant id for weight 400 is "regular", not "400"
 **Problem:** `KeyError: '400'` when picking Inter variants from gwfh API JSON.
 **Cause:** the API names the normal-weight variant `regular` (and italic `italic`), numeric ids only for other weights.
