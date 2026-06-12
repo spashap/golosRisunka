@@ -189,6 +189,8 @@ textarea.input { min-height: 84px; resize: vertical; }
 .form-card > h3 { margin-bottom: 18px; }
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
 @media (max-width: 680px) { .form-grid-2 { grid-template-columns: 1fr; } }
+.ym-row { display: flex; gap: 10px; }
+.ym-row select:first-child { flex: 0 0 42%; }   /* месяц уже, год шире */
 
 /* загрузка рисунка */
 .file-drop {

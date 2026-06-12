@@ -115,7 +115,7 @@ def _render_order_form(values: dict, errors: dict, status: int = 200):
         email_field=EMAIL_FIELD,
         values=values,
         errors=errors,
-        current_month=datetime.date.today().strftime("%Y-%m"),
+        current_year=datetime.date.today().year,
     ), status
 
 

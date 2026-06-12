@@ -15,9 +15,22 @@
     <option value="{{ val }}" {% if values.get(name) == val %}selected{% endif %}>{{ label }}</option>
     {% endfor %}
   </select>
-  {% elif f.type == "month" %}
-  <input class="input{% if errors.get(name) %} input--error{% endif %}" type="month" id="{{ name }}" name="{{ name }}"
-         value="{{ values.get(name, '') }}" max="{{ current_month }}">
+  {% elif f.type == "ym" %}
+  {# два числовых селекта: месяц 1–12 + год; сервер собирает 'YYYY-MM' #}
+  <div class="ym-row">
+    <select class="input{% if errors.get(name) %} input--error{% endif %}" id="{{ name }}_m" name="{{ name }}_m" aria-label="Месяц">
+      <option value="">Месяц</option>
+      {% for m in range(1, 13) %}
+      <option value="{{ '%02d' % m }}" {% if values.get(name ~ '_m') == '%02d' % m %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+    <select class="input{% if errors.get(name) %} input--error{% endif %}" id="{{ name }}_y" name="{{ name }}_y" aria-label="Год">
+      <option value="">Год</option>
+      {% for y in range(current_year, current_year - f.get('years_back', 10) - 1, -1) %}
+      <option value="{{ y }}" {% if values.get(name ~ '_y') == y|string %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
   {% else %}
   <input class="input{% if errors.get(name) %} input--error{% endif %}" type="{{ f.type }}" id="{{ name }}" name="{{ name }}"
          value="{{ values.get(name, '') }}" placeholder="{{ f.placeholder or '' }}">

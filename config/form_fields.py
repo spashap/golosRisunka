@@ -1,6 +1,9 @@
 """Конфиг полей формы заказа (spec §5: рендер и валидация — по конфигу).
 
-Менять состав полей = править этот файл. type: text | textarea | month | select.
+Менять состав полей = править этот файл. type: text | textarea | ym | select.
+type "ym" = два числовых селекта «месяц + год» (input type=month отвергнут
+заказчиком: в части браузеров требует ввода названия месяца текстом).
+years_back — глубина списка лет от текущего года.
 К каждому рисунку — свой блок DRAWING_FIELDS; данные ребёнка — один блок CHILD_FIELDS.
 """
 
@@ -9,13 +12,14 @@ CHILD_FIELDS = [
      "placeholder": "Алиса"},
     {"key": "gender", "label": "Пол", "type": "select", "required": True,
      "options": [("ж", "Девочка"), ("м", "Мальчик")]},
-    {"key": "birth_ym", "label": "Месяц и год рождения", "type": "month", "required": True,
+    {"key": "birth_ym", "label": "Месяц и год рождения", "type": "ym", "required": True,
+     "years_back": 18,
      "hint": "Нужен, чтобы оценивать навыки относительно возраста"},
 ]
 
 DRAWING_FIELDS = [
-    {"key": "drawn_at", "label": "Когда нарисован (месяц и год)", "type": "month",
-     "required": True,
+    {"key": "drawn_at", "label": "Когда нарисован (месяц и год)", "type": "ym",
+     "required": True, "years_back": 8,
      "hint": "Поможет отслеживать развитие со временем"},
     {"key": "theme", "label": "Что было задано / тема рисунка", "type": "text",
      "required": True, "placeholder": "Свободная тема / нарисовать семью / персонаж мультфильма"},

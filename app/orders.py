@@ -28,11 +28,20 @@ def _validate_block(fields: list[dict], data: dict, prefix: str,
                     errors: dict[str, str]) -> dict:
     out = {}
     for f in fields:
-        val = (data.get(f"{prefix}{f['key']}") or "").strip()
-        if f["required"] and not val:
-            errors[f"{prefix}{f['key']}"] = "Обязательное поле"
-        elif val and f["type"] == "month" and not MONTH_RE.match(val):
-            errors[f"{prefix}{f['key']}"] = "Формат: месяц и год"
+        name = f"{prefix}{f['key']}"
+        if f["type"] == "ym":
+            # два селекта <name>_m + <name>_y -> 'YYYY-MM'
+            m = (data.get(f"{name}_m") or "").strip()
+            y = (data.get(f"{name}_y") or "").strip()
+            val = f"{y}-{m}" if (m and y) else ""
+            if f["required"] and not val:
+                errors[name] = "Выберите месяц и год"
+            elif val and not MONTH_RE.match(val):
+                errors[name] = "Выберите месяц и год из списка"
+        else:
+            val = (data.get(name) or "").strip()
+            if f["required"] and not val:
+                errors[name] = "Обязательное поле"
         out[f["key"]] = val
     return out
 
