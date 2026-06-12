@@ -1,0 +1,54 @@
+{% extends "_base.html" %}
+{% block title %}Вход — Голос рисунка{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 440px; padding: 50px 0 70px">
+    <div class="form-card">
+      <h3>Вход в кабинет</h3>
+      <p class="sub" style="font-size: 15px; margin-bottom: 20px">
+        Без паролей: пришлём 6-значный код на почту, которую вы указывали при заказе.
+      </p>
+
+      {% if notice %}<div class="login-notice">{{ notice }}</div>{% endif %}
+
+      {% if step == "email" %}
+      <form method="post" action="/login">
+        <div class="field">
+          <label for="email">Email</label>
+          <div class="ctl">
+            <input class="input{% if error %} input--error{% endif %}" type="email"
+                   id="email" name="email" value="{{ email }}" placeholder="you@example.com"
+                   autocomplete="email" required autofocus>
+            {% if error %}<div class="err">{{ error }}</div>{% endif %}
+          </div>
+        </div>
+        <button class="btn btn--primary" type="submit" style="width: 100%">Получить код</button>
+      </form>
+
+      {% else %}
+      <form method="post" action="/login/verify">
+        <input type="hidden" name="email" value="{{ email }}">
+        <div class="field">
+          <label for="code">Код из письма для {{ email }}</label>
+          <div class="ctl">
+            <input class="input code-input{% if error %} input--error{% endif %}" type="text"
+                   id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
+                   pattern="\d{6}" maxlength="6" placeholder="······" required autofocus>
+            {% if error %}<div class="err">{{ error }}</div>{% endif %}
+          </div>
+        </div>
+        <button class="btn btn--primary" type="submit" style="width: 100%">Войти</button>
+      </form>
+      <form method="post" action="/login" style="margin-top: 14px; text-align: center">
+        <input type="hidden" name="email" value="{{ email }}">
+        <button class="btn btn--ghost" type="submit">Прислать код ещё раз</button>
+      </form>
+      {% endif %}
+    </div>
+    <p class="hint" style="text-align: center">
+      Ещё не заказывали отчёт? <a href="/order">Получите первый</a> — кабинет
+      откроется автоматически.
+    </p>
+  </div>
+</div>
+{% endblock %}

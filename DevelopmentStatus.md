@@ -307,3 +307,50 @@ M3R sign-off: «looks great for MVP step» (сессия улучшений — 
    «письмо» появится в `data/outbox/` (открыть HTML, перейти по кнопке «Открыть отчёт»).
 3. Саботаж: выключить интернет (или подложить битый файл рисунка) → заказ failed,
    алерт в outbox → `scripts/regenerate_report.py <id>` после починки → delivered, ссылка та же.
+
+---
+
+## 2026-06-12 — Phase 7: Вход по email-коду + личный кабинет
+
+Заказчик занят M6-тестами → решение: строить Phase 7 сразу, M6+M7 проверить одной сессией.
+Кабинет упрощает M6-проверку: статусы заказов и ссылки на отчёты видны на одной странице.
+
+### Steps done
+1. **`app/auth.py`**: `request_code()` (6 цифр, TTL 30 мин; rate limit — пока «живой» код
+   моложе 10 мин, новый не выдаётся «код уже отправлен»; аннулированный по попыткам код
+   НЕ блокирует повторный запрос); `verify_code()` (5 неверных вводов → код void; одноразовость;
+   customer find-or-create — вход без покупок даёт пустой кабинет и не раскрывает, есть ли заказы);
+   `create_session()` (общая с payments.mark_paid — auto-login при покупке, дубль-код убран);
+   `current_customer()` (cookie gr_s, кэш в g); `destroy_session()`.
+   Код уходит письмом (mailer → outbox) И ASCII-строкой в лог/консоль (до Unisender — план M7).
+2. **Роуты**: GET/POST /login (шаги email→код, «прислать ещё раз»), POST /login/verify,
+   POST /logout, GET /cabinet (заказы покупателя, кроме неоплаченных 'created'),
+   GET /cabinet/drawing/<id> (превью: thumb-JPEG 480px кэшируется рядом с оригиналом — heic
+   браузер не покажет; только владельцу: 403 аноним / 404 чужое),
+   GET /cabinet/order/<id>/report.pdf (скачивание, владелец+delivered).
+   Статусы для клиента: paid/generating/**failed** → «в обработке» (план 6.2), delivered →
+   «готов», insufficient → «нужны другие фото». robots.txt += Disallow /login, /cabinet.
+   События: login_view, login_code_requested, login_success, cabinet_view.
+3. **Шаблоны**: login.html (код-инпут one-time-code/inputmode=numeric), cabinet.html
+   (карточки заказов: продукт+имя ребёнка, статус-пилюля, превью рисунков, кнопки
+   Открыть/Скачать PDF, логаут с email), email/login_code.html.
+   login_stub.html устарел (не удалён: deny-list на Remove-Item) — удалить руками.
+4. **CSS** (components.css, секция Phase 7): .login-notice, .code-input, .order-card
+   (+__head/__thumbs/__actions), .thumb, .status-pill--wait/ready/warn.
+5. dist/ переэкспортирован (инлайн-CSS лендинга вырос на ~1КБ — в Lighthouse-пасс Phase 9).
+
+### Machine checks (27/27 passed)
+Запрос кода (формат, страница шага 2); rate limit (повтор → «уже отправлен», новый код
+не создан); 5 неверных вводов → void (верный код после — отказ; повторный запрос разрешён);
+вход → redirect+cookie; кабинет: заказ 7 «готов» со ссылкой /r/ и превью; reuse кода — отказ;
+thumb=JPEG, PDF скачивается; аноним 403/redirect, чужой покупатель 404/пустой кабинет;
+auto-session при покупке (7.4: купил → кабинет без логина, заказ «в обработке»); логаут.
+
+### 🧪 Milestone M6+M7 — USER ACTION (одной сессией)
+1. Две консоли: `venv\Scripts\python.exe run.py` + `venv\Scripts\python.exe worker.py`.
+   **Заказ 8 уже ждёт в paid** — воркер доставит его при старте (это и есть M6-проверка).
+2. M6: письмо в `data/outbox/` (открыть HTML → кнопка «Открыть отчёт»); свой заказ с телефона/HEIC.
+3. M7: /cabinet в том же браузере (auto-login после покупки) — статусы, превью, PDF.
+   Другой браузер → /login → код из консоли run.py ИЛИ из data/outbox/.
+   Попробовать сломать: неверный код 5 раз, повторный запрос < 10 мин, повторное использование кода.
+4. Саботаж M6: отключить интернет → заказ → failed → алерт в outbox → regenerate_report.py.

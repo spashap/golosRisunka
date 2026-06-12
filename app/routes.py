@@ -8,9 +8,11 @@ from functools import lru_cache
 from flask import (Blueprint, Response, abort, g, redirect, render_template,
                    request, url_for)
 
+from app.auth import (SESSION_COOKIE, AuthError, current_customer,
+                      destroy_session, request_code, verify_code)
 from app.blog import get_post, get_posts
 from app.db import get_db
-from app.orders import FormError, validate_and_create_order
+from app.orders import EMAIL_RE, FormError, validate_and_create_order
 from app.payments import create_payment, mark_paid
 from app.samples import get_sample_by_token, get_samples
 from app.track import track_event
@@ -94,16 +96,142 @@ def hosted_report(token: str):
     abort(404)
 
 
+# --- Вход по email-коду + кабинет (Phase 7) ---
+
+# статус заказа → подпись в кабинете (внутренние failed/generating клиенту
+# не показываем — для него это «в обработке», план 6.2)
+ORDER_STATUS_LABELS = {
+    "paid": ("в обработке", "wait"),
+    "generating": ("в обработке", "wait"),
+    "failed": ("в обработке", "wait"),
+    "delivered": ("готов", "ready"),
+    "insufficient": ("нужны другие фото — мы написали вам", "warn"),
+}
+
+
 @bp.get("/login")
-def login_stub():
-    # Phase 7: вход по email-коду. Пока — заглушка для пункта «Войти» в шапке.
-    return render_template("login_stub.html")
+def login_form():
+    if current_customer():
+        return redirect(url_for("main.cabinet"))
+    track_event("login_view")
+    return render_template("login.html", step="email", email="", error=None, notice=None)
+
+
+@bp.post("/login")
+def login_request_code():
+    email = (request.form.get("email") or "").strip().lower()
+    if not EMAIL_RE.match(email):
+        return render_template("login.html", step="email", email=email,
+                               error="Укажите корректный email", notice=None), 400
+    try:
+        request_code(email)
+    except AuthError as e:
+        # код уже отправлен — сразу шаг ввода кода с пояснением
+        return render_template("login.html", step="code", email=email,
+                               error=None, notice=str(e))
+    track_event("login_code_requested")
+    return render_template("login.html", step="code", email=email, error=None,
+                           notice="Отправили 6-значный код на почту. Он действует "
+                                  f"{settings.LOGIN_CODE_TTL_MINUTES} минут.")
+
+
+@bp.post("/login/verify")
+def login_verify():
+    email = (request.form.get("email") or "").strip().lower()
+    code = (request.form.get("code") or "").strip()
+    try:
+        token = verify_code(email, code)
+    except AuthError as e:
+        return render_template("login.html", step="code", email=email,
+                               error=str(e), notice=None), 400
+    track_event("login_success")
+    resp = redirect(url_for("main.cabinet"))
+    resp.set_cookie(SESSION_COOKIE, token, max_age=settings.SESSION_DAYS * 24 * 3600,
+                    httponly=True, samesite="Lax")
+    return resp
+
+
+@bp.post("/logout")
+def logout():
+    destroy_session()
+    resp = redirect(url_for("main.landing"))
+    resp.delete_cookie(SESSION_COOKIE)
+    return resp
 
 
 @bp.get("/cabinet")
-def cabinet_stub():
-    # Phase 7: настоящий кабинет. Пока — заглушка (success-страница ссылается сюда).
-    return render_template("login_stub.html")
+def cabinet():
+    customer = current_customer()
+    if customer is None:
+        return redirect(url_for("main.login_form"))
+    db = get_db()
+    orders = db.execute(
+        "SELECT o.*, r.public_token, c.name AS child_name FROM orders o"
+        " LEFT JOIN reports r ON r.order_id = o.id"
+        " LEFT JOIN children c ON c.id = o.child_id"
+        " WHERE o.customer_id = ? AND o.status != 'created'"
+        " ORDER BY o.id DESC", (customer["id"],)).fetchall()
+    items = []
+    products = settings.get_products()
+    for o in orders:
+        drawings = db.execute(
+            "SELECT id FROM drawings WHERE order_id = ? ORDER BY id",
+            (o["id"],)).fetchall()
+        label, kind = ORDER_STATUS_LABELS.get(o["status"], ("в обработке", "wait"))
+        product = products.get(o["product_code"], {})
+        items.append({
+            "id": o["id"],
+            "date": (o["paid_at"] or o["created_at"])[:10],
+            "product_title": product.get("title", o["product_code"]),
+            "child_name": o["child_name"] or "",
+            "status_label": label, "status_kind": kind,
+            "ready": o["status"] == "delivered" and o["public_token"],
+            "report_url": f"/r/{o['public_token']}" if o["public_token"] else None,
+            "drawing_ids": [d["id"] for d in drawings],
+        })
+    track_event("cabinet_view", customer_id=customer["id"])
+    return render_template("cabinet.html", customer=customer, orders=items)
+
+
+@bp.get("/cabinet/drawing/<int:drawing_id>")
+def cabinet_drawing(drawing_id: int):
+    """Превью рисунка (только владельцу): heic/огромные файлы → мини-JPEG."""
+    customer = current_customer()
+    if customer is None:
+        abort(403)
+    row = get_db().execute(
+        "SELECT d.file_path FROM drawings d JOIN orders o ON o.id = d.order_id"
+        " WHERE d.id = ? AND o.customer_id = ?", (drawing_id, customer["id"])).fetchone()
+    if row is None:
+        abort(404)
+    src = settings.BASE_DIR / row["file_path"]
+    if not src.exists():
+        abort(404)
+    thumb = src.with_name(f"thumb_{src.stem}.jpg")
+    if not thumb.exists() or thumb.stat().st_mtime < src.stat().st_mtime:
+        from pipeline.images import prepare_image
+        thumb.write_bytes(prepare_image(src, max_side=480))
+    return Response(thumb.read_bytes(), mimetype="image/jpeg",
+                    headers={"Cache-Control": "private, max-age=86400"})
+
+
+@bp.get("/cabinet/order/<int:order_id>/report.pdf")
+def cabinet_report_pdf(order_id: int):
+    customer = current_customer()
+    if customer is None:
+        abort(403)
+    row = get_db().execute(
+        "SELECT r.pdf_path FROM reports r JOIN orders o ON o.id = r.order_id"
+        " WHERE o.id = ? AND o.customer_id = ? AND o.status = 'delivered'",
+        (order_id, customer["id"])).fetchone()
+    if row is None or not row["pdf_path"]:
+        abort(404)
+    pdf = settings.BASE_DIR / row["pdf_path"]
+    if not pdf.exists():
+        abort(404)
+    return Response(pdf.read_bytes(), mimetype="application/pdf",
+                    headers={"Content-Disposition":
+                             f'attachment; filename="golosrisunka-report-{order_id}.pdf"'})
 
 
 # --- Заказ (Phase 5) ---
@@ -242,6 +370,8 @@ def robots():
         "Allow: /",
         "Disallow: /r/",        # отчёты непубличные
         "Disallow: /order",
+        "Disallow: /login",
+        "Disallow: /cabinet",
         f"Sitemap: https://{settings.SITE_DOMAIN}/sitemap.xml",
     ]
     return Response("\n".join(lines), mimetype="text/plain")

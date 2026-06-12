@@ -1,0 +1,49 @@
+{% extends "_base.html" %}
+{% block title %}Кабинет — Голос рисунка{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 720px; padding-bottom: 60px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap">
+      <h2>Ваши отчёты</h2>
+      <form method="post" action="/logout">
+        <button class="btn btn--ghost" type="submit">Выйти ({{ customer.email }})</button>
+      </form>
+    </div>
+
+    {% if not orders %}
+    <div class="form-card" style="margin-top: 24px; text-align: center">
+      <p class="sub">Пока здесь пусто — закажите первый отчёт, и он появится в кабинете.</p>
+      <a class="btn btn--primary" href="/order" style="margin-top: 16px">Заказать отчёт</a>
+    </div>
+    {% endif %}
+
+    {% for o in orders %}
+    <div class="order-card">
+      <div class="order-card__head">
+        <div>
+          <b>{{ o.product_title }}</b>{% if o.child_name %} · {{ o.child_name }}{% endif %}
+          <div class="hint">заказ №{{ o.id }} от {{ o.date }}</div>
+        </div>
+        <span class="status-pill status-pill--{{ o.status_kind }}">{{ o.status_label }}</span>
+      </div>
+      {% if o.drawing_ids %}
+      <div class="order-card__thumbs">
+        {% for did in o.drawing_ids %}
+        <img class="thumb" src="/cabinet/drawing/{{ did }}" alt="Рисунок {{ loop.index }}" loading="lazy">
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if o.ready %}
+      <div class="order-card__actions">
+        <a class="btn btn--primary" href="{{ o.report_url }}">Открыть отчёт</a>
+        <a class="btn btn--ghost" href="/cabinet/order/{{ o.id }}/report.pdf">Скачать PDF</a>
+      </div>
+      {% elif o.status_kind == "wait" %}
+      <p class="hint" style="margin-top: 12px">Обычно отчёт готов в течение часа после
+        оплаты — пришлём на почту и он появится здесь.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

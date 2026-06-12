@@ -6,13 +6,11 @@ webhook ЮKassa потом): customer+child, сессия, статус paid. И
 """
 from __future__ import annotations
 
-import datetime
 import json
 
 from flask import url_for
 
-from app.db import get_db, new_token, now
-from config import settings
+from app.db import get_db, now
 
 
 def create_payment(order_id: int, price_kopecks: int) -> str:
@@ -64,11 +62,8 @@ def mark_paid(order_id: int) -> dict | None:
             child_id = cur.lastrowid
 
     # сессия 30 дней — покупатель сразу «в кабинете» (spec §9.1)
-    token = new_token()
-    expires = (datetime.datetime.now(datetime.timezone.utc)
-               + datetime.timedelta(days=settings.SESSION_DAYS)).isoformat(timespec="seconds")
-    db.execute("INSERT INTO sessions (customer_id, token, expires_at, created_at)"
-               " VALUES (?, ?, ?, ?)", (customer_id, token, expires, now()))
+    from app.auth import create_session
+    token = create_session(db, customer_id)
 
     db.execute("UPDATE orders SET status = 'paid', customer_id = ?, child_id = ?, paid_at = ?"
                " WHERE id = ?", (customer_id, child_id, now(), order_id))
