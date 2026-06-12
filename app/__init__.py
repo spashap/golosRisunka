@@ -40,6 +40,7 @@ def create_app() -> Flask:
     @app.context_processor
     def inject_globals():
         return {"static": "/static", "palette": settings.PALETTE,
-                "site_name": settings.SITE_NAME}
+                "site_name": settings.SITE_NAME,
+                "site_domain": settings.SITE_DOMAIN}
 
     return app

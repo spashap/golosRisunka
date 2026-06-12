@@ -70,6 +70,10 @@ venv\Scripts\python.exe scripts\hello_pdf.py                    # smoke-тест
   5 попыток → void; код в outbox + консоль до Unisender; create_session общая с mark_paid),
   /login → /cabinet (статусы «в обработке»/«готов», превью рисунков thumb-JPEG, скачивание PDF,
   владельческие проверки). Заказ 8 оставлен в paid — воркер доставит при M6-тесте.
+- **Блог: 6 статей** (content/blog/) по EN-образцам заказчика (projectSpec/blog/) — НЕ калька:
+  те же поисковые запросы, но ответы в философии §7.4 (развенчание «психологии цвета»,
+  тревога — по поведению, не по рисунку). Ждут вычитки заказчиком. PNG-обложки образцов
+  английские — не использованы (OG-картинки в Phase 9).
 - **Git**: https://github.com/spashap/golosRisunka (PUBLIC — рекомендация private остаётся), запушено.
   **Vercel**: статический экспорт dist/ (scripts/export_static.py, noindex), деплой через дашборд.
 - **Дальше по плану**: Phase 8 (ЮKassa + Unisender — НУЖНЫ аккаунты от заказчика) → 9 (юр., деплой VPS).

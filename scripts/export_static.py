@@ -15,6 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
 from app import create_app
+from app.blog import get_posts
 from app.samples import get_samples
 
 DIST = BASE_DIR / "dist"
@@ -42,6 +43,8 @@ def main() -> None:
     pages = dict(PAGES)
     for s in get_samples():
         pages[f"/r/{s.token}"] = f"r/{s.token}.html"
+    for p in get_posts():
+        pages[f"/blog/{p.slug}"] = f"blog/{p.slug}.html"
 
     for route, fname in pages.items():
         resp = client.get(route)

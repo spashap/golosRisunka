@@ -1,20 +1,32 @@
 {% extends "_base.html" %}
 {% block title %}{{ post.title }} — Голос рисунка{% endblock %}
 {% block description %}{{ post.description }}{% endblock %}
+{% block og %}
+<link rel="canonical" href="https://{{ site_domain }}/blog/{{ post.slug }}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.description }}">
+<meta property="og:url" content="https://{{ site_domain }}/blog/{{ post.slug }}">
+<meta property="og:site_name" content="Голос рисунка">
+{% endblock %}
 {% block head %}
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "Article",
  "headline": {{ post.title | tojson }},
  "description": {{ post.description | tojson }},
  "datePublished": "{{ post.date.isoformat() }}",
+ "dateModified": "{{ post.date.isoformat() }}",
+ "inLanguage": "ru",
+ "mainEntityOfPage": {"@type": "WebPage", "@id": "https://{{ site_domain }}/blog/{{ post.slug }}"},
+ "author": {"@type": "Organization", "name": "Голос рисунка"},
  "publisher": {"@type": "Organization", "name": "Голос рисунка"}}
 </script>
 {% endblock %}
 {% block body %}
 <div class="section">
-  <article class="wrap" style="max-width: 760px; line-height: 1.65">
-    <h2>{{ post.title }}</h2>
-    <p style="color: var(--soft); font-size: 14px">{{ post.date.strftime("%d.%m.%Y") }}</p>
+  <article class="wrap prose" style="max-width: 760px">
+    <p class="hint" style="margin-bottom: 6px"><a href="/blog">Блог</a> · {{ post.date.strftime("%d.%m.%Y") }}</p>
+    <h1 class="h2">{{ post.title }}</h1>
     {{ post.html | safe }}
     <p style="margin-top: 32px"><a class="btn btn--primary" href="/order">Получить отчёт по рисунку</a></p>
   </article>
