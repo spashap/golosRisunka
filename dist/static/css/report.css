@@ -1,0 +1,100 @@
+/* ============================================================
+   Отчёт (HTML + WeasyPrint PDF) — spec §7.5.
+   Те же токены (tokens.css), но вёрстка дружелюбная к WeasyPrint:
+   блоки/таблицы/float, НИКАКОГО сложного flex/grid.
+   Постраничные разрывы — через page-break-*.
+   ============================================================ */
+
+@page {
+  size: A4;
+  margin: 18mm 16mm 20mm 16mm;
+  @bottom-center {
+    content: "Голос рисунка · образовательное наблюдение, не диагностика · стр. " counter(page);
+    font-family: Inter, sans-serif;
+    font-size: 8.5pt;
+    color: #8C93A3;
+  }
+}
+
+body.report {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: #fff;          /* печать: белая бумага, бумажный фон только на экране */
+  font-size: 10.5pt;
+  line-height: 1.55;
+}
+@media screen {
+  body.report { background: var(--bg); }
+  .report-page { max-width: 800px; margin: 0 auto; padding: 40px 32px; background: #fff;
+                 box-shadow: 0 8px 24px var(--shadow); }
+}
+
+/* --- Обложка --- */
+.r-cover { text-align: center; page-break-after: always; padding-top: 30mm; }
+.r-cover .r-logo { font-family: var(--font-hand); font-weight: 700; font-size: 26pt; }
+.r-cover .r-logo b { color: var(--accent); }
+.r-cover .r-logo i { color: var(--accent2); font-style: normal; }
+.r-cover h1 { font-family: var(--font-head); font-weight: 900; font-size: 26pt;
+              letter-spacing: -0.5pt; margin: 18mm 0 4mm; }
+.r-cover .r-child { font-family: var(--font-head); font-weight: 800; font-size: 15pt; color: var(--accent); }
+.r-cover .r-date { color: var(--soft); font-size: 10pt; margin-top: 3mm; }
+.r-cover .r-polaroid {            /* упрощённый полароид для печати */
+  display: inline-block; background: var(--paper); padding: 10px 10px 26px;
+  box-shadow: 3px 4px 0 var(--alt); border: 1pt solid var(--alt);
+  transform: rotate(-2deg); margin-top: 12mm; max-width: 70%;
+}
+.r-cover .r-polaroid img { max-width: 100%; max-height: 75mm; }
+.r-cover .r-polaroid--alt { transform: rotate(2deg); margin-left: 6mm; }
+/* несколько рисунков: полароиды ужимаются в ряд */
+.r-cover .r-polaroid + .r-polaroid { max-width: 40%; }
+.r-cover .r-polaroid .cap { font-family: var(--font-hand); font-weight: 600;
+                            font-size: 13pt; color: var(--cap); margin-top: 6px; }
+.r-cover .r-disclaimer { margin-top: 16mm; color: var(--soft); font-size: 9pt; max-width: 80%;
+                         margin-left: auto; margin-right: auto; }
+
+/* --- Заголовки разделов --- */
+.r-section { margin: 8mm 0; }
+h2.r-h { font-family: var(--font-head); font-weight: 900; font-size: 15pt;
+         letter-spacing: -0.3pt; color: var(--ink); margin-bottom: 4mm;
+         page-break-after: avoid; }
+h2.r-h .num { color: var(--accent); }
+
+/* --- Контекст --- */
+.r-context { background: var(--alt); border-radius: 8pt; padding: 5mm 6mm; font-size: 10pt; }
+
+/* --- Сводный блок оценок: таблица (WeasyPrint-надёжно) --- */
+table.r-scores { width: 100%; border-collapse: collapse; page-break-inside: avoid; }
+table.r-scores td { padding: 2.2mm 0; vertical-align: middle; border: none; }
+table.r-scores .name { width: 38%; font-weight: 600; font-size: 10pt; }
+table.r-scores .num { width: 8%; text-align: right; font-family: var(--font-head);
+                      font-weight: 800; font-size: 11pt; }
+.r-bar { height: 8pt; background: var(--alt); border-radius: 4pt; }
+.r-bar i { display: block; height: 8pt; border-radius: 4pt; background: var(--accent); }
+
+/* --- Разбор направления --- */
+.r-dim { page-break-inside: avoid; margin-bottom: 7mm; }
+.r-dim .r-dim-head { border-bottom: 1.5pt solid var(--alt); padding-bottom: 2mm; margin-bottom: 3mm; }
+.r-dim h3 { font-family: var(--font-head); font-weight: 800; font-size: 12.5pt; display: inline; }
+.r-dim .r-score-badge {       /* бейдж с оценкой справа от заголовка */
+  float: right; background: var(--accent); color: #fff;
+  font-family: var(--font-hand); font-weight: 700; font-size: 12pt;
+  padding: 1mm 4mm; border-radius: 99pt;
+}
+.r-dim .r-note { color: var(--muted); font-size: 9.5pt; margin-top: 2mm; }
+.r-dim .r-activities { margin-top: 2.5mm; }
+.r-dim .r-activities .t { font-family: var(--font-hand); font-weight: 700;
+                          font-size: 12.5pt; color: var(--accent2); }
+.r-dim ul { margin: 1.5mm 0 0 5mm; }
+.r-dim li { margin-bottom: 1.2mm; }
+
+/* --- Рекомендации / направления развития --- */
+.r-list ul { margin: 2mm 0 0 5mm; }
+.r-list li { margin-bottom: 2mm; }
+.r-dd { page-break-inside: avoid; margin-bottom: 4mm; }
+.r-dd .t { font-weight: 600; }
+.r-dd-note { color: var(--soft); font-size: 9pt; }
+
+/* --- Заключение и дисклеймер --- */
+.r-conclusion { background: var(--alt); border-radius: 8pt; padding: 5mm 6mm; page-break-inside: avoid; }
+.r-footer-disclaimer { margin-top: 8mm; padding-top: 3mm; border-top: 1pt solid var(--alt);
+                       color: var(--soft); font-size: 8.5pt; }

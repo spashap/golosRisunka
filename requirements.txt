@@ -1,0 +1,9 @@
+flask>=3.0
+jinja2>=3.1
+weasyprint>=62
+google-genai>=1.0
+pillow>=10.0
+pillow-heif>=0.16
+python-dotenv>=1.0
+pydantic>=2.0
+markdown>=3.6

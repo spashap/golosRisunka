@@ -1,0 +1,59 @@
+/* ============================================================
+   Дизайн-токены — spec §3.2. ЕДИНСТВЕННЫЙ источник цветов/размеров.
+   Палитра по умолчанию: «Синий» (B1 из мокапа golosrisunka-hybrid-2.html).
+   Переключение палитры: класс на <html> — "pu" Фиолет, "dk" Тёмный, "cl" Облака
+   (одна строка конфига: settings.PALETTE).
+   ============================================================ */
+
+:root {
+  /* --- Палитра «Синий» (дефолт): тёплая бумага + глубокий синий --- */
+  --bg: #F7F1E3;        /* тёплая бумага — фон страницы */
+  --paper: #FFFEF8;     /* карточки, полароиды */
+  --ink: #1B2533;       /* основной текст */
+  --muted: #5A6273;     /* вторичный текст */
+  --soft: #8C93A3;      /* третичный текст */
+  --accent: #2456A6;    /* главный акцент, CTA */
+  --accent2: #C7762B;   /* второй акцент (оранжевый) */
+  --badge: #3E8BC9;     /* бейджи, «скотч», заливка баров */
+  --alt: #EDE4CE;       /* фон чередующихся секций */
+  --shadow: rgba(40, 60, 100, .16);
+  --cap: #5A6273;       /* подписи под полароидами */
+  --polbg: #fff;        /* фон фото внутри полароида */
+
+  /* --- Типографика (spec §3.3) --- */
+  --font-head: "Rubik", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-hand: "Caveat", cursive;
+
+  /* --- Геометрия --- */
+  --wrap-max: 1160px;
+  --radius-card: 18px;
+  --radius-pill: 99px;
+  --shadow-card: 0 8px 24px var(--shadow);
+  --shadow-pol: 0 12px 28px var(--shadow);
+  --shadow-hard: 5px 5px 0 var(--ink);       /* жёсткая тень CTA */
+  --shadow-hard-sm: 3px 3px 0 var(--ink);    /* жёсткая тень бейджей */
+}
+
+/* --- Палитра «Фиолет»: тёплый крем + сливовый --- */
+html.pu {
+  --bg: #F9F2E9; --paper: #FFFEF9; --ink: #2C2138; --muted: #675A75;
+  --soft: #988CA5; --accent: #6D3FA8; --accent2: #C2702E; --badge: #9B59B6;
+  --alt: #F0E5D8; --shadow: rgba(80, 50, 120, .15); --cap: #675A75; --polbg: #fff;
+}
+
+/* --- Палитра «Тёмный»: тёплая ночь --- */
+html.dk {
+  --bg: #221B12; --paper: #FFFCF3; --ink: #F2E8D5; --muted: #BFAE8F;
+  --soft: #8C7C60; --accent: #E07A3F; --accent2: #7FA05C; --badge: #E3A72F;
+  --alt: #2E251A; --shadow: rgba(0, 0, 0, .5); --cap: #6B5D4A; --polbg: #fff;
+  --shadow-hard: 5px 5px 0 rgba(0, 0, 0, .6);
+  --shadow-hard-sm: 3px 3px 0 rgba(0, 0, 0, .6);
+}
+
+/* --- Палитра «Облака»: светло-голубое небо --- */
+html.cl {
+  --bg: #E8F1F8; --paper: #FFFFFF; --ink: #27364A; --muted: #5D7187;
+  --soft: #8FA3B8; --accent: #3D7BC4; --accent2: #E0903C; --badge: #74A8DC;
+  --alt: #DCE9F4; --shadow: rgba(60, 100, 150, .14); --cap: #5D7187; --polbg: #fff;
+}

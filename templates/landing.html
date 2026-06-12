@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru" class="{{ palette }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голос рисунка — отчёт о развитии ребёнка по его рисункам</title>
+<meta name="description" content="Профессиональный PDF-отчёт по детскому рисунку: 8 направлений развития, оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский. {{ min_price }} ₽, готов за час.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Голос рисунка — у каждого рисунка есть голос. Услышьте его.">
+<meta property="og:description" content="PDF-отчёт о развитии ребёнка по его рисункам: 8 направлений, оценки, занятия. {{ min_price }} ₽.">
+<meta property="og:url" content="https://golosrisunka.ru/">
+<meta property="og:locale" content="ru_RU">
+<link rel="canonical" href="https://golosrisunka.ru/">
+<link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ static }}/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+{# Критический CSS инлайном: токены + компоненты (перфоманс, spec §4.2) #}
+<style>{{ inline_css }}</style>
+<script type="application/ld+json">{{ schema_jsonld | safe }}</script>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><b>Голос</b> <i>рисунка</i></div>
+    <a class="btn" href="/order">Получить отчёт</a>
+  </nav>
+</div>
+
+<!-- 2. Hero -->
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <h1>У каждого рисунка есть <span class="hand">голос</span>.<br>Услышьте его.</h1>
+      <p class="lead">Профессиональный отчёт о развитии ребёнка по его рисункам: 8 направлений,
+        оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский.</p>
+      <a class="btn btn--primary" href="/order">Получить отчёт — {{ min_price }} ₽</a>
+      <div class="note">
+        <svg width="42" height="28" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        PDF за час · ничего специально рисовать не нужно
+      </div>
+    </div>
+    <div class="pol-table" aria-hidden="true">
+      {% for s in samples %}
+      <div class="polaroid {{ ['polaroid--tilt-l', 'polaroid--tilt-r', 'polaroid--tilt-sl'][loop.index0] }}"
+           style="width: {{ [242, 222, 204][loop.index0] }}px; {{ ['top:0;left:3%', 'top:128px;right:2%', 'bottom:0;left:28%'][loop.index0] }}">
+        <div class="badge badge--corner">{{ s.badge }}</div>
+        <img class="polaroid__img" src="{{ s.thumb_url }}" alt="Детский рисунок: {{ s.caption }}" width="{{ s.thumb_w }}" height="{{ s.thumb_h }}" style="width:100%;height:auto">
+        <div class="polaroid__cap">{{ s.caption }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </header>
+</div>
+
+<!-- 3. Примеры отчётов (главный proof-блок) -->
+<section class="section section--alt" id="primery">
+  <div class="wrap">
+    <h2>Посмотрите настоящие отчёты</h2>
+    <div class="sub">Эти отчёты сгенерированы нашей системой по реальным рисункам — листайте и открывайте полные версии.</div>
+    <div class="carousel">
+      {% for s in samples %}
+      <article class="report-card">
+        <span class="badge badge--flat report-card__badge">пример отчёта</span>
+        <div class="report-card__top">
+          <div class="report-card__draw"><img src="{{ s.thumb_url }}" alt="Рисунок — {{ s.caption }}" loading="lazy" width="84" height="84"></div>
+          <div class="report-card__name">{{ s.name }}</div>
+          <div class="report-card__age">{{ s.age_display }}</div>
+        </div>
+        <div class="report-card__body">
+          {% for t in s.top_scores %}
+          <div class="score-bar">
+            <span>{{ t.title }}</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ t.score * 10 }}%"></i></div>
+            <b>{{ t.score }}</b>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="report-card__quote">«{{ s.quote }}»</div>
+        <a class="report-card__link" href="/r/{{ s.token }}">Смотреть полный отчёт →</a>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- 4. Как это работает -->
+<section class="section">
+  <div class="wrap">
+    <h2>Как это работает</h2>
+    <div class="sub">Три шага — и отчёт у вас на почте.</div>
+    <div class="steps">
+      <div class="step"><div class="step__n">1</div><h3>Сфотографируйте рисунок</h3><p>Подойдёт любой рисунок, который ребёнок уже нарисовал. Ничего специально рисовать не нужно.</p></div>
+      <div class="step"><div class="step__n">2</div><h3>Расскажите контекст</h3><p>Возраст, чем рисовал, что было задано — короткая форма на 2–3 минуты.</p></div>
+      <div class="step"><div class="step__n">3</div><h3>Получите отчёт</h3><p>PDF на почту в течение часа + личный кабинет, где хранятся все ваши отчёты и рисунки.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Отзывы (тексты заменит заказчик после закрытого тестирования) -->
+<section class="section section--alt">
+  <div class="wrap quote">
+    <div class="quote__text">«Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений я бы сама никогда не заметила.»</div>
+    <div class="quote__who">Мария, мама Сони (6 лет) — из закрытого тестирования</div>
+  </div>
+</section>
+
+<!-- 6. Гарантия / доверие -->
+<section class="section">
+  <div class="wrap">
+    <h2>Почему нам можно доверять</h2>
+    <div class="steps">
+      <div class="step"><div class="step__n">✓</div><h3>Возврат денег</h3><p>Отчёт не понравился — напишите в течение 7 дней, вернём оплату без лишних вопросов.</p></div>
+      <div class="step"><div class="step__n">✓</div><h3>Рисунки видите только вы</h3><p>Работы вашего ребёнка не публикуются и не передаются третьим лицам.</p></div>
+      <div class="step"><div class="step__n">✓</div><h3>Честные наблюдения</h3><p>Каждый вывод привязан к видимой детали рисунка. Это образовательное наблюдение, а не диагностика.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. FAQ -->
+<section class="section section--alt" id="faq">
+  <div class="wrap">
+    <h2>Частые вопросы</h2>
+    {% for q, a in faq %}
+    <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- 8. Финальный CTA: выбор продукта (2 продукта, цены из config/products.json) -->
+<section class="section" id="ceny">
+  <div class="wrap">
+    <h2>Выберите отчёт</h2>
+    <div class="sub">Один отчёт охватывает до 3 рисунков — загрузите несколько работ, и мы сведём наблюдения воедино.</div>
+    <div class="price-grid">
+      {% for code, p in products.items() %}
+      <div class="card price-card{% if not p.enabled %} price-card--soon{% endif %}">
+        {% if not p.enabled %}<span class="badge badge--corner">скоро</span>{% endif %}
+        <div class="p-title">{{ p.title }}</div>
+        <div class="p-sub">{{ p.subtitle }}</div>
+        <div class="p-prices">
+          <span class="p-old">{{ p.old_price_rub }} ₽</span>
+          <span class="p-price">{{ p.price_rub }} ₽</span>
+        </div>
+        <ul class="p-features">
+          {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
+        </ul>
+        {% if p.enabled %}
+        <a class="btn btn--primary" href="/order?product={{ code }}">Заказать за {{ p.price_rub }} ₽</a>
+        {% else %}
+        <span class="p-soon-note">Появится после запуска — следите за новостями</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<footer class="foot wrap">
+  Голос рисунка · Образовательное наблюдение, не медицинская и не психологическая диагностика<br>
+  <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
+  <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
+  golosrisunka.ru
+</footer>
+
+</body>
+</html>

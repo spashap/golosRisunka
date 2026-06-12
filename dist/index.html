@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ru" class="">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голос рисунка — отчёт о развитии ребёнка по его рисункам</title>
+<meta name="description" content="Профессиональный PDF-отчёт по детскому рисунку: 8 направлений развития, оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский. 2999 ₽, готов за час.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Голос рисунка — у каждого рисунка есть голос. Услышьте его.">
+<meta property="og:description" content="PDF-отчёт о развитии ребёнка по его рисункам: 8 направлений, оценки, занятия. 2999 ₽.">
+<meta property="og:url" content="https://golosrisunka.ru/">
+<meta property="og:locale" content="ru_RU">
+<link rel="canonical" href="https://golosrisunka.ru/">
+<link rel="preload" href="/static/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/fonts.css">
+
+<style>/* ============================================================
+   Дизайн-токены — spec §3.2. ЕДИНСТВЕННЫЙ источник цветов/размеров.
+   Палитра по умолчанию: «Синий» (B1 из мокапа golosrisunka-hybrid-2.html).
+   Переключение палитры: класс на &lt;html&gt; — &#34;pu&#34; Фиолет, &#34;dk&#34; Тёмный, &#34;cl&#34; Облака
+   (одна строка конфига: settings.PALETTE).
+   ============================================================ */
+
+:root {
+  /* --- Палитра «Синий» (дефолт): тёплая бумага + глубокий синий --- */
+  --bg: #F7F1E3;        /* тёплая бумага — фон страницы */
+  --paper: #FFFEF8;     /* карточки, полароиды */
+  --ink: #1B2533;       /* основной текст */
+  --muted: #5A6273;     /* вторичный текст */
+  --soft: #8C93A3;      /* третичный текст */
+  --accent: #2456A6;    /* главный акцент, CTA */
+  --accent2: #C7762B;   /* второй акцент (оранжевый) */
+  --badge: #3E8BC9;     /* бейджи, «скотч», заливка баров */
+  --alt: #EDE4CE;       /* фон чередующихся секций */
+  --shadow: rgba(40, 60, 100, .16);
+  --cap: #5A6273;       /* подписи под полароидами */
+  --polbg: #fff;        /* фон фото внутри полароида */
+
+  /* --- Типографика (spec §3.3) --- */
+  --font-head: &#34;Rubik&#34;, system-ui, sans-serif;
+  --font-body: &#34;Inter&#34;, system-ui, sans-serif;
+  --font-hand: &#34;Caveat&#34;, cursive;
+
+  /* --- Геометрия --- */
+  --wrap-max: 1160px;
+  --radius-card: 18px;
+  --radius-pill: 99px;
+  --shadow-card: 0 8px 24px var(--shadow);
+  --shadow-pol: 0 12px 28px var(--shadow);
+  --shadow-hard: 5px 5px 0 var(--ink);       /* жёсткая тень CTA */
+  --shadow-hard-sm: 3px 3px 0 var(--ink);    /* жёсткая тень бейджей */
+}
+
+/* --- Палитра «Фиолет»: тёплый крем + сливовый --- */
+html.pu {
+  --bg: #F9F2E9; --paper: #FFFEF9; --ink: #2C2138; --muted: #675A75;
+  --soft: #988CA5; --accent: #6D3FA8; --accent2: #C2702E; --badge: #9B59B6;
+  --alt: #F0E5D8; --shadow: rgba(80, 50, 120, .15); --cap: #675A75; --polbg: #fff;
+}
+
+/* --- Палитра «Тёмный»: тёплая ночь --- */
+html.dk {
+  --bg: #221B12; --paper: #FFFCF3; --ink: #F2E8D5; --muted: #BFAE8F;
+  --soft: #8C7C60; --accent: #E07A3F; --accent2: #7FA05C; --badge: #E3A72F;
+  --alt: #2E251A; --shadow: rgba(0, 0, 0, .5); --cap: #6B5D4A; --polbg: #fff;
+  --shadow-hard: 5px 5px 0 rgba(0, 0, 0, .6);
+  --shadow-hard-sm: 3px 3px 0 rgba(0, 0, 0, .6);
+}
+
+/* --- Палитра «Облака»: светло-голубое небо --- */
+html.cl {
+  --bg: #E8F1F8; --paper: #FFFFFF; --ink: #27364A; --muted: #5D7187;
+  --soft: #8FA3B8; --accent: #3D7BC4; --accent2: #E0903C; --badge: #74A8DC;
+  --alt: #DCE9F4; --shadow: rgba(60, 100, 150, .14); --cap: #5D7187; --polbg: #fff;
+}
+/* ============================================================
+   Компонентная библиотека — spec §3.4. Правило (закон #3):
+   новый блок = композиция этих компонентов. Не хватает — добавь
+   компонент СЮДА, не инлайнь стили в страницу.
+   Зависит от tokens.css.
+   ============================================================ */
+
+/* --- Reset / base --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+a { text-decoration: none; color: inherit; }
+button { font: inherit; cursor: pointer; border: none; background: none; }
+img, svg { display: block; max-width: 100%; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* --- Layout --- */
+.wrap { max-width: var(--wrap-max); margin: 0 auto; padding: 0 24px; }
+
+.section { padding: 72px 0; position: relative; }
+.section--alt { background: var(--alt); }
+
+/* --- Типографика --- */
+h1, .h1 {
+  font-family: var(--font-head); font-weight: 900;
+  font-size: clamp(38px, 5.4vw, 62px); line-height: 1.06; letter-spacing: -1.2px;
+}
+h2, .h2 {
+  font-family: var(--font-head); font-weight: 900;
+  font-size: clamp(28px, 3.6vw, 42px); letter-spacing: -.5px; margin-bottom: 10px;
+}
+h3, .h3 { font-family: var(--font-head); font-weight: 800; font-size: 19px; }
+.sub { color: var(--muted); font-size: 17px; margin-bottom: 36px; }
+.hand { font-family: var(--font-hand); font-weight: 700; }
+h1 .hand, .h1 .hand { color: var(--accent); font-size: 1.16em; letter-spacing: 0; }
+.note {  /* рукописная заметка со стрелкой/иконкой */
+  display: flex; align-items: center; gap: 10px; margin-top: 22px;
+  font-family: var(--font-hand); font-size: 22px; color: var(--muted); font-weight: 600;
+}
+
+/* --- Кнопки --- */
+.btn {
+  display: inline-block; padding: 13px 28px; border-radius: var(--radius-pill);
+  font-weight: 700; transition: .2s; text-align: center;
+  background: var(--ink); color: var(--bg);
+}
+.btn:hover { background: var(--accent); color: #fff; }
+html.dk .btn { background: var(--accent); color: #fff; }
+html.dk .btn:hover { background: var(--paper); color: #221B12; }
+
+.btn--primary {  /* главный CTA: жёсткая тень + сдвиг на hover */
+  background: var(--accent); color: #fff;
+  padding: 18px 42px; font-weight: 900; font-size: 18px;
+  box-shadow: var(--shadow-hard); transition: .15s;
+}
+.btn--primary:hover {
+  background: var(--accent); color: #fff;
+  transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* --- Карточка --- */
+.card {
+  background: var(--paper); border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card); color: #2A2118;
+}
+.card--pad { padding: 30px; }
+
+/* --- Полароид (фото на «скотче») --- */
+.polaroid {
+  position: relative; background: var(--paper);
+  padding: 14px 14px 40px; border-radius: 3px; box-shadow: var(--shadow-pol);
+}
+.polaroid::before {  /* скотч */
+  content: &#34;&#34;; position: absolute; top: -12px; left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  width: 88px; height: 25px; background: var(--badge); opacity: .55; border-radius: 2px;
+}
+.polaroid--tilt-l { transform: rotate(-5deg); }
+.polaroid--tilt-r { transform: rotate(4deg); }
+.polaroid--tilt-sl { transform: rotate(-2deg); }
+.polaroid__img { background: var(--polbg); display: block; }
+.polaroid__cap {
+  font-family: var(--font-hand); font-weight: 600; font-size: 20px;
+  color: var(--cap); text-align: center; margin-top: 8px;
+}
+
+/* --- Бейдж-наклейка (рукописная оценка) --- */
+.badge {
+  display: inline-block; background: var(--accent); color: #fff;
+  font-family: var(--font-hand); font-weight: 600; font-size: 19px;
+  padding: 6px 14px; border-radius: var(--radius-pill);
+  transform: rotate(8deg); box-shadow: var(--shadow-hard-sm);
+}
+.badge--corner { position: absolute; top: -15px; right: -16px; z-index: 2; }
+.badge--flat { transform: rotate(4deg); box-shadow: none; font-size: 17px; padding: 4px 12px; }
+
+/* --- Строка оценки (название / бар / число) --- */
+.score-bar {
+  display: grid; grid-template-columns: 140px 1fr 28px; gap: 10px;
+  align-items: center; font-size: 14px; color: #666; margin-bottom: 12px;
+}
+.score-bar b { color: #2A2118; text-align: right; }
+.score-bar__track {
+  height: 10px; border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, .08); overflow: hidden;
+}
+.score-bar__fill {
+  display: block; height: 100%; border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--badge), var(--accent));
+  /* ширина = оценка × 10%: style=&#34;width:80%&#34; из шаблона */
+}
+
+/* --- Карусель (CSS scroll-snap, без JS) --- */
+.carousel {
+  display: flex; gap: 24px; overflow-x: auto;
+  scroll-snap-type: x mandatory; padding: 8px 4px 24px;
+}
+.carousel &gt; * { scroll-snap-align: center; flex: 0 0 auto; }
+
+/* --- Цитата (отзыв) --- */
+.quote { max-width: 760px; margin: 0 auto; text-align: center; }
+.quote__text {
+  font-family: var(--font-hand); font-weight: 600;
+  font-size: clamp(26px, 3.2vw, 34px); line-height: 1.35;
+}
+.quote__who { margin-top: 16px; color: var(--soft); font-size: 15px; }
+
+/* --- Шаг («Как это работает») --- */
+.step { background: var(--paper); border-radius: var(--radius-card); padding: 30px;
+        box-shadow: 0 6px 18px var(--shadow); color: #2A2118; }
+.step__n { font-family: var(--font-hand); font-weight: 700; font-size: 46px; color: var(--accent); }
+.step h3 { margin: 10px 0; }
+.step p { color: #666; font-size: 15px; line-height: 1.55; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+
+/* --- Навигация и лого --- */
+.nav { display: flex; justify-content: space-between; align-items: center;
+       padding: 18px 0; position: relative; z-index: 2; }
+.logo { font-family: var(--font-hand); font-weight: 700; font-size: 36px; line-height: 1; }
+.logo b { color: var(--accent); font-weight: 700; }
+.logo i { color: var(--accent2); font-style: normal; }
+
+/* --- FAQ (details/summary, без JS) --- */
+.faq { border-bottom: 2px dashed rgba(0, 0, 0, .1); padding: 18px 0; }
+.faq summary { font-family: var(--font-head); font-weight: 800; font-size: 17px;
+               cursor: pointer; list-style: none; }
+.faq summary::after { content: &#34; +&#34;; color: var(--accent); }
+.faq[open] summary::after { content: &#34; –&#34;; }
+.faq p { color: var(--muted); margin-top: 10px; font-size: 15px; line-height: 1.5; }
+
+/* --- Футер --- */
+.foot { padding: 40px 0; color: var(--soft); font-size: 14px; text-align: center; }
+
+/* --- Hero (двухколоночный первый экран) --- */
+.hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 48px;
+        align-items: center; padding: 56px 0 84px; }
+.hero p.lead { font-size: 19px; color: var(--muted); margin: 24px 0 32px; max-width: 47ch; }
+
+/* --- «Стол» с разбросанными полароидами --- */
+.pol-table { position: relative; min-height: 440px; }
+.pol-table .polaroid { position: absolute; }
+
+/* --- Карточка-превью отчёта (лендинг: блок «Примеры отчётов») --- */
+.report-card { width: 340px; overflow: hidden; position: relative;
+               display: flex; flex-direction: column;   /* кнопка всегда у низа */
+               background: var(--paper); border-radius: var(--radius-card);
+               box-shadow: var(--shadow-card); color: #2A2118; }
+.report-card__badge { position: absolute; top: 12px; right: 12px; z-index: 2; }
+.report-card__top { padding: 18px; border-bottom: 2px dashed rgba(0, 0, 0, .08); }
+.report-card__draw { float: left; width: 84px; height: 84px; border-radius: 12px;
+                     margin-right: 14px; background: rgba(0, 0, 0, .04);
+                     transform: rotate(-3deg); box-shadow: 0 3px 10px var(--shadow);
+                     overflow: hidden; }
+.report-card__draw img { width: 100%; height: 100%; object-fit: cover; }
+.report-card__name { font-family: var(--font-head); font-weight: 800; font-size: 18px;
+                     padding-top: 14px; }
+.report-card__age { color: var(--soft); font-size: 14px; }
+.report-card__top::after { content: &#34;&#34;; display: block; clear: both; }
+.report-card__body { padding: 18px; }
+.report-card__quote { font-family: var(--font-hand); font-weight: 600; font-size: 19px;
+                      color: var(--accent2); padding: 4px 18px 20px; }
+.report-card__link { display: block; text-align: center; padding: 14px;
+                     margin-top: auto;                  /* прижат к низу карточки */
+                     background: var(--ink); color: var(--bg); font-weight: 700; }
+.report-card__link:hover { background: var(--accent); color: #fff; }
+
+/* --- Карточка продукта (цены из конфига, дизайн «скидка от старой цены») --- */
+.price-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px;
+              max-width: 880px; margin: 0 auto; }
+.price-card { position: relative; display: flex; flex-direction: column;
+              text-align: center; padding: 36px 30px; }
+.price-card .p-title { font-family: var(--font-head); font-weight: 800; font-size: 21px; }
+.price-card .p-sub { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.price-card .p-prices { margin: 22px 0 6px; }
+.price-card .p-old { color: var(--soft); font-size: 19px; text-decoration: line-through;
+                     margin-right: 12px; }
+.price-card .p-price { font-family: var(--font-head); font-weight: 900; font-size: 38px;
+                       color: var(--accent); }
+.price-card .p-features { list-style: none; margin: 18px 0 28px; padding: 0;
+                          color: var(--muted); font-size: 15px; text-align: left; }
+.price-card .p-features li { padding: 7px 0 7px 26px; position: relative; }
+.price-card .p-features li::before { content: &#34;✓&#34;; position: absolute; left: 0;
+                                     color: var(--accent2); font-weight: 700; }
+.price-card .btn { margin-top: auto; }       /* кнопка прижата к низу карточки */
+.price-card--soon { opacity: .82; }
+.price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: 14px;
+                           font-family: var(--font-hand); font-size: 19px; }
+
+/* --- Мобильная адаптация базовых сеток --- */
+@media (max-width: 880px) {
+  .steps { grid-template-columns: 1fr; }
+  .price-grid { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: 1fr; padding: 32px 0 56px; }
+  .pol-table { min-height: 400px; }
+}
+</style>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Product", "name": "Отчёт о развитии ребёнка по детскому рисунку", "description": "PDF-отчёт: 8 направлений развития, оценки с объяснениями, занятия для родителей. Образовательное наблюдение.", "brand": {"@type": "Brand", "name": "Голос рисунка"}, "offers": [{"@type": "Offer", "name": "Отчёт по рисункам", "price": 2999, "priceCurrency": "RUB", "url": "https://golosrisunka.ru/order?product=snapshot", "availability": "https://schema.org/InStock"}]}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Какой возраст ребёнка подходит?", "acceptedAnswer": {"@type": "Answer", "text": "От 3 до 12 лет. Отчёт учитывает возрастной этап развития рисунка: то, что типично для трёх лет, оценивается иначе, чем для девяти."}}, {"@type": "Question", "name": "Как быстро придёт отчёт?", "acceptedAnswer": {"@type": "Answer", "text": "Обычно в течение часа после оплаты. PDF придёт на почту, и он же будет доступен в личном кабинете."}}, {"@type": "Question", "name": "Что нужно прислать?", "acceptedAnswer": {"@type": "Answer", "text": "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, чем рисовал, что было задано. Ничего специально рисовать не нужно."}}, {"@type": "Question", "name": "Это психологическая диагностика?", "acceptedAnswer": {"@type": "Answer", "text": "Нет. Это образовательное наблюдение за навыками, которые видны в рисунке: композиция, контроль линий, вариативность решений. Мы принципиально не делаем выводов об эмоциях или психологическом состоянии ребёнка."}}, {"@type": "Question", "name": "А если отчёт мне не понравится?", "acceptedAnswer": {"@type": "Answer", "text": "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов."}}, {"@type": "Question", "name": "Кто увидит рисунки моего ребёнка?", "acceptedAnswer": {"@type": "Answer", "text": "Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам."}}]}]</script>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><b>Голос</b> <i>рисунка</i></div>
+    <a class="btn" href="/order">Получить отчёт</a>
+  </nav>
+</div>
+
+<!-- 2. Hero -->
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <h1>У каждого рисунка есть <span class="hand">голос</span>.<br>Услышьте его.</h1>
+      <p class="lead">Профессиональный отчёт о развитии ребёнка по его рисункам: 8 направлений,
+        оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский.</p>
+      <a class="btn btn--primary" href="/order">Получить отчёт — 2999 ₽</a>
+      <div class="note">
+        <svg width="42" height="28" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        PDF за час · ничего специально рисовать не нужно
+      </div>
+    </div>
+    <div class="pol-table" aria-hidden="true">
+      
+      <div class="polaroid polaroid--tilt-l"
+           style="width: 242px; top:0;left:3%">
+        <div class="badge badge--corner">креативность 8/10</div>
+        <img class="polaroid__img" src="/static/img/samples/primer-3-goda.webp" alt="Детский рисунок: Алексей, 3,5 года" width="471" height="331" style="width:100%;height:auto">
+        <div class="polaroid__cap">Алексей, 3,5 года</div>
+      </div>
+      
+      <div class="polaroid polaroid--tilt-r"
+           style="width: 222px; top:128px;right:2%">
+        <div class="badge badge--corner">социальная направленность 9/10</div>
+        <img class="polaroid__img" src="/static/img/samples/primer-6-let.webp" alt="Детский рисунок: «Семья», Никита, 6 лет" width="480" height="322" style="width:100%;height:auto">
+        <div class="polaroid__cap">«Семья», Никита, 6 лет</div>
+      </div>
+      
+      <div class="polaroid polaroid--tilt-sl"
+           style="width: 204px; bottom:0;left:28%">
+        <div class="badge badge--corner">креативность 9/10</div>
+        <img class="polaroid__img" src="/static/img/samples/primer-8-let.webp" alt="Детский рисунок: «Кот», Алина, 8 лет" width="480" height="344" style="width:100%;height:auto">
+        <div class="polaroid__cap">«Кот», Алина, 8 лет</div>
+      </div>
+      
+    </div>
+  </header>
+</div>
+
+<!-- 3. Примеры отчётов (главный proof-блок) -->
+<section class="section section--alt" id="primery">
+  <div class="wrap">
+    <h2>Посмотрите настоящие отчёты</h2>
+    <div class="sub">Эти отчёты сгенерированы нашей системой по реальным рисункам — листайте и открывайте полные версии.</div>
+    <div class="carousel">
+      
+      <article class="report-card">
+        <span class="badge badge--flat report-card__badge">пример отчёта</span>
+        <div class="report-card__top">
+          <div class="report-card__draw"><img src="/static/img/samples/primer-3-goda.webp" alt="Рисунок — Алексей, 3,5 года" loading="lazy" width="84" height="84"></div>
+          <div class="report-card__name">Алексей</div>
+          <div class="report-card__age">3 года 6 мес.</div>
+        </div>
+        <div class="report-card__body">
+          
+          <div class="score-bar">
+            <span>Креативность</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Уверенность исполнения</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Решение задач</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+        </div>
+        <div class="report-card__quote">«Рисунок Алексея демонстрирует уверенное владение линией и формой, что является отличным показателем для его возраста.»</div>
+        <a class="report-card__link" href="/r/primer-3-goda">Смотреть полный отчёт →</a>
+      </article>
+      
+      <article class="report-card">
+        <span class="badge badge--flat report-card__badge">пример отчёта</span>
+        <div class="report-card__top">
+          <div class="report-card__draw"><img src="/static/img/samples/primer-6-let.webp" alt="Рисунок — «Семья», Никита, 6 лет" loading="lazy" width="84" height="84"></div>
+          <div class="report-card__name">Никита</div>
+          <div class="report-card__age">6 лет</div>
+        </div>
+        <div class="report-card__body">
+          
+          <div class="score-bar">
+            <span>Социальная направленность</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
+            <b>9</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Эмоциональная выразительность</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Уверенность исполнения</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+        </div>
+        <div class="report-card__quote">«В рисунке Никиты Н.»</div>
+        <a class="report-card__link" href="/r/primer-6-let">Смотреть полный отчёт →</a>
+      </article>
+      
+      <article class="report-card">
+        <span class="badge badge--flat report-card__badge">пример отчёта</span>
+        <div class="report-card__top">
+          <div class="report-card__draw"><img src="/static/img/samples/primer-8-let.webp" alt="Рисунок — «Кот», Алина, 8 лет" loading="lazy" width="84" height="84"></div>
+          <div class="report-card__name">Алина</div>
+          <div class="report-card__age">8 лет</div>
+        </div>
+        <div class="report-card__body">
+          
+          <div class="score-bar">
+            <span>Креативность</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
+            <b>9</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Уверенность исполнения</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
+            <b>9</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Эмоциональная выразительность</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+        </div>
+        <div class="report-card__quote">«В этом рисунке Алины Н.»</div>
+        <a class="report-card__link" href="/r/primer-8-let">Смотреть полный отчёт →</a>
+      </article>
+      
+    </div>
+  </div>
+</section>
+
+<!-- 4. Как это работает -->
+<section class="section">
+  <div class="wrap">
+    <h2>Как это работает</h2>
+    <div class="sub">Три шага — и отчёт у вас на почте.</div>
+    <div class="steps">
+      <div class="step"><div class="step__n">1</div><h3>Сфотографируйте рисунок</h3><p>Подойдёт любой рисунок, который ребёнок уже нарисовал. Ничего специально рисовать не нужно.</p></div>
+      <div class="step"><div class="step__n">2</div><h3>Расскажите контекст</h3><p>Возраст, чем рисовал, что было задано — короткая форма на 2–3 минуты.</p></div>
+      <div class="step"><div class="step__n">3</div><h3>Получите отчёт</h3><p>PDF на почту в течение часа + личный кабинет, где хранятся все ваши отчёты и рисунки.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Отзывы (тексты заменит заказчик после закрытого тестирования) -->
+<section class="section section--alt">
+  <div class="wrap quote">
+    <div class="quote__text">«Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений я бы сама никогда не заметила.»</div>
+    <div class="quote__who">Мария, мама Сони (6 лет) — из закрытого тестирования</div>
+  </div>
+</section>
+
+<!-- 6. Гарантия / доверие -->
+<section class="section">
+  <div class="wrap">
+    <h2>Почему нам можно доверять</h2>
+    <div class="steps">
+      <div class="step"><div class="step__n">✓</div><h3>Возврат денег</h3><p>Отчёт не понравился — напишите в течение 7 дней, вернём оплату без лишних вопросов.</p></div>
+      <div class="step"><div class="step__n">✓</div><h3>Рисунки видите только вы</h3><p>Работы вашего ребёнка не публикуются и не передаются третьим лицам.</p></div>
+      <div class="step"><div class="step__n">✓</div><h3>Честные наблюдения</h3><p>Каждый вывод привязан к видимой детали рисунка. Это образовательное наблюдение, а не диагностика.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. FAQ -->
+<section class="section section--alt" id="faq">
+  <div class="wrap">
+    <h2>Частые вопросы</h2>
+    
+    <details class="faq"><summary>Какой возраст ребёнка подходит?</summary><p>От 3 до 12 лет. Отчёт учитывает возрастной этап развития рисунка: то, что типично для трёх лет, оценивается иначе, чем для девяти.</p></details>
+    
+    <details class="faq"><summary>Как быстро придёт отчёт?</summary><p>Обычно в течение часа после оплаты. PDF придёт на почту, и он же будет доступен в личном кабинете.</p></details>
+    
+    <details class="faq"><summary>Что нужно прислать?</summary><p>Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, чем рисовал, что было задано. Ничего специально рисовать не нужно.</p></details>
+    
+    <details class="faq"><summary>Это психологическая диагностика?</summary><p>Нет. Это образовательное наблюдение за навыками, которые видны в рисунке: композиция, контроль линий, вариативность решений. Мы принципиально не делаем выводов об эмоциях или психологическом состоянии ребёнка.</p></details>
+    
+    <details class="faq"><summary>А если отчёт мне не понравится?</summary><p>Напишите нам в течение 7 дней — вернём деньги без лишних вопросов.</p></details>
+    
+    <details class="faq"><summary>Кто увидит рисунки моего ребёнка?</summary><p>Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам.</p></details>
+    
+  </div>
+</section>
+
+<!-- 8. Финальный CTA: выбор продукта (2 продукта, цены из config/products.json) -->
+<section class="section" id="ceny">
+  <div class="wrap">
+    <h2>Выберите отчёт</h2>
+    <div class="sub">Один отчёт охватывает до 3 рисунков — загрузите несколько работ, и мы сведём наблюдения воедино.</div>
+    <div class="price-grid">
+      
+      <div class="card price-card">
+        
+        <div class="p-title">Отчёт по рисункам</div>
+        <div class="p-sub">1–3 рисунка одного периода</div>
+        <div class="p-prices">
+          <span class="p-old">4900 ₽</span>
+          <span class="p-price">2999 ₽</span>
+        </div>
+        <ul class="p-features">
+          <li>Единый отчёт по 1–3 рисункам</li><li>8 направлений развития с оценками</li><li>Занятия для родителей по каждому направлению</li><li>PDF на почту + личный кабинет</li>
+        </ul>
+        
+        <a class="btn btn--primary" href="/order?product=snapshot">Заказать за 2999 ₽</a>
+        
+      </div>
+      
+      <div class="card price-card price-card--soon">
+        <span class="badge badge--corner">скоро</span>
+        <div class="p-title">Отчёт о развитии во времени</div>
+        <div class="p-sub">2 набора рисунков с интервалом от 6 месяцев</div>
+        <div class="p-prices">
+          <span class="p-old">6900 ₽</span>
+          <span class="p-price">4999 ₽</span>
+        </div>
+        <ul class="p-features">
+          <li>Сравнение двух периодов «тогда и сейчас»</li><li>Динамика по каждому из 8 направлений</li><li>Что изменилось и что развивать дальше</li><li>PDF на почту + личный кабинет</li>
+        </ul>
+        
+        <span class="p-soon-note">Появится после запуска — следите за новостями</span>
+        
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<footer class="foot wrap">
+  Голос рисунка · Образовательное наблюдение, не медицинская и не психологическая диагностика<br>
+  <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
+  <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
+  golosrisunka.ru
+</footer>
+
+</body>
+</html>

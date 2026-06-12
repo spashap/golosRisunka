@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голос рисунка — гибрид, 4 палитры</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700;800;900&family=Caveat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+a{text-decoration:none;color:inherit}
+button{font:inherit;cursor:pointer;border:none;background:none}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.carousel{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 4px 24px}
+.carousel>*{scroll-snap-align:center;flex:0 0 auto}
+
+.switcher{position:fixed;top:0;left:0;right:0;z-index:1000;background:#111;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 16px;font-family:Inter,sans-serif;font-size:14px;flex-wrap:wrap}
+.switcher span{opacity:.6;margin-right:6px}
+.sw-btn{padding:8px 16px;border-radius:99px;background:#2a2a2a;color:#bbb;font-weight:600;transition:.2s}
+.sw-btn:hover{background:#3a3a3a}
+.sw-btn.active{background:#fff;color:#111}
+.sw-sep{width:1px;height:24px;background:#444;margin:0 6px}
+
+/* ===== PALETTES ===== */
+.site{--bg:#FBF3E4;--paper:#FFFDF6;--ink:#2A2118;--muted:#6B5D4A;--soft:#9A8B74;--accent:#C75B39;--accent2:#5E7D4E;--badge:#E3A72F;--alt:#F4E8D2;--shadow:rgba(80,60,30,.18)}
+.site.p2{--bg:#F6EAD0;--paper:#FFFEF8;--ink:#26201A;--muted:#6E5F46;--soft:#A08C68;--accent:#C98A12;--accent2:#2F5D8C;--badge:#C0392B;--alt:#EEDFBC;--shadow:rgba(90,70,30,.18)}
+.site.p3{--bg:#F2EDE3;--paper:#FFFFFC;--ink:#23281F;--muted:#5F6657;--soft:#8E9582;--accent:#C96F5E;--accent2:#6B7F5A;--badge:#7C9B6B;--alt:#E7E0D0;--shadow:rgba(60,70,50,.16)}
+.site.p4{--bg:#FAF1E6;--paper:#FFFFFA;--ink:#1C1410;--muted:#63504A;--soft:#99857C;--accent:#A4282E;--accent2:#1F3A5F;--badge:#D4A017;--alt:#F1E3D2;--shadow:rgba(70,30,20,.2)}
+
+.site{font-family:Inter,sans-serif;background:var(--bg);color:var(--ink);padding-top:96px;transition:background .3s}
+
+/* nav */
+.nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font-family:Caveat,cursive;font-size:36px;font-weight:700;line-height:1}
+.logo b{color:var(--accent)}
+.logo i{color:var(--accent2);font-style:normal}
+.nav-cta{background:var(--ink);color:var(--bg);padding:13px 28px;border-radius:99px;font-weight:700;transition:.2s}
+.nav-cta:hover{background:var(--accent);color:#fff}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.08fr .92fr;gap:48px;align-items:center;padding:56px 0 84px}
+h1{font-family:Rubik,sans-serif;font-size:clamp(38px,5.4vw,62px);font-weight:900;line-height:1.06;letter-spacing:-1.2px}
+h1 .hand{font-family:Caveat,cursive;color:var(--accent);font-size:1.16em;font-weight:700;letter-spacing:0}
+.hero p{font-size:19px;color:var(--muted);margin:24px 0 32px;max-width:47ch}
+.hero-cta{display:inline-block;background:var(--accent);color:#fff;padding:18px 42px;border-radius:99px;font-weight:900;font-size:18px;box-shadow:5px 5px 0 var(--ink);transition:.15s}
+.hero-cta:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.hero-note{display:flex;align-items:center;gap:10px;margin-top:18px;font-family:Caveat,cursive;font-size:22px;color:var(--muted)}
+
+/* taped polaroids + badges */
+.table{position:relative;min-height:440px}
+.pol{position:absolute;background:var(--paper);padding:14px 14px 40px;box-shadow:0 12px 28px var(--shadow);border-radius:3px}
+.pol::before{content:"";position:absolute;top:-12px;left:50%;transform:translateX(-50%) rotate(-3deg);width:88px;height:25px;background:var(--badge);opacity:.55;border-radius:2px}
+.pol .cap{font-family:Caveat,cursive;font-size:20px;color:var(--muted);text-align:center;margin-top:8px}
+.badge{position:absolute;top:-15px;right:-16px;background:var(--accent);color:#fff;font-family:Caveat,cursive;font-size:19px;padding:6px 14px;border-radius:99px;transform:rotate(8deg);box-shadow:3px 3px 0 var(--ink);z-index:2}
+.t1{width:242px;transform:rotate(-5deg);top:0;left:3%}
+.t2{width:222px;transform:rotate(4deg);top:128px;right:2%}
+.t3{width:204px;transform:rotate(-2deg);bottom:0;left:28%}
+.pol svg{background:#fff;display:block}
+.c-acc{stroke:var(--accent)}
+.c-acc2{stroke:var(--accent2)}
+.c-badge{stroke:var(--badge)}
+.f-acc{fill:var(--accent)}
+
+/* samples */
+.sec{padding:72px 0}
+.sec.alt{background:var(--alt)}
+h2{font-family:Rubik,sans-serif;font-size:clamp(28px,3.6vw,42px);font-weight:900;margin-bottom:10px;letter-spacing:-.5px}
+.sub{color:var(--muted);font-size:17px;margin-bottom:36px}
+.report-card{width:340px;background:var(--paper);border-radius:18px;box-shadow:0 8px 24px var(--shadow);overflow:hidden;position:relative}
+.report-card .rc-badge{position:absolute;top:12px;right:12px;background:var(--accent);color:#fff;font-family:Caveat,cursive;font-size:17px;padding:4px 12px;border-radius:99px;transform:rotate(4deg)}
+.rc-top{display:flex;gap:14px;padding:18px;align-items:center;border-bottom:2px dashed var(--alt)}
+.rc-draw{width:84px;height:84px;border-radius:12px;background:var(--bg);flex:0 0 auto;transform:rotate(-3deg);box-shadow:0 3px 10px var(--shadow);overflow:hidden}
+.rc-name{font-family:Rubik,sans-serif;font-weight:800;font-size:18px}
+.rc-age{color:var(--soft);font-size:14px}
+.rc-body{padding:18px}
+.bar-row{display:grid;grid-template-columns:140px 1fr 28px;gap:10px;align-items:center;margin-bottom:12px;font-size:14px;color:var(--muted)}
+.bar-row b{color:var(--ink)}
+.bar{height:10px;border-radius:99px;background:var(--alt);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--badge),var(--accent))}
+.rc-quote{font-family:Caveat,cursive;font-size:19px;color:var(--accent2);padding:0 18px 18px}
+.rc-link{display:block;text-align:center;padding:14px;background:var(--ink);color:var(--bg);font-weight:700}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.step{background:var(--paper);border-radius:18px;padding:30px;box-shadow:0 6px 18px var(--shadow)}
+.step .n{font-family:Caveat,cursive;font-size:46px;color:var(--accent);font-weight:700}
+.step h3{font-family:Rubik,sans-serif;font-size:19px;margin:8px 0 8px;font-weight:800}
+.step p{color:var(--muted);font-size:15px}
+
+/* quote + footer */
+.quote{max-width:760px;margin:0 auto;text-align:center}
+.quote .q{font-family:Caveat,cursive;font-size:clamp(26px,3.2vw,34px);line-height:1.35}
+.quote .who{margin-top:16px;color:var(--soft);font-size:15px}
+.foot{padding:40px 0;color:var(--soft);font-size:14px;text-align:center}
+
+@media(max-width:880px){
+  .hero{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  .table{min-height:400px}
+}
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <span>Палитра:</span>
+  <button class="sw-btn pal active" data-p="">1 · Терракота</button>
+  <button class="sw-btn pal" data-p="p2">2 · Горчица</button>
+  <button class="sw-btn pal" data-p="p3">3 · Шалфей</button>
+  <button class="sw-btn pal" data-p="p4">4 · Вишня</button>
+  <div class="sw-sep"></div>
+  <span>Заголовок:</span>
+  <button class="sw-btn head active" data-h="warm">Тёплый</button>
+  <button class="sw-btn head" data-h="bold">Провокация</button>
+</div>
+
+<div class="site" id="site">
+  <div class="wrap">
+    <nav class="nav">
+      <div class="logo"><b>Голос</b> <i>рисунка</i></div>
+      <a class="nav-cta" href="#">Получить отчёт</a>
+    </nav>
+
+    <div class="hero">
+      <div>
+        <h1 id="headline">У каждого рисунка есть <span class="hand">голос</span>.<br>Услышьте его.</h1>
+        <p>Профессиональный отчёт о развитии ребёнка по его рисункам: 8 направлений, оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский.</p>
+        <a class="hero-cta" href="#">Получить отчёт — от 990 ₽</a>
+        <div class="hero-note">
+          <svg width="42" height="28" viewBox="0 0 46 30"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          PDF за час · ничего специально рисовать не нужно
+        </div>
+      </div>
+      <div class="table">
+        <div class="pol t1">
+          <div class="badge">креативность 8/10</div>
+          <svg viewBox="0 0 200 150">
+            <rect x="45" y="70" width="70" height="55" fill="none" class="c-acc" stroke-width="4"/>
+            <path d="M40 70 L80 40 L120 70" fill="none" class="c-acc" stroke-width="4" stroke-linejoin="round"/>
+            <rect x="64" y="96" width="22" height="29" fill="none" class="c-acc2" stroke-width="4"/>
+            <circle cx="160" cy="28" r="14" fill="none" class="c-badge" stroke-width="4"/>
+          </svg>
+          <div class="cap">«Наш дом», Миша, 5 лет</div>
+        </div>
+        <div class="pol t2">
+          <div class="badge">соц. контакт 9/10</div>
+          <svg viewBox="0 0 200 150">
+            <circle cx="65" cy="48" r="13" fill="none" class="c-acc2" stroke-width="4"/>
+            <line x1="65" y1="61" x2="65" y2="100" class="c-acc2" stroke-width="4" stroke-linecap="round"/>
+            <line x1="65" y1="72" x2="48" y2="88" class="c-acc2" stroke-width="4" stroke-linecap="round"/>
+            <line x1="65" y1="72" x2="82" y2="88" class="c-acc2" stroke-width="4" stroke-linecap="round"/>
+            <line x1="65" y1="100" x2="54" y2="130" class="c-acc2" stroke-width="4" stroke-linecap="round"/>
+            <line x1="65" y1="100" x2="76" y2="130" class="c-acc2" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="128" cy="54" r="11" fill="none" class="c-acc" stroke-width="4"/>
+            <line x1="128" y1="65" x2="128" y2="100" class="c-acc" stroke-width="4" stroke-linecap="round"/>
+            <line x1="128" y1="74" x2="113" y2="88" class="c-acc" stroke-width="4" stroke-linecap="round"/>
+            <line x1="128" y1="74" x2="143" y2="88" class="c-acc" stroke-width="4" stroke-linecap="round"/>
+            <line x1="128" y1="100" x2="118" y2="128" class="c-acc" stroke-width="4" stroke-linecap="round"/>
+            <line x1="128" y1="100" x2="138" y2="128" class="c-acc" stroke-width="4" stroke-linecap="round"/>
+            <line x1="82" y1="82" x2="113" y2="82" class="c-badge" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <div class="cap">«Мы с папой», Соня, 6 лет</div>
+        </div>
+        <div class="pol t3">
+          <div class="badge">контроль 9/10</div>
+          <svg viewBox="0 0 200 150">
+            <path d="M100 128 L100 58" class="c-acc2" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <circle cx="100" cy="46" r="32" fill="none" class="c-acc2" stroke-width="5"/>
+            <circle cx="84" cy="38" r="5" class="f-acc"/>
+            <circle cx="112" cy="32" r="5" class="f-acc"/>
+            <circle cx="104" cy="56" r="5" class="f-acc"/>
+          </svg>
+          <div class="cap">«Яблоня», Лиза, 7 лет</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec alt">
+    <div class="wrap">
+      <h2>Посмотрите настоящие отчёты</h2>
+      <div class="sub">Примеры отчётов — листайте. Каждый: 6–8 страниц наблюдений, оценок и советов.</div>
+      <div class="carousel">
+        <div class="report-card">
+          <div class="rc-badge">пример отчёта</div>
+          <div class="rc-top">
+            <div class="rc-draw"><svg viewBox="0 0 100 100"><rect x="20" y="45" width="40" height="32" fill="none" class="c-acc" stroke-width="3"/><path d="M16 45 L40 26 L64 45" fill="none" class="c-acc" stroke-width="3"/><circle cx="78" cy="22" r="9" fill="none" class="c-badge" stroke-width="3"/></svg></div>
+            <div><div class="rc-name">Миша</div><div class="rc-age">5 лет · «Наш дом»</div></div>
+          </div>
+          <div class="rc-body">
+            <div class="bar-row"><span>Креативность</span><div class="bar"><i style="width:80%"></i></div><b>8</b></div>
+            <div class="bar-row"><span>Организация</span><div class="bar"><i style="width:70%"></i></div><b>7</b></div>
+            <div class="bar-row"><span>Уверенность</span><div class="bar"><i style="width:90%"></i></div><b>9</b></div>
+          </div>
+          <div class="rc-quote">«Чёткая структура дома говорит о развитом пространственном мышлении…»</div>
+          <a class="rc-link" href="#">Смотреть полный отчёт →</a>
+        </div>
+        <div class="report-card">
+          <div class="rc-badge">пример отчёта</div>
+          <div class="rc-top">
+            <div class="rc-draw"><svg viewBox="0 0 100 100"><circle cx="35" cy="34" r="9" fill="none" class="c-acc2" stroke-width="3"/><line x1="35" y1="43" x2="35" y2="68" class="c-acc2" stroke-width="3"/><circle cx="65" cy="38" r="8" fill="none" class="c-acc" stroke-width="3"/><line x1="65" y1="46" x2="65" y2="68" class="c-acc" stroke-width="3"/><line x1="42" y1="55" x2="58" y2="55" class="c-badge" stroke-width="3"/></svg></div>
+            <div><div class="rc-name">Соня</div><div class="rc-age">6 лет · «Мы с папой»</div></div>
+          </div>
+          <div class="rc-body">
+            <div class="bar-row"><span>Соц. контакт</span><div class="bar"><i style="width:90%"></i></div><b>9</b></div>
+            <div class="bar-row"><span>Эмоции</span><div class="bar"><i style="width:80%"></i></div><b>8</b></div>
+            <div class="bar-row"><span>Моторика</span><div class="bar"><i style="width:60%"></i></div><b>6</b></div>
+          </div>
+          <div class="rc-quote">«Совместная сцена с папой — признак сильной социальной направленности…»</div>
+          <a class="rc-link" href="#">Смотреть полный отчёт →</a>
+        </div>
+        <div class="report-card">
+          <div class="rc-badge">пример отчёта</div>
+          <div class="rc-top">
+            <div class="rc-draw"><svg viewBox="0 0 100 100"><path d="M50 80 L50 42" class="c-acc2" stroke-width="4" fill="none"/><circle cx="50" cy="34" r="20" fill="none" class="c-acc2" stroke-width="3"/><circle cx="42" cy="30" r="3" class="f-acc"/><circle cx="58" cy="26" r="3" class="f-acc"/></svg></div>
+            <div><div class="rc-name">Лиза</div><div class="rc-age">7 лет · «Яблоня»</div></div>
+          </div>
+          <div class="rc-body">
+            <div class="bar-row"><span>Контроль линий</span><div class="bar"><i style="width:90%"></i></div><b>9</b></div>
+            <div class="bar-row"><span>Логика</span><div class="bar"><i style="width:80%"></i></div><b>8</b></div>
+            <div class="bar-row"><span>Креативность</span><div class="bar"><i style="width:70%"></i></div><b>7</b></div>
+          </div>
+          <div class="rc-quote">«Аккуратные штрихи и симметрия кроны — зрелый контроль движений…»</div>
+          <a class="rc-link" href="#">Смотреть полный отчёт →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap">
+      <h2>Как это работает</h2>
+      <div class="sub">Три шага — и отчёт у вас на почте.</div>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Сфотографируйте рисунок</h3><p>Подойдёт любой рисунок, который ребёнок уже нарисовал. Ничего специально рисовать не нужно.</p></div>
+        <div class="step"><div class="n">2</div><h3>Расскажите контекст</h3><p>Возраст, чем рисовал, что было задано — короткая форма на 2–3 минуты.</p></div>
+        <div class="step"><div class="n">3</div><h3>Получите отчёт</h3><p>PDF на почту + личный кабинет, где хранятся все ваши отчёты и рисунки.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec alt">
+    <div class="wrap quote">
+      <div class="q">«Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений я бы сама никогда не заметила.»</div>
+      <div class="who">Мария, мама Сони (6 лет) — из закрытого тестирования</div>
+    </div>
+  </div>
+
+  <div class="foot wrap">Голос рисунка · Образовательное наблюдение, не медицинская диагностика · golosrisunka.ru</div>
+</div>
+
+<script>
+document.querySelectorAll('.sw-btn.pal').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.sw-btn.pal').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');
+    var s=document.getElementById('site');
+    s.className='site'+(b.dataset.p?' '+b.dataset.p:'');
+  });
+});
+var heads={
+  warm:'У каждого рисунка есть <span class="hand">голос</span>.<br>Услышьте его.',
+  bold:'Вы видите <span class="hand">каляку</span>.<br>Мы видим развитие.'
+};
+document.querySelectorAll('.sw-btn.head').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.sw-btn.head').forEach(function(x){x.classList.remove('active')});
+    b.classList.add('active');
+    document.getElementById('headline').innerHTML=heads[b.dataset.h];
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Отчёт — {{ report.child.name }}, {{ report.child.age_display }} · Голос рисунка</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+<link rel="stylesheet" href="{{ static }}/css/tokens.css">
+<link rel="stylesheet" href="{{ static }}/css/report.css">
+</head>
+<body class="report">
+<div class="report-page">
+
+  <!-- Обложка -->
+  <div class="r-cover">
+    <div class="r-logo"><b>Голос</b> <i>рисунка</i></div>
+    <h1>Отчёт о развитии<br>по детскому рисунку</h1>
+    <div class="r-child">{{ report.child.name }}, {{ report.child.age_display }}</div>
+    <div class="r-date">{{ generated_date }}</div>
+    {% for d in drawings %}
+    <div class="r-polaroid{% if loop.index is even %} r-polaroid--alt{% endif %}">
+      <img src="{{ d.src }}" alt="Рисунок: {{ d.caption }}">
+      <div class="cap">{{ d.caption }}</div>
+    </div>
+    {% endfor %}
+    <div class="r-disclaimer">
+      Этот отчёт — образовательное наблюдение за навыками, видимыми в рисунке.
+      Он не является медицинской или психологической диагностикой.
+    </div>
+  </div>
+
+  <!-- Контекст -->
+  {% if report.context_summary %}
+  <div class="r-section">
+    <h2 class="r-h">Детали и контекст</h2>
+    <div class="r-context">{{ report.context_summary }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Введение -->
+  <div class="r-section">
+    <h2 class="r-h">Введение</h2>
+    <p>{{ report.introduction }}</p>
+  </div>
+
+  <!-- Сводные оценки -->
+  <div class="r-section">
+    <h2 class="r-h">Сводные оценки</h2>
+    <table class="r-scores">
+      {% for d in report.dimensions %}
+      <tr>
+        <td class="name">{{ d.title }}</td>
+        <td><div class="r-bar"><i style="width: {{ d.score * 10 }}%"></i></div></td>
+        <td class="num">{{ d.score }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <!-- Разбор направлений -->
+  <div class="r-section">
+    <h2 class="r-h">Разбор по направлениям</h2>
+    {% for d in report.dimensions %}
+    <div class="r-dim">
+      <div class="r-dim-head">
+        <span class="r-score-badge">{{ d.score }}/10</span>
+        <h3><span class="num">{{ loop.index }}.</span> {{ d.title }}</h3>
+      </div>
+      <p>{{ d.observation }}</p>
+      {% if d.research_note %}<p class="r-note">{{ d.research_note }}</p>{% endif %}
+      {% if d.activities %}
+      <div class="r-activities">
+        <span class="t">Как развивать:</span>
+        <ul>
+          {% for a in d.activities %}<li>{{ a }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Рекомендации -->
+  {% if report.recommendations %}
+  <div class="r-section r-list">
+    <h2 class="r-h">Рекомендации родителям</h2>
+    <ul>
+      {% for r in report.recommendations %}<li>{{ r }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Возможные направления развития (опционально) -->
+  {% if report.development_directions %}
+  <div class="r-section">
+    <h2 class="r-h">Возможные направления развития</h2>
+    <p class="r-dd-note">Эти идеи — для интереса и вдохновения, а не прогноз способностей ребёнка.</p>
+    {% for dd in report.development_directions %}
+    <div class="r-dd"><span class="t">{{ dd.title }}.</span> {{ dd.text }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Заключение -->
+  <div class="r-section">
+    <h2 class="r-h">Заключение</h2>
+    <div class="r-conclusion">{{ report.conclusion }}</div>
+  </div>
+
+  <div class="r-footer-disclaimer">
+    «Голос рисунка» (golosrisunka.ru) · Отчёт сгенерирован {{ generated_date }} ·
+    Образовательное наблюдение, не медицинская и не психологическая диагностика ·
+    Вопросы: поддержка на golosrisunka.ru
+  </div>
+
+</div>
+</body>
+</html>

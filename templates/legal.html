@@ -1,0 +1,16 @@
+{% extends "_base.html" %}
+{% block title %}{{ title }} — Голос рисунка{% endblock %}
+{% block body %}
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><b>Голос</b> <i>рисунка</i></div>
+    <a class="btn" href="/">На главную</a>
+  </nav>
+</div>
+<div class="section">
+  <div class="wrap" style="max-width: 760px">
+    <h2>{{ title }}</h2>
+    <p style="color: var(--muted); line-height: 1.6">{{ text }}</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 220" width="300" height="220">
+  <rect width="300" height="220" fill="#ffffff"/>
+  <!-- ствол -->
+  <path d="M150 200 L145 120 Q150 100 155 120 L160 200 Z" fill="#8B5A2B" stroke="#6B4423" stroke-width="2"/>
+  <path d="M148 150 L120 110" stroke="#8B5A2B" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M156 140 L185 105" stroke="#8B5A2B" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M150 130 L150 95" stroke="#8B5A2B" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <!-- крона: перекрывающиеся облака зелени -->
+  <circle cx="115" cy="85" r="32" fill="#5E9C4E" opacity="0.9"/>
+  <circle cx="150" cy="62" r="38" fill="#4E8C3E" opacity="0.9"/>
+  <circle cx="188" cy="82" r="33" fill="#6BAE5B" opacity="0.9"/>
+  <circle cx="150" cy="92" r="30" fill="#57A046" opacity="0.85"/>
+  <!-- трава -->
+  <path d="M0 205 Q75 195 150 205 T300 205 L300 220 L0 220 Z" fill="#7FBF6E"/>
+  <!-- солнце -->
+  <circle cx="262" cy="34" r="18" fill="none" stroke="#E3A72F" stroke-width="4"/>
+  <g stroke="#E3A72F" stroke-width="3" stroke-linecap="round">
+    <line x1="262" y1="8" x2="262" y2="2"/><line x1="262" y1="60" x2="262" y2="66"/>
+    <line x1="236" y1="34" x2="230" y2="34"/><line x1="288" y1="34" x2="294" y2="34"/>
+  </g>
+</svg>

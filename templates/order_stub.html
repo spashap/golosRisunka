@@ -1,0 +1,29 @@
+{% extends "_base.html" %}
+{% block title %}Заказ отчёта — Голос рисунка{% endblock %}
+{% block body %}
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><b>Голос</b> <i>рисунка</i></div>
+    <a class="btn" href="/">На главную</a>
+  </nav>
+</div>
+<div class="section">
+  <div class="wrap" style="text-align:center; padding: 40px 0">
+    <h2>Форма заказа</h2>
+    <p class="sub">Скоро здесь будет форма заказа отчёта.<br>
+      (Заглушка — полная форма с загрузкой рисунков появится на следующем этапе разработки.)</p>
+    <div class="price-grid" style="max-width: 440px">
+      {% for code, p in products.items() %}
+      <div class="card price-card">
+        <div class="p-title">{{ p.title }}</div>
+        <div class="p-sub">{{ p.subtitle }}</div>
+        <div class="p-prices">
+          <span class="p-old">{{ p.old_price_rub }} ₽</span>
+          <span class="p-price">{{ p.price_rub }} ₽</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

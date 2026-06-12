@@ -1,0 +1,217 @@
+/* ============================================================
+   Компонентная библиотека — spec §3.4. Правило (закон #3):
+   новый блок = композиция этих компонентов. Не хватает — добавь
+   компонент СЮДА, не инлайнь стили в страницу.
+   Зависит от tokens.css.
+   ============================================================ */
+
+/* --- Reset / base --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+a { text-decoration: none; color: inherit; }
+button { font: inherit; cursor: pointer; border: none; background: none; }
+img, svg { display: block; max-width: 100%; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* --- Layout --- */
+.wrap { max-width: var(--wrap-max); margin: 0 auto; padding: 0 24px; }
+
+.section { padding: 72px 0; position: relative; }
+.section--alt { background: var(--alt); }
+
+/* --- Типографика --- */
+h1, .h1 {
+  font-family: var(--font-head); font-weight: 900;
+  font-size: clamp(38px, 5.4vw, 62px); line-height: 1.06; letter-spacing: -1.2px;
+}
+h2, .h2 {
+  font-family: var(--font-head); font-weight: 900;
+  font-size: clamp(28px, 3.6vw, 42px); letter-spacing: -.5px; margin-bottom: 10px;
+}
+h3, .h3 { font-family: var(--font-head); font-weight: 800; font-size: 19px; }
+.sub { color: var(--muted); font-size: 17px; margin-bottom: 36px; }
+.hand { font-family: var(--font-hand); font-weight: 700; }
+h1 .hand, .h1 .hand { color: var(--accent); font-size: 1.16em; letter-spacing: 0; }
+.note {  /* рукописная заметка со стрелкой/иконкой */
+  display: flex; align-items: center; gap: 10px; margin-top: 22px;
+  font-family: var(--font-hand); font-size: 22px; color: var(--muted); font-weight: 600;
+}
+
+/* --- Кнопки --- */
+.btn {
+  display: inline-block; padding: 13px 28px; border-radius: var(--radius-pill);
+  font-weight: 700; transition: .2s; text-align: center;
+  background: var(--ink); color: var(--bg);
+}
+.btn:hover { background: var(--accent); color: #fff; }
+html.dk .btn { background: var(--accent); color: #fff; }
+html.dk .btn:hover { background: var(--paper); color: #221B12; }
+
+.btn--primary {  /* главный CTA: жёсткая тень + сдвиг на hover */
+  background: var(--accent); color: #fff;
+  padding: 18px 42px; font-weight: 900; font-size: 18px;
+  box-shadow: var(--shadow-hard); transition: .15s;
+}
+.btn--primary:hover {
+  background: var(--accent); color: #fff;
+  transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* --- Карточка --- */
+.card {
+  background: var(--paper); border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card); color: #2A2118;
+}
+.card--pad { padding: 30px; }
+
+/* --- Полароид (фото на «скотче») --- */
+.polaroid {
+  position: relative; background: var(--paper);
+  padding: 14px 14px 40px; border-radius: 3px; box-shadow: var(--shadow-pol);
+}
+.polaroid::before {  /* скотч */
+  content: ""; position: absolute; top: -12px; left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  width: 88px; height: 25px; background: var(--badge); opacity: .55; border-radius: 2px;
+}
+.polaroid--tilt-l { transform: rotate(-5deg); }
+.polaroid--tilt-r { transform: rotate(4deg); }
+.polaroid--tilt-sl { transform: rotate(-2deg); }
+.polaroid__img { background: var(--polbg); display: block; }
+.polaroid__cap {
+  font-family: var(--font-hand); font-weight: 600; font-size: 20px;
+  color: var(--cap); text-align: center; margin-top: 8px;
+}
+
+/* --- Бейдж-наклейка (рукописная оценка) --- */
+.badge {
+  display: inline-block; background: var(--accent); color: #fff;
+  font-family: var(--font-hand); font-weight: 600; font-size: 19px;
+  padding: 6px 14px; border-radius: var(--radius-pill);
+  transform: rotate(8deg); box-shadow: var(--shadow-hard-sm);
+}
+.badge--corner { position: absolute; top: -15px; right: -16px; z-index: 2; }
+.badge--flat { transform: rotate(4deg); box-shadow: none; font-size: 17px; padding: 4px 12px; }
+
+/* --- Строка оценки (название / бар / число) --- */
+.score-bar {
+  display: grid; grid-template-columns: 140px 1fr 28px; gap: 10px;
+  align-items: center; font-size: 14px; color: #666; margin-bottom: 12px;
+}
+.score-bar b { color: #2A2118; text-align: right; }
+.score-bar__track {
+  height: 10px; border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, .08); overflow: hidden;
+}
+.score-bar__fill {
+  display: block; height: 100%; border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--badge), var(--accent));
+  /* ширина = оценка × 10%: style="width:80%" из шаблона */
+}
+
+/* --- Карусель (CSS scroll-snap, без JS) --- */
+.carousel {
+  display: flex; gap: 24px; overflow-x: auto;
+  scroll-snap-type: x mandatory; padding: 8px 4px 24px;
+}
+.carousel > * { scroll-snap-align: center; flex: 0 0 auto; }
+
+/* --- Цитата (отзыв) --- */
+.quote { max-width: 760px; margin: 0 auto; text-align: center; }
+.quote__text {
+  font-family: var(--font-hand); font-weight: 600;
+  font-size: clamp(26px, 3.2vw, 34px); line-height: 1.35;
+}
+.quote__who { margin-top: 16px; color: var(--soft); font-size: 15px; }
+
+/* --- Шаг («Как это работает») --- */
+.step { background: var(--paper); border-radius: var(--radius-card); padding: 30px;
+        box-shadow: 0 6px 18px var(--shadow); color: #2A2118; }
+.step__n { font-family: var(--font-hand); font-weight: 700; font-size: 46px; color: var(--accent); }
+.step h3 { margin: 10px 0; }
+.step p { color: #666; font-size: 15px; line-height: 1.55; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+
+/* --- Навигация и лого --- */
+.nav { display: flex; justify-content: space-between; align-items: center;
+       padding: 18px 0; position: relative; z-index: 2; }
+.logo { font-family: var(--font-hand); font-weight: 700; font-size: 36px; line-height: 1; }
+.logo b { color: var(--accent); font-weight: 700; }
+.logo i { color: var(--accent2); font-style: normal; }
+
+/* --- FAQ (details/summary, без JS) --- */
+.faq { border-bottom: 2px dashed rgba(0, 0, 0, .1); padding: 18px 0; }
+.faq summary { font-family: var(--font-head); font-weight: 800; font-size: 17px;
+               cursor: pointer; list-style: none; }
+.faq summary::after { content: " +"; color: var(--accent); }
+.faq[open] summary::after { content: " –"; }
+.faq p { color: var(--muted); margin-top: 10px; font-size: 15px; line-height: 1.5; }
+
+/* --- Футер --- */
+.foot { padding: 40px 0; color: var(--soft); font-size: 14px; text-align: center; }
+
+/* --- Hero (двухколоночный первый экран) --- */
+.hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 48px;
+        align-items: center; padding: 56px 0 84px; }
+.hero p.lead { font-size: 19px; color: var(--muted); margin: 24px 0 32px; max-width: 47ch; }
+
+/* --- «Стол» с разбросанными полароидами --- */
+.pol-table { position: relative; min-height: 440px; }
+.pol-table .polaroid { position: absolute; }
+
+/* --- Карточка-превью отчёта (лендинг: блок «Примеры отчётов») --- */
+.report-card { width: 340px; overflow: hidden; position: relative;
+               display: flex; flex-direction: column;   /* кнопка всегда у низа */
+               background: var(--paper); border-radius: var(--radius-card);
+               box-shadow: var(--shadow-card); color: #2A2118; }
+.report-card__badge { position: absolute; top: 12px; right: 12px; z-index: 2; }
+.report-card__top { padding: 18px; border-bottom: 2px dashed rgba(0, 0, 0, .08); }
+.report-card__draw { float: left; width: 84px; height: 84px; border-radius: 12px;
+                     margin-right: 14px; background: rgba(0, 0, 0, .04);
+                     transform: rotate(-3deg); box-shadow: 0 3px 10px var(--shadow);
+                     overflow: hidden; }
+.report-card__draw img { width: 100%; height: 100%; object-fit: cover; }
+.report-card__name { font-family: var(--font-head); font-weight: 800; font-size: 18px;
+                     padding-top: 14px; }
+.report-card__age { color: var(--soft); font-size: 14px; }
+.report-card__top::after { content: ""; display: block; clear: both; }
+.report-card__body { padding: 18px; }
+.report-card__quote { font-family: var(--font-hand); font-weight: 600; font-size: 19px;
+                      color: var(--accent2); padding: 4px 18px 20px; }
+.report-card__link { display: block; text-align: center; padding: 14px;
+                     margin-top: auto;                  /* прижат к низу карточки */
+                     background: var(--ink); color: var(--bg); font-weight: 700; }
+.report-card__link:hover { background: var(--accent); color: #fff; }
+
+/* --- Карточка продукта (цены из конфига, дизайн «скидка от старой цены») --- */
+.price-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px;
+              max-width: 880px; margin: 0 auto; }
+.price-card { position: relative; display: flex; flex-direction: column;
+              text-align: center; padding: 36px 30px; }
+.price-card .p-title { font-family: var(--font-head); font-weight: 800; font-size: 21px; }
+.price-card .p-sub { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.price-card .p-prices { margin: 22px 0 6px; }
+.price-card .p-old { color: var(--soft); font-size: 19px; text-decoration: line-through;
+                     margin-right: 12px; }
+.price-card .p-price { font-family: var(--font-head); font-weight: 900; font-size: 38px;
+                       color: var(--accent); }
+.price-card .p-features { list-style: none; margin: 18px 0 28px; padding: 0;
+                          color: var(--muted); font-size: 15px; text-align: left; }
+.price-card .p-features li { padding: 7px 0 7px 26px; position: relative; }
+.price-card .p-features li::before { content: "✓"; position: absolute; left: 0;
+                                     color: var(--accent2); font-weight: 700; }
+.price-card .btn { margin-top: auto; }       /* кнопка прижата к низу карточки */
+.price-card--soon { opacity: .82; }
+.price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: 14px;
+                           font-family: var(--font-hand); font-size: 19px; }
+
+/* --- Мобильная адаптация базовых сеток --- */
+@media (max-width: 880px) {
+  .steps { grid-template-columns: 1fr; }
+  .price-grid { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: 1fr; padding: 32px 0 56px; }
+  .pol-table { min-height: 400px; }
+}

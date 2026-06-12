@@ -1,0 +1,27 @@
+{% extends "_base.html" %}
+{% block title %}Блог — Голос рисунка{% endblock %}
+{% block description %}Статьи о детском рисунке и развитии: этапы, наблюдения, занятия для родителей.{% endblock %}
+{% block body %}
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><b>Голос</b> <i>рисунка</i></div>
+    <a class="btn" href="/order">Получить отчёт</a>
+  </nav>
+</div>
+<div class="section">
+  <div class="wrap" style="max-width: 760px">
+    <h2>Блог</h2>
+    {% if posts %}
+      {% for p in posts %}
+      <article class="card card--pad" style="margin-bottom: 20px">
+        <h3><a href="/blog/{{ p.slug }}">{{ p.title }}</a></h3>
+        <p style="color: var(--soft); font-size: 14px">{{ p.date.strftime("%d.%m.%Y") }}</p>
+        <p style="color: var(--muted)">{{ p.description }}</p>
+      </article>
+      {% endfor %}
+    {% else %}
+      <p class="sub">Статьи скоро появятся.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

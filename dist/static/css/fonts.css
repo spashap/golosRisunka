@@ -1,0 +1,59 @@
+/* Self-hosted fonts (cyrillic+latin) — spec §3.3. No CDN.
+   woff2 for browsers; ttf fallback kept for WeasyPrint PDF rendering. */
+
+@font-face {
+  font-family: "Rubik";
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  src: url("../fonts/rubik-800.woff2") format("woff2"),
+       url("../fonts/rubik-800.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Rubik";
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("../fonts/rubik-900.woff2") format("woff2"),
+       url("../fonts/rubik-900.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("../fonts/inter-400.woff2") format("woff2"),
+       url("../fonts/inter-400.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("../fonts/inter-500.woff2") format("woff2"),
+       url("../fonts/inter-500.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Inter";
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url("../fonts/inter-600.woff2") format("woff2"),
+       url("../fonts/inter-600.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Caveat";
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url("../fonts/caveat-600.woff2") format("woff2"),
+       url("../fonts/caveat-600.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Caveat";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("../fonts/caveat-700.woff2") format("woff2"),
+       url("../fonts/caveat-700.ttf") format("truetype");
+}

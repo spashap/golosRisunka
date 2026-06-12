@@ -1,0 +1,129 @@
+{% extends "_base.html" %}
+{% block title %}Галерея компонентов — dev{% endblock %}
+{% block body %}
+
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><b>Голос</b> <i>рисунка</i></div>
+    <a class="btn" href="#">Получить отчёт</a>
+  </nav>
+</div>
+
+<div class="section">
+  <div class="wrap">
+    <h1>Заголовок h1 — есть <span class="hand">голос</span></h1>
+    <p class="sub">Это .sub — подзаголовок секции. Ниже — все компоненты системы с фиктивными данными.</p>
+    <div class="note">
+      <svg width="42" height="28" viewBox="0 0 46 30"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      .note — рукописная заметка · PDF за час · 990 ₽
+    </div>
+  </div>
+</div>
+
+<div class="section section--alt">
+  <div class="wrap">
+    <h2>Кнопки</h2>
+    <p style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <a class="btn" href="#">.btn — обычная</a>
+      <a class="btn btn--primary" href="#">.btn--primary — CTA от 990 ₽</a>
+    </p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="wrap">
+    <h2>Полароиды и бейджи</h2>
+    <div style="display:flex;gap:64px;flex-wrap:wrap;padding:40px 0">
+      <div class="polaroid polaroid--tilt-l" style="width:242px">
+        <div class="badge badge--corner">креативность 8/10</div>
+        <svg class="polaroid__img" viewBox="0 0 200 150">
+          <rect x="45" y="70" width="70" height="55" fill="none" stroke="var(--accent)" stroke-width="4"/>
+          <path d="M40 70 L80 40 L120 70" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linejoin="round"/>
+          <circle cx="160" cy="28" r="14" fill="none" stroke="var(--badge)" stroke-width="4"/>
+        </svg>
+        <div class="polaroid__cap">«Наш дом», Миша, 5 лет</div>
+      </div>
+      <div class="polaroid polaroid--tilt-r" style="width:222px">
+        <div class="badge badge--corner">контроль 9/10</div>
+        <svg class="polaroid__img" viewBox="0 0 200 150">
+          <path d="M100 128 L100 58" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <circle cx="100" cy="46" r="32" fill="none" stroke="var(--accent2)" stroke-width="5"/>
+          <circle cx="84" cy="38" r="5" fill="var(--accent)"/>
+          <circle cx="112" cy="32" r="5" fill="var(--accent)"/>
+        </svg>
+        <div class="polaroid__cap">«Яблоня», Лиза, 7 лет</div>
+      </div>
+      <div style="align-self:center">
+        <span class="badge">.badge — отдельно</span>&nbsp;&nbsp;
+        <span class="badge badge--flat">пример отчёта</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section section--alt">
+  <div class="wrap">
+    <h2>Карточка + строки оценок (.card / .score-bar)</h2>
+    <div class="card" style="max-width:420px;padding:24px">
+      <h3 style="margin-bottom:16px">Сводные оценки</h3>
+      {% for name, score in [("Креативность", 8), ("Организованность", 7), ("Уверенность", 9), ("Логика", 6)] %}
+      <div class="score-bar">
+        <span>{{ name }}</span>
+        <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ score * 10 }}%"></i></div>
+        <b>{{ score }}</b>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="wrap">
+    <h2>Карусель (.carousel) из карточек</h2>
+    <div class="carousel">
+      {% for child, age in [("Миша", "5 лет"), ("Соня", "6 лет"), ("Лиза", "7 лет")] %}
+      <div class="card" style="width:340px;overflow:hidden;position:relative">
+        <span class="badge badge--flat" style="position:absolute;top:12px;right:12px">пример отчёта</span>
+        <div style="padding:18px">
+          <h3>{{ child }}</h3>
+          <div style="color:var(--soft);font-size:14px;margin-bottom:14px">{{ age }}</div>
+          <div class="score-bar">
+            <span>Креативность</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+        </div>
+        <a class="btn" style="display:block;border-radius:0" href="#">Смотреть полный отчёт →</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="section section--alt">
+  <div class="wrap">
+    <h2>Шаги (.steps / .step)</h2>
+    <div class="steps">
+      <div class="step"><div class="step__n">1</div><h3>Сфотографируйте рисунок</h3><p>Подойдёт любой рисунок, который ребёнок уже нарисовал.</p></div>
+      <div class="step"><div class="step__n">2</div><h3>Расскажите контекст</h3><p>Возраст, чем рисовал — короткая форма на 2–3 минуты.</p></div>
+      <div class="step"><div class="step__n">3</div><h3>Получите отчёт</h3><p>PDF на почту + личный кабинет.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="wrap quote">
+    <div class="quote__text">«.quote — я будто впервые посмотрела на рисунки дочки внимательно.»</div>
+    <div class="quote__who">Мария, мама Сони (6 лет)</div>
+  </div>
+</div>
+
+<div class="section section--alt">
+  <div class="wrap">
+    <h2>FAQ (.faq, details/summary)</h2>
+    <details class="faq"><summary>Это психологическая диагностика?</summary><p>Нет. Это образовательное наблюдение за развитием навыков, не медицинская или психологическая диагностика.</p></details>
+    <details class="faq"><summary>Какой возраст ребёнка подходит?</summary><p>От 3 до 12 лет — содержание отчёта учитывает возрастной этап.</p></details>
+  </div>
+</div>
+
+{% endblock %}
