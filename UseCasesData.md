@@ -46,6 +46,16 @@ Chronological build log lives in `DevelopmentStatus.md`.
 **Cause:** it didn't fail — Gemini correctly recognized the crop as part of the same drawing and merged them (the crop's content appears inside the single description). The model was more perceptive than the test.
 **Solution:** consolidation quality can only be tested with genuinely different drawings of the same child (user to provide). Crop/duplicate synthetic sets are invalid for this purpose — though they usefully confirm the model doesn't hallucinate differences between near-identical inputs.
 
+## #10 · Browsers silently rejected our subsetted fonts (serif fallback) while WeasyPrint accepted them
+**Problem:** user screenshot showed the whole landing in Times-like serif — woff2 fonts not applied. PDFs were fine, so the fonts "worked" in all our machine checks.
+**Cause:** `fontTools.varLib.instancer` pins axes and removes `fvar`, but leaves the `STAT` table behind. Chrome/Firefox run fonts through the OTS sanitizer, which rejects a font with STAT referencing non-existent axes — silently, falling back to system serif. WeasyPrint doesn't sanitize, hence PDF worked.
+**Solution:** in `build_fonts.py` after instancing, delete leftover variable-font tables: `STAT, avar, fvar, gvar, cvar, MVAR, HVAR, VVAR`. Verified via headless Chrome screenshot (`chrome --headless --screenshot=ABS_PATH url` — note: the path must be absolute on Windows).
+**Reusable principle:** webfont checks must include a real browser engine (headless Chrome screenshot), not only the PDF renderer — they validate fonts differently.
+
+## #11 · Naive sentence split breaks on Russian initials («Никиты Н.»)
+**Problem:** landing quotes extracted as «В рисунке Никиты Н.» — `conclusion.split('. ')[0]` saw the initial's period as a sentence end.
+**Solution:** sentence boundary = period preceded by a lowercase letter/quote/paren: `re.search(r"^(.*?[а-яёa-z»\)])\.(?=\s|$)", text)` (`app/samples.py::_first_sentence`).
+
 ## #5 · gwfh variant id for weight 400 is "regular", not "400"
 **Problem:** `KeyError: '400'` when picking Inter variants from gwfh API JSON.
 **Cause:** the API names the normal-weight variant `regular` (and italic `italic`), numeric ids only for other weights.

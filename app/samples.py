@@ -5,15 +5,22 @@
 """
 from __future__ import annotations
 
-import base64
-import io
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image
 
 from config import settings
+
+
+def _first_sentence(text: str, max_len: int = 220) -> str:
+    """Первое предложение, не ломаясь на инициалах («Никиты Н.») — точка
+    считается концом предложения только после строчной буквы/скобки/кавычки."""
+    m = re.search(r"^(.*?[а-яёa-z»\)])\.(?=\s|$)", text)
+    s = (m.group(1) + ".") if m else text
+    return s if len(s) <= max_len else s[: max_len - 1] + "…"
 
 # (token, каталог отчёта, файл рисунка, подпись полароида, бейдж берётся из top-оценки)
 _SAMPLE_DEFS = [
@@ -66,7 +73,7 @@ def _load() -> list[Sample]:
         data = json.loads(rjson.read_text(encoding="utf-8"))
         dims = sorted(data["dimensions"], key=lambda d: -d["score"])
         first_name = data["child"]["name"].split()[0]
-        quote = data["conclusion"].split(". ")[0].strip() + "."
+        quote = _first_sentence(data["conclusion"].strip())
         thumb_url, tw, th = _thumb_file(settings.BASE_DIR / drawing, token)
         samples.append(Sample(
             token=token,
@@ -76,7 +83,7 @@ def _load() -> list[Sample]:
             thumb_url=thumb_url, thumb_w=tw, thumb_h=th,
             top_scores=[{"title": d["title"], "score": d["score"]} for d in dims[:3]],
             badge=f"{dims[0]['title'].lower()} {dims[0]['score']}/10",
-            quote=quote if len(quote) < 220 else quote[:217] + "…",
+            quote=quote,
             html_path=rdir / "report.html",
         ))
     return samples

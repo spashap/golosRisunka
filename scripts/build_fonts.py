@@ -43,6 +43,11 @@ def build(family: str, raw: bytes, weight: int) -> None:
     if "opsz" in {a.axisTag for a in font["fvar"].axes}:
         axes["opsz"] = 14  # Inter text optical size
     instantiateVariableFont(font, axes, inplace=True)
+    # инстансер оставляет STAT при удалённом fvar — Chrome OTS такое ОТВЕРГАЕТ
+    # (тихий fallback на системный serif в браузере; UseCases.md #10)
+    for table in ("STAT", "avar", "fvar", "gvar", "cvar", "MVAR", "HVAR", "VVAR"):
+        if table in font:
+            del font[table]
 
     options = subset.Options()
     options.flavor = None

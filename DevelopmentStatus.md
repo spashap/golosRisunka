@@ -192,3 +192,21 @@ Dev server: `venv\Scripts\python.exe run.py` → http://localhost:5000 (already 
 
 ### 🧪 Milestone M3R — ждёт реальный набор
 Прочитать сводный PDF: ощущается как ЕДИН отчёт об одном ребёнке? наблюдения ссылаются на конкретные рисунки? противоречия названы честно?
+
+---
+
+## 2026-06-12 — Git push + временный Vercel-хостинг + 2 бага из скриншотов заказчика
+
+### Git
+- `.gitignore`: `.env`, `data/`, `venv/`, `.claude/`, **projectSpec/testDrawings/ и reportSamples/** (детские рисунки с ФИО и приватные материалы — НЕ в git).
+- Initial commit (95 файлов) → push в https://github.com/spashap/golosRisunka (main). ⚠️ Репозиторий ПУБЛИЧНЫЙ — рекомендация сделать private остаётся в силе.
+
+### Временный хостинг (до русского VPS)
+- Полный Flask-стек на Vercel не работает (WeasyPrint/SQLite/воркер) — для витрины сделан **статический экспорт**: `scripts/export_static.py` → `dist/` (лендинг, 3 sample-отчёта, юр.страницы, static). Все страницы с `noindex`, robots.txt `Disallow: /` — временный домен не должен индексироваться (каноничный будет golosrisunka.ru).
+- `vercel.json`: outputDirectory=dist, cleanUrls. dist/ закоммичен.
+- Деплой: Vercel dashboard → Import Git Repository → spashap/golosRisunka → Framework "Other" → деплой (build command пустой). Адрес вида golos-risunka.vercel.app.
+
+### Баги из projectSpec/errors/ (скриншоты заказчика 11.06)
+1. **Шрифты не грузились в браузере** (всё serif): instancer оставлял STAT-таблицу при удалённом fvar → Chrome OTS тихо отвергал woff2. WeasyPrint не санитайзит — поэтому PDF были ок и мы не заметили. Фикс: build_fonts.py дропает STAT/avar/gvar/…; проверка headless-Chrome скриншотом. **UseCase #10.** Правило: проверки шрифтов — и PDF, и браузер.
+2. **Цитаты карточек обрывались на инициалах** («В рисунке Никиты Н.»): наивный split по '. '. Фикс: `_first_sentence()` — конец предложения только после строчной буквы. **UseCase #11.**
+- Отступ CTA↔заметка в hero был починен ранее (22px) — скриншот заказчика был до фикса.
