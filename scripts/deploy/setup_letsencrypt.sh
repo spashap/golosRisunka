@@ -28,5 +28,9 @@ echo "== verify =="
 nginx -t && systemctl reload nginx
 echo | openssl s_client -connect "$DOMAIN":443 -servername "$DOMAIN" 2>/dev/null \
   | grep -E "Verify return code|issuer=" || true
-echo "done. dry-run renewal check:"
-certbot renew --cert-name "$DOMAIN" --dry-run 2>&1 | grep -iE "success|congratulat|fail|error" || true
+echo "auto-renewal: certbot.timer is $(systemctl is-active certbot.timer 2>/dev/null) / $(systemctl is-enabled certbot.timer 2>/dev/null)"
+certbot certificates --cert-name "$DOMAIN" 2>/dev/null | grep -E "Expiry Date" || true
+echo "done."
+echo
+echo "(Optional) simulate a renewal — can be SLOW/flaky against LE staging, so it's not"
+echo "run automatically. To check manually:  certbot renew --cert-name $DOMAIN --dry-run"
