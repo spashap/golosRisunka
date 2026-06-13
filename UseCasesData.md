@@ -78,3 +78,28 @@ Chronological build log lives in `DevelopmentStatus.md`.
 **Problem:** `KeyError: '400'` when picking Inter variants from gwfh API JSON.
 **Cause:** the API names the normal-weight variant `regular` (and italic `italic`), numeric ids only for other weights.
 **Solution:** map `regular → 400` when indexing variants. (Script later superseded by build_fonts.py, see #2.)
+
+## #16 · Ubuntu: `python3 -m venv` fails ("ensurepip is not available") though `import venv` works
+**Problem:** on the VPS, `python3 -m venv venv` aborted with *"ensurepip is not available … install the python3.12-venv package"*, even though a recon check of `import venv` had reported OK.
+**Cause:** Debian/Ubuntu split venv: the `venv` module imports fine, but `ensurepip` (needed to bootstrap pip into a new venv) ships in a separate `python3.X-venv` apt package that isn't installed by default. A bare `import venv` check is a false positive.
+**Solution:** `apt-get install -y python3.12-venv`, then `rm -rf` the half-built venv dir and recreate. **Recon rule:** to test real venv capability, check the apt package / try `python3 -m venv` in a temp dir, not just `import venv`.
+
+## #17 · `.gitignore` inline `#` comments don't work — almost leaked a private key
+**Problem:** lines like `scripts/deploy/install_cert.sh      # private CF key` failed to ignore the file; `git add -A` staged the private Cloudflare Origin key + a tarball of private drawings.
+**Cause:** in `.gitignore`, `#` only starts a comment at the **beginning of a line**. An inline `#` after a pattern becomes part of the pattern (`install_cert.sh      # private CF key`), which matches nothing → file not ignored.
+**Solution:** put comments on their **own lines**. Verify with `git check-ignore <path>`. **Process rule:** before every commit, run a safety grep over `git diff --cached --name-only` for secret/generated patterns (`install_cert|\.tar\.gz|/samples/|^\.env$|\.webp$`) — this is what caught it. Confirmed via `git log --all -- <path>` the secrets were never in history.
+
+## #18 · Cloudflare proxy silently overrides robots.txt and 403s crawlers (breaks SEO)
+**Problem:** after deploy, live `robots.txt` showed a Cloudflare-managed block (`Content-Signal: ai-train=no`, `Disallow: /` for GPTBot/ClaudeBot) **above** our allow-rules; and `/`, `/blog`, `/sitemap.xml` returned **403** to non-browser clients while `robots.txt` returned 200. Origin (Flask) was correct in all local tests.
+**Cause:** orange-cloud proxy means Cloudflare can rewrite/serve content at the edge. **"Block AI Scrapers and Crawlers" / Content-Signals** prepends anti-AI rules to robots.txt; **Bot Fight Mode** challenges/403s automated clients (would block Yandex fetching the sitemap). Both are dashboard toggles, invisible from the codebase.
+**Solution:** disable both in Cloudflare (Security → Bots), then **purge the CF cache for `/robots.txt`** (edge-cached). Re-verify with a cache-busting query (`?cb=…`). **Verification rule:** what crawlers actually see = Yandex Webmaster «Проверка ответа сервера» (fetches as YandexBot through CF), NOT a normal browser — browsers pass CF, bots may not.
+
+## #19 · grep mangles Cyrillic in Git Bash on this box → false "clean" on banned-word scans
+**Problem:** a grep-based banned-word scan of Russian blog content reported "clean", but a later check found `«Энергия темперамента»` (a banned token) it had missed; grep output also showed mojibake (`предсказ�`).
+**Cause:** Git Bash grep on this Windows box has a locale/encoding mismatch with UTF-8 Cyrillic — matches are unreliable (false negatives).
+**Solution:** scan Russian text with **Python (UTF-8)**, not grep: `low = path.read_text(encoding="utf-8").lower(); if token in low`. Don't `print()` the Cyrillic context (cp1252 console crashes, UseCase #3) — **write findings to a UTF-8 file and open it with the Read tool**. Reusable for any Cyrillic content audit.
+
+## #20 · WeasyPrint doesn't resolve CSS `var()` inside SVG presentation attributes
+**Problem:** rendering the inline-SVG blog doodles (which use `fill="var(--accent)"`) to a PDF montage for visual QA produced black/unstyled shapes.
+**Cause:** browsers inherit CSS custom properties into SVG, but WeasyPrint's SVG renderer (and most rasterizers) don't resolve `var()` in SVG presentation attributes.
+**Solution:** for offline rasterization/QA only, string-replace `var(--x)` with concrete hex before rendering. In the live site it's a non-issue — real browsers resolve `var()`, so the doodles recolor correctly across all 4 palettes. Don't "fix" the SVGs to hex (that would break theming).

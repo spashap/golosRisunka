@@ -71,8 +71,11 @@ venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 
   `_metrika.html` сам шлёт `reachGoal` — JS дописывать не нужно. Имя цели уникальное, по схеме
   `<страница>_<действие>` (напр. `order_submit`, `cabinet_download_pdf`). Админку НЕ трекать.
 
-## Состояние на вечер 12.06.2026 (детали в DevelopmentStatus.md)
-- **Фазы 0–7 построены; 0–5 одобрены заказчиком (M5 ✅), M6+M7 ждут проверки одной сессией**: дизайн-система; промпт v2.0 (M3R: сводный отчёт по
+## Состояние на 13.06.2026 (детали в DevelopmentStatus.md)
+- **🚀 СОФТ-ЗАПУЩЕНО В ПРОД (13.06): сайт ЖИВ на golosrisunka.ru, V1.003.** Фазы 0–7 готовы,
+  Phase 9 (деплой) сделан РАНЬШЕ Phase 8 — прод за Cloudflare со stub-оплатой (публичный,
+  индексируемый по решению заказчика). Следующий гейт — Phase 8 (ЮKassa + Unisender), ждём аккаунты.
+- **Фазы 0–7 построены; 0–5 одобрены заказчиком (M5 ✅)**: дизайн-система; промпт v2.0 (M3R: сводный отчёт по
   2 реальным рисункам одного ребёнка — честные противоречия, ссылки на номера рисунков — sign-off);
   лендинг с 4 сэмплами (сводный по 2 рисункам — в центре карусели, стрелки ‹ ›, мобайл-адаптация);
   единая sticky-шапка с навигацией и «Войти» (заглушка /login до Phase 7);
@@ -90,9 +93,9 @@ venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 
   5 попыток → void; код в outbox + консоль до Unisender; create_session общая с mark_paid),
   /login → /cabinet (статусы «в обработке»/«готов», превью рисунков thumb-JPEG, скачивание PDF,
   владельческие проверки). Заказ 8 оставлен в paid — воркер доставит при M6-тесте.
-- **Блог: 6 статей** (content/blog/) по EN-образцам заказчика (projectSpec/blog/, gitignored) —
-  НЕ калька: те же поисковые запросы, но ответы в философии §7.4. Ждут вычитки. Карточки-плитки
-  с инлайн-SVG дудлами (_blog_thumb.html), дат на витрине нет.
+- **Блог: 14 статей** (content/blog/) в философии §7.4 — 6 «тревожных» тем + 8 SEO-столпов/
+  конверсионных (13.06): по одному целевому запросу на статью, перелинковка blog→лендинг+/primer,
+  0 эзотерики. У КАЖДОЙ статьи свой инлайн-SVG дудл (_blog_thumb.html). Даты на витрине нет.
 - **Админка /admin** (дизайн одобрен): вход по `ADMIN_PASS` из .env (отдельно от /login!),
   сайдбар: Аналитика/Заказы/Клиенты/Промокоды/Настройки сайта (редактор products.json
   живьём)/Письма (outbox). Лендинг: Цены → FAQ → Блог-карусель; отзывы — узкая лента-ротатор
@@ -100,17 +103,31 @@ venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 
   (webvisor выключен намеренно). Dev-чит: код входа виден на странице для spashap@gmail.com
   на localhost. Кабинет: группировка по детям + спящие CTA Development («скоро»).
   Сид кабинета: data/tmp/tmp_seed_cabinet.py (заказы 9/10/11).
-- **Git**: https://github.com/spashap/golosRisunka (PUBLIC — рекомендация private остаётся), запушено.
-  **Vercel**: статический экспорт dist/ (scripts/export_static.py, noindex), деплой через дашборд.
-- **⏸ ПРОЕКТ НА ПАУЗЕ (12.06 ночь)**: ждём от заказчика домен, ЮKassa, Unisender-домен,
-  YANDEX_METRIKA_ID, тест M6+M7, вычитку блога/отзывов. Дальше: Phase 8 → 9.
+- **Аналитика ЖИВА (13.06)**: Я.Метрика на всех страницах кроме /admin (webvisor=ON по решению
+  заказчика), first-party трекинг кликов (data-ym-goal → reachGoal + beacon /t/e), админ-вкладки
+  **Визиты** (устройства/UTM/origin) и **Действия** (счётчик событий с фильтром); events получил
+  device/user_agent/referer (миграция в init_db). `scripts/reset_analytics.py` — чистка тест-данных.
+- **SEO Yandex+AI (13.06)**: robots.txt (YandexBot/GPTBot/ClaudeBot/Perplexity allow; block
+  admin/cabinet/r), sitemap (23 URL), OG+Twitter+canonical глобально, schema Org/WebSite/Product/
+  FAQPage/Article, индексируемые `/primer/<token>` (приватные /r/ закрыты), OG-картинка
+  (scripts/build_og_image.py), noindex на приватных. yandex-verification на лендинге.
+  ⚠️ Cloudflare-гочи — см. UseCase #18 + память.
+- **Git**: https://github.com/spashap/golosRisunka (PUBLIC). **Прод-деплой = VPS** (см. «Деплой»);
+  Vercel-экспорт dist/ — устаревший noindex-зеркало, НЕ продакшен (продакшен на VPS).
+- **⏳ Ждём от заказчика для Phase 8**: ЮKassa (аккаунт/ключи) + Unisender (домен golosrisunka.ru).
+  Всё за абстракциями — подключение = один backend каждый. После Phase 8 — боевой M8/M9-гейт.
 - **devtest-img1** (Алиса, 4 года, июль 2024) — зарезервирован для Development report (продукт 2).
-- Кредензалы: Gemini ✅ (.env); Unisender — домен не добавлен; ЮKassa — «старый или новый аккаунт» открыт.
+- Кредензалы: Gemini ✅ · YANDEX_METRIKA_ID ✅ (109824945, в прод-.env) · Cloudflare Origin-cert ✅
+  (ротировать — ключ прошёл через чат) · Unisender — домен не добавлен · ЮKassa — открыт.
 - Тестовый купон в локальной БД: TEST20 (20%, multi-use).
 
 ## Watch list
 - Первый экран ≈235KB (цель <200KB): caveat-700.woff2 = 93KB — решить на Lighthouse-пассе Phase 9.
-- Отзывы на лендинге — placeholder до текстов заказчика; OG-image нет; 6yr тест-рисунок — сток (заменит).
+- Отзывы на лендинге — placeholder до текстов заказчика; 6yr тест-рисунок — сток (заменит).
+  OG-image есть (static/img/og-default.png, генератор scripts/build_og_image.py).
+- Прод: stub-оплата = бесплатные отчёты у любого посетителя (риск Gemini-расходов) — закроется
+  с ЮKassa (Phase 8). После правок шаблонов/CSS: на сервере `./deploy.sh`. Cloudflare «Block AI
+  bots»/Bot Fight Mode держать ВЫКЛ (иначе ломают SEO — UseCase #18), после смены настроек — purge.
 - `python -` heredoc и `&&`-цепочки: падение по encoding обрывает цепочку — файлы писать Write-тулом.
 - Headless-скриншоты на этой машине КРОПЯТСЯ (Windows DPI 125%, UseCase #14) — мобильную вёрстку
   проверяет заказчик на телефоне; fast-сессии = правка → отдать на проверку, без скриншот-циклов.

@@ -459,3 +459,103 @@ canonical+OG, Article-schema, нет сырого markdown, ссылка /order,
 ### ⏸ ПАУЗА. Чего ждём от заказчика
 1. Тест M6+M7 (заказы 8 и 11 ждут воркера). 2. Вычитка 6 статей блога + 6 отзывов-плейсхолдеров.
 3. Домен → VPS (Phase 9). 4. ЮKassa + Unisender домен (Phase 8). 5. YANDEX_METRIKA_ID в .env.
+
+---
+
+## 2026-06-13 — 🚀 СОФТ-ЗАПУСК В ПРОД + версионирование + аналитика + Yandex/AI SEO + 8 статей
+
+Большая сессия: заказчик дал домен → развернули прод (Phase 9 РАНЬШЕ Phase 8), затем
+версионирование, Я.Метрику с трекингом кликов, админ-аналитику, полный SEO-слой и 8 новых статей.
+Сайт ЖИВ: **https://golosrisunka.ru, V1.003**. Оплата всё ещё stub (ЮKassa/Unisender ждём).
+
+### Деплой (Phase 9, сделан вне очереди)
+- VPS Fornex (Ubuntu 24.04, root@31.172.67.220) — уже хостит shepotzvezd/astro-api (nginx 1.24,
+  certbot, MySQL, Next на :3000, python на :8000). Сначала read-only `scripts/server_recon.sh`
+  (инвентаризация), потом план под существующее окружение.
+- **WeasyPrint-либы уже стояли** (Pango/Cairo/GDK-Pixbuf — другой сайт юзает). Python 3.12 +
+  `python3.12-venv` доставили (UseCase #16: `import venv` ок, но ensurepip отдельным пакетом).
+- Код в `/var/www/golosrisunka` (git clone из публичного репо). Запуск как **www-data**, код
+  root-owned (веб читает, не пишет); пишет только data/ + static/img/. **gunicorn на unix-сокете**
+  `/run/golosrisunka/web.sock` (нет коллизии с :8000/:3000). systemd: `golosrisunka-web` +
+  `golosrisunka-worker`. nginx-vhost рядом с чужими (явный server_name, не default).
+- **SSL/Cloudflare**: домен на CF orange-proxy. Выбрали **Cloudflare Origin Certificate** (не
+  Let's Encrypt — за оранжевым прокси LE-обновление хрупкое), SSL mode Full(strict). Cert/key в
+  /etc/ssl/cloudflare/, валидация пары openssl modulus. nginx восстанавливает реальный IP из
+  CF-Connecting-IP (диапазоны CF в конфиге).
+- Скрипты: `scripts/deploy/{provision,go_live,install_cert,install_samples,update}.sh` (первичная
+  установка; install_cert.sh + *.tar.gz — gitignored, содержат ключ/приватные рисунки). Рабочие
+  команды в КОРНЕ репо: **`./deploy.sh`** (git pull + deps + restart) и **`./restart.sh`**.
+- Сэмплы лендинга чинились отдельно: report.json/html + рисунки gitignored → не приехали клоном →
+  пустая лента примеров. Залили тарболом (install_samples.sh) + chown static/img www-data.
+
+### Версионирование (правило в CLAUDE.md)
+- Файл `VERSION` (1.001) — единый источник, в футере «V{{version}}». `scripts/bump_version.py`
+  (минор +1 / `--major`). **Правило: минор поднимать ПЕРЕД каждым git push.** Грабли: лендинг
+  standalone (не наследует _base), футер у него отдельный — версию добавляли в оба места.
+
+### Аналитика (Я.Метрика + first-party)
+- `_metrika.html` переписан под боевой сниппет заказчика (**webvisor=ON** — осознанный override
+  приватностного «выкл» из-за загрузки рисунков; зафиксировано). ID 109824945 из .env. Гейт:
+  `metrika_id and not request.path.startswith('/admin')` — счётчик на всех страницах кроме админки.
+- **Трекинг кликов**: делегированный листенер шлёт `data-ym-goal="page_action"` в Я.Метрику
+  (reachGoal) И first-party beacon на `/t/e` → лог в events как `click:<goal>`. На КАЖДУЮ кнопку/
+  CTA/ссылку проставлен уникальный goal (~42 имени по 12 шаблонам). Правило в CLAUDE.md.
+- **events** получил `user_agent/device/referer` (идемпотентная миграция `_migrate` в init_db;
+  `track()`/`track_event()` заполняют из request; воркер шлёт NULL). `parse_device()` по UA
+  (mobile/tablet/desktop/bot; YaBrowser не путать с ботом).
+- Админка: новые вкладки **Визиты** (устройства, UTM-источники, последние посетители с origin) и
+  **Действия** (события с количеством + фильтр по имени, лента). `scripts/reset_analytics.py`
+  (report по умолчанию, `--events/--orders/--all` + `--confirm`) — чистка пред-запускового мусора;
+  на сервере гонять как `sudo -u www-data venv/bin/python ...`.
+
+### SEO (Yandex + AI) — отдельной большой задачей
+- **robots.txt**: явные allow-группы YandexBot/Yandex/Googlebot/Google-Extended/Bingbot/GPTBot/
+  OAI-SearchBot/ChatGPT-User/ClaudeBot/Claude-SearchBot/anthropic-ai/PerplexityBot + `*`; Disallow
+  admin/cabinet/login/logout/order-success/pay/r/t/track; Sitemap-строка.
+- **sitemap.xml**: лендинг + блог (lastmod=дата) + сэмпл-страницы /primer (23 URL).
+- **/primer/<token>** — НОВАЯ индексируемая страница-пример (sample.html, один H1, Article-schema,
+  ссылка на полный отчёт /r/ с rel=nofollow). Приватные отчёты заказов на /r/ остаются закрыты
+  (Disallow). Лендинг-карточки примеров теперь ведут на /primer.
+- **Глобально в _base**: canonical, robots-блок, OG + Twitter cards, og:image, og:locale ru_RU;
+  partial `_seo_jsonld.html` (Organization+WebSite на всех страницах). Лендинг: коммерческий
+  title «Анализ детского рисунка по фото — образовательный PDF-отчёт без диагноза», schema
+  Org/WebSite/Product(цены из config!)/FAQPage. blog_post: Article. noindex на приватных
+  (кабинет/логин/чекаут/успех/стабы/админ-логин).
+- **FAQ +3 пункта** (не диагноз / понять рисунок 4–5 лет / интерпретировать дома) — кормят FAQPage.
+- **OG-картинка** `static/img/og-default.png` (1200×630, брендовая, `scripts/build_og_image.py`
+  на PIL + проектные шрифты).
+- Цены в schema — из products.json (2999/4999), НЕ из ТЗ-«990–1890» (закон «без хардкода цен»).
+
+### Контент: 8 новых статей + дудлы
+- 8 SEO-статей под высокочастотные запросы (столпы «что узнать по рисунку», «7 признаков», «не
+  диагноз»-конверсия; + без психолога, PDF-отчёт, одно и то же, рисунок семьи, развивающие
+  задания). Стиль = дом-шаблон (лид → **Коротко:** → ## → мифы/факты → ЧВ → дисклеймер → «Читайте
+  также»), строго §7.4. Перелинковка blog→лендинг+/primer, два столпа — хабы.
+- **0 запрещённой эзотерики** (Python-скан, не grep — UseCase #19): почистил «тайный смысл/магия/
+  судьба/предсказания/эзотерика», в т.ч. в СУЩЕСТВУЮЩЕЙ статье «Энергия темперамента»→«Живость»
+  (старый grep это пропустил из-за кириллицы). «расшифровка» в разоблачающем контексте — оставлено.
+- **Уникальный инлайн-SVG дудл на каждую из 14 статей** (_blog_thumb.html): лупа/лампочка/«7»/
+  3 домика/семья-палочки/карандаши/документ-с-графиком/перечёркнутый медкрест. Проверены визуально
+  (рендер монтажа через WeasyPrint, var()→hex — WeasyPrint не резолвит var() в SVG, UseCase #20).
+
+### Git/безопасность
+- **.gitignore баг (чуть не утёк ключ!)**: inline `#`-комментарии в .gitignore НЕ комментарии —
+  текст становится частью паттерна, файл не игнорился. install_cert.sh (приватный ключ CF) и
+  golos_samples.tar.gz попали в stage. Поймал pre-commit safety-grep'ом. Исправил (комменты
+  отдельными строками), проверил `git check-ignore` + историю (никогда не коммитились). UseCase #17.
+- Три коммита: V1.001 (деплой-тулинг+версия), V1.002 (футер лендинга), **V1.003** (Метрика+
+  аналитика+SEO+8 статей+дудлы+yandex-verification). Запушено, задеплоено.
+
+### Cloudflare-гочи на проде (после деплоя)
+- Прокси переписывал robots.txt: **«Block AI Scrapers»** допихивал `Content-Signal: ai-train=no` +
+  `Disallow: /` для GPTBot/ClaudeBot — поверх наших allow. **Bot Fight Mode** отдавал 403 на /,
+  /blog, /sitemap.xml (robots.txt проходил) — заблокировал бы Яндексу чтение sitemap.
+- Заказчик выключил оба в CF-дашборде + purge кэша robots.txt. Перепроверено через WebFetch
+  (cache-buster): /, /blog, /sitemap.xml → 200; robots.txt чистый (AI-боты Allow, без CF-секции).
+  Зафиксировано в памяти + UseCase #18. Истина о том, что видят краулеры — Я.Вебмастер
+  «Проверка ответа сервера», не браузер (браузер проходит CF, боты могут нет).
+
+### Следующий шаг
+**Phase 8 — ЮKassa + Unisender** (ждём аккаунты заказчика). Всё за абстракциями (payments.py,
+mailer.py): подключение = один backend каждый. После — боевой платёж + рассылки, затем гейт M8/M9.
+Заказчику: submit sitemap в Я.Вебмастер; по желанию — `seo-audit`/`seo-technical` по живому сайту.

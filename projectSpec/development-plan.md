@@ -7,6 +7,39 @@ Locked decisions reflected here: Gemini 2.5 Pro · report pipeline built first a
 
 ---
 
+## ⚑ Статус на 13.06.2026 (обновление после софт-запуска) — читать первым
+
+План остаётся ориентиром, но РЕАЛЬНЫЙ порядок отличается. Сайт **СОФТ-ЗАПУЩЕН В ПРОД**:
+живёт на **https://golosrisunka.ru, V1.003**, индексируется, оплата пока stub.
+
+**Готово:**
+- **Phase 0–7** — построены; **0–5 одобрены заказчиком** (M5 ✅). M6/M7 — функционально готовы,
+  воркер доставляет заказы на проде.
+- **Phase 9 (деплой) — СДЕЛАН РАНЬШЕ Phase 8** (вне очереди): VPS, nginx-vhost, systemd (web+worker),
+  gunicorn на unix-сокете, **Cloudflare Origin-cert** (не Let's Encrypt — за orange-proxy), git push +
+  `./deploy.sh`/`./restart.sh`. Прод за Cloudflare, публичный + индексируемый (решение заказчика).
+- **Phase 10 частично:** блог — **14 статей** (6 + 8 SEO-столпов 13.06), у каждой свой SVG-дудл,
+  Article-schema, /blog + /blog/{slug}; коупоны + админка (вход по ADMIN_PASS) — готовы.
+- **Phase 4.4 SEO — сильно расширен (13.06):** не «база», а полный слой под Yandex + AI-поисковики —
+  robots (Yandex/GPTBot/ClaudeBot/Perplexity allow), sitemap (23 URL), OG+Twitter, schema
+  Org/WebSite/Product/FAQPage/Article, индексируемые `/primer/<token>`, OG-картинка, noindex
+  приватных, yandex-verification.
+- **НОВОЕ (не было в плане):** версионирование (V-в футере, `bump_version.py`, минор перед каждым
+  push); Я.Метрика + first-party трекинг кликов (`data-ym-goal`→reachGoal+beacon /t/e); админ-вкладки
+  **Визиты**/**Действия** + миграция events (device/UA/referer); `reset_analytics.py`. Это override
+  старого решения «без JS-аналитики» (Phase 5.7) — осознанно, по заказчику.
+
+**Следующий гейт — Phase 8 (ЮKassa + Unisender):** ждём аккаунты/домен заказчика. Всё за
+абстракциями (payments.py/mailer.py) — подключение = один backend каждый. После него — боевой
+платёж + рассылки = **жёсткий запуск** (гейт M8/M9).
+
+**Хвосты Phase 9, не закрытые:** 9.4 ежедневный бэкап-крон SQLite+data/ (НЕ сделан); 9.5 финальный
+PageSpeed-пасс на проде; 9.6 полный чек-лист §13. Замена Let's Encrypt → Cloudflare Origin-cert.
+
+Дальше по файлу — исходный план по фазам (история целей и милстоунов).
+
+---
+
 ## Phase 0 — Project skeleton (~half a day)
 
 - [ ] 0.1 Create project layout: `app/` (web app, empty for now), `pipeline/` (report generation), `templates/`, `static/` (`css/`, `fonts/`, `img/`), `config/`, `data/` (`drawings/`, `reports/` — gitignored later), `scripts/`, `content/blog/` (empty, reserved)
