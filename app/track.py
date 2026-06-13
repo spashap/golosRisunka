@@ -44,11 +44,30 @@ def after_request(response):
     return response
 
 
+def parse_device(ua: str | None) -> str:
+    """Грубое определение устройства по User-Agent. YaBrowser/боты-краулеры
+    помечаем аккуратно (не путаем Яндекс.Браузер с ботом — он популярен в RU)."""
+    s = (ua or "").lower()
+    if not s:
+        return "unknown"
+    if any(b in s for b in ("bot", "crawler", "spider", "headless", "slurp", "monitor")):
+        return "bot"
+    if "ipad" in s or "tablet" in s or ("android" in s and "mobile" not in s):
+        return "tablet"
+    if any(m in s for m in ("mobi", "iphone", "ipod", "android", "phone")):
+        return "mobile"
+    return "desktop"
+
+
 def track_event(event_type: str, payload: dict | None = None,
                 customer_id: int | None = None) -> None:
     from app.db import track
+    ua = request.user_agent.string if request else None
     track(event_type,
           visitor_id=getattr(g, "visitor_id", None),
           customer_id=customer_id,
           payload=payload,
-          utm=getattr(g, "utm", None))
+          utm=getattr(g, "utm", None),
+          user_agent=(ua or None),
+          device=parse_device(ua),
+          referer=(request.referrer if request else None))

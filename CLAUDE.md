@@ -64,6 +64,12 @@ venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 
   `python scripts\bump_version.py` (V1.001 → V1.002) и включать `VERSION` в тот же коммит.
   Мажор (`--major`, сброс минора в 000) — ТОЛЬКО по явной команде заказчика. Источник истины —
   файл `VERSION`; показывается в футере сайта (`config.settings.APP_VERSION` → `inject_globals`).
+- **АНАЛИТИКА / Я.Метрика (обязательно)**: счётчик стоит на ВСЕХ страницах сайта, кроме `/admin*`
+  (`templates/_metrika.html`, гейт `metrika_id and not request.path.startswith('/admin')`;
+  ID из `YANDEX_METRIKA_ID` в `.env`). КАЖДАЯ новая кнопка/CTA/ссылка-действие получает уникальный
+  `data-ym-goal="page_action"` (форма — `data-ym-goal-submit="..."`); делегированный трекер в
+  `_metrika.html` сам шлёт `reachGoal` — JS дописывать не нужно. Имя цели уникальное, по схеме
+  `<страница>_<действие>` (напр. `order_submit`, `cabinet_download_pdf`). Админку НЕ трекать.
 
 ## Состояние на вечер 12.06.2026 (детали в DevelopmentStatus.md)
 - **Фазы 0–7 построены; 0–5 одобрены заказчиком (M5 ✅), M6+M7 ждут проверки одной сессией**: дизайн-система; промпт v2.0 (M3R: сводный отчёт по

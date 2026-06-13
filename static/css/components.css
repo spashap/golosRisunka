@@ -533,6 +533,10 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .admin-kpi__l { color: var(--soft); font-size: 12.5px; margin-top: 4px; }
 .admin-scroll { overflow-x: auto; }
 .admin-scroll table { min-width: 760px; }
+.admin-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+@media (max-width: 640px) { .admin-cols { grid-template-columns: 1fr; } }
+.admin-filter { display: flex; gap: 8px; margin: 16px 0; max-width: 520px; }
+.admin-filter .input { flex: 1; }
 .admin-status { font-weight: 600; font-size: 13px; }
 .admin-status--delivered { color: #2E7D32; }
 .admin-status--paid, .admin-status--generating { color: var(--accent); }

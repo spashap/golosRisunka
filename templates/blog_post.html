@@ -3,11 +3,18 @@
 {% block description %}{{ post.description }}{% endblock %}
 {% block og %}
 <link rel="canonical" href="https://{{ site_domain }}/blog/{{ post.slug }}">
+<meta name="robots" content="index, follow">
 <meta property="og:type" content="article">
 <meta property="og:title" content="{{ post.title }}">
 <meta property="og:description" content="{{ post.description }}">
 <meta property="og:url" content="https://{{ site_domain }}/blog/{{ post.slug }}">
 <meta property="og:site_name" content="Голос рисунка">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://{{ site_domain }}/static/img/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ post.title }}">
+<meta name="twitter:description" content="{{ post.description }}">
+<meta name="twitter:image" content="https://{{ site_domain }}/static/img/og-default.png">
 {% endblock %}
 {% block head %}
 <script type="application/ld+json">
@@ -25,10 +32,18 @@
 {% block body %}
 <div class="section">
   <article class="wrap prose" style="max-width: 760px">
-    <p class="hint" style="margin-bottom: 6px"><a href="/blog">Блог</a></p>
+    <p class="hint" style="margin-bottom: 6px"><a href="/blog" data-ym-goal="blogpost_back_blog">Блог</a></p>
     <h1 class="h2">{{ post.title }}</h1>
     {{ post.html | safe }}
-    <p style="margin-top: 32px"><a class="btn btn--primary" href="/order">Получить отчёт по рисунку</a></p>
+    <div class="form-card" style="margin-top: 36px; text-align: center">
+      <p style="margin-top: 0">Хотите спокойный, образовательный взгляд на рисунки вашего ребёнка —
+        по видимым деталям, без диагноза? Посмотрите <a href="/#primery" data-ym-goal="blogpost_sample">пример анализа детского рисунка</a>
+        или закажите отчёт по фото.</p>
+      <p style="margin-bottom: 0; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+        <a class="btn btn--primary" href="/order" data-ym-goal="blogpost_order">Получить образовательный отчёт по рисунку</a>
+        <a class="btn btn--ghost" href="/#primery" data-ym-goal="blogpost_sample_btn">Посмотреть пример</a>
+      </p>
+    </div>
   </article>
 </div>
 {% endblock %}

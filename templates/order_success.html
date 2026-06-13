@@ -1,5 +1,6 @@
 {% extends "_base.html" %}
 {% block title %}Заказ принят — Голос рисунка{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
 {% block body %}
 <div class="section">
   <div class="wrap" style="max-width: 560px; text-align: center; padding: 40px 0">
@@ -10,7 +11,7 @@
       Он же появится в вашем личном кабинете — вход уже выполнен на этом устройстве.
     </p>
     <p style="margin-top: 20px">
-      <a class="btn btn--primary" href="/cabinet">Открыть кабинет</a>
+      <a class="btn btn--primary" href="/cabinet" data-ym-goal="success_open_cabinet">Открыть кабинет</a>
     </p>
     <p class="hint" style="margin-top: 26px">
       Образовательное наблюдение, не медицинская диагностика.<br>

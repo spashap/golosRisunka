@@ -1,19 +1,42 @@
-{# Яндекс.Метрика: вставляется ТОЛЬКО если задан YANDEX_METRIKA_ID (.env).
-   Стандартный тег + вебвизор выключен (приватность: на сайте загружают
-   детские рисунки) — включить можно параметром webvisor:true после решения. #}
-{% if metrika_id %}
+{# Яндекс.Метрика: вставляется ТОЛЬКО если задан YANDEX_METRIKA_ID (.env)
+   и страница НЕ из админки (/admin*). Счётчик ставится на все страницы сайта,
+   включая вход и личный кабинет.
+   Цели: любой элемент с data-ym-goal="имя" шлёт reachGoal при клике, а форма с
+   data-ym-goal-submit="имя" — при отправке. Делегирование на document — работает
+   и для динамически добавленных кнопок. Новая кнопка = новый data-ym-goal. #}
+{% if metrika_id and not request.path.startswith('/admin') %}
 <script type="text/javascript">
   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
   m[i].l=1*new Date();
   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-  (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+  (window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id={{ metrika_id }}", "ym");
   ym({{ metrika_id }}, "init", {
+    ssr: true,
+    webvisor: true,
     clickmap: true,
-    trackLinks: true,
+    ecommerce: "dataLayer",
+    referrer: document.referrer,
+    url: location.href,
     accurateTrackBounce: true,
-    webvisor: false
+    trackLinks: true
   });
+
+  // --- Цели по кликам/сабмитам (data-ym-goal / data-ym-goal-submit) ---
+  // Шлём и в Яндекс (reachGoal), и первой стороной (beacon -> /t/e) для админки.
+  window.ymGoal = function (goal, params) {
+    if (!goal) { return; }
+    if (window.ym) { try { ym({{ metrika_id }}, "reachGoal", goal, params || {}); } catch (e) {} }
+    try { navigator.sendBeacon("/t/e", new URLSearchParams({ g: goal })); } catch (e) {}
+  };
+  document.addEventListener("click", function (ev) {
+    var el = ev.target.closest && ev.target.closest("[data-ym-goal]");
+    if (el) { window.ymGoal(el.getAttribute("data-ym-goal")); }
+  }, true);
+  document.addEventListener("submit", function (ev) {
+    var f = ev.target.closest && ev.target.closest("[data-ym-goal-submit]");
+    if (f) { window.ymGoal(f.getAttribute("data-ym-goal-submit")); }
+  }, true);
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/{{ metrika_id }}"
   style="position:absolute; left:-9999px;" alt=""></div></noscript>

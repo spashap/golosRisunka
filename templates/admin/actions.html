@@ -1,0 +1,52 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Действия{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Действия</h1>
+  <div class="admin-periods">
+    {% for val, label in periods %}
+    <a class="status-pill {% if days == val %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.actions') }}?days={{ val }}{% if q %}&q={{ q }}{% endif %}">{{ label }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<form method="get" class="admin-filter">
+  <input type="hidden" name="days" value="{{ days }}">
+  <input class="input" type="text" name="q" value="{{ q }}"
+         placeholder="фильтр по событию, напр. order, click: или checkout_pay">
+  <button class="btn btn--ghost" type="submit">Фильтр</button>
+  {% if q %}<a class="btn btn--ghost" href="{{ url_for('admin.actions') }}?days={{ days }}">Сброс</a>{% endif %}
+</form>
+
+<p class="hint">Всего срабатываний за период{% if q %} (фильтр «{{ q }}»){% endif %}: <b>{{ total }}</b>.
+  Серверные события воронки (<code>landing_view</code>…) и клики UI (<code>click:*</code>) — вместе.</p>
+
+<table>
+  <thead><tr><th>Событие</th><th>Срабатываний</th><th>Уникальных</th><th>Последнее (UTC)</th></tr></thead>
+  <tbody>
+  {% for s in summary %}
+  <tr><td>{{ s.type }}</td><td><b>{{ s.n }}</b></td><td>{{ s.users }}</td>
+      <td style="white-space:nowrap">{{ s.last }}</td></tr>
+  {% else %}
+  <tr><td colspan="4">Событий за период нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Лента действий <span class="hint">(до 100)</span></h2>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Время (UTC)</th><th>Событие</th><th>Кто</th><th>Устройство</th><th>Данные</th></tr></thead>
+  <tbody>
+  {% for e in recent %}
+  <tr><td style="white-space:nowrap">{{ e.time }}</td><td>{{ e.type }}</td>
+      <td><code>{{ e.who }}</code></td><td>{{ e.device }}</td>
+      <td><code style="font-size:12px">{{ e.payload }}</code></td></tr>
+  {% else %}
+  <tr><td colspan="5">Событий за период нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

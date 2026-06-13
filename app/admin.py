@@ -29,6 +29,8 @@ ADMIN_COOKIE = "gr_a"
 # сайдбар: (endpoint, подпись)
 SECTIONS = [
     ("admin.analytics", "Аналитика"),
+    ("admin.visits", "Визиты"),
+    ("admin.actions", "Действия"),
     ("admin.orders", "Заказы"),
     ("admin.clients", "Клиенты"),
     ("admin.coupons", "Промокоды"),
@@ -200,6 +202,91 @@ def analytics():
                    sources=sorted(sources.items(), key=lambda kv: -kv[1]["visitors"]),
                    events=events_view,
                    metrika_configured=bool(settings.YANDEX_METRIKA_ID))
+
+
+@bp_admin.get("/visits")
+def visits():
+    """Визиты: устройства, источники (UTM), последние посетители с origin."""
+    _guard()
+    days, since = _period()
+    db = get_db()
+
+    devices = db.execute(
+        "SELECT COALESCE(device, '—') d, COUNT(DISTINCT visitor_id) c FROM events"
+        " WHERE visitor_id IS NOT NULL AND created_at >= ? GROUP BY device"
+        " ORDER BY c DESC", (since,)).fetchall()
+    devices_view = [{"device": r["d"], "n": r["c"]} for r in devices]
+
+    src: dict[str, int] = {}
+    for row in db.execute(
+            "SELECT utm_json, COUNT(DISTINCT visitor_id) c FROM events"
+            " WHERE visitor_id IS NOT NULL AND created_at >= ? GROUP BY utm_json", (since,)):
+        src[_utm_label(row["utm_json"])] = src.get(_utm_label(row["utm_json"]), 0) + row["c"]
+    sources = sorted(src.items(), key=lambda kv: -kv[1])
+
+    rows = db.execute(
+        "SELECT visitor_id, COUNT(*) n, MIN(created_at) first_seen, MAX(created_at) last_seen,"
+        " MAX(device) device, MAX(referer) referer, MAX(utm_json) utm_json,"
+        " MAX(customer_id) customer_id"
+        " FROM events WHERE visitor_id IS NOT NULL AND created_at >= ?"
+        " GROUP BY visitor_id ORDER BY last_seen DESC LIMIT 200", (since,)).fetchall()
+    visitors_view = [{
+        "id": (r["visitor_id"] or "")[:10],
+        "device": r["device"] or "—",
+        "utm": _utm_label(r["utm_json"]),
+        "referer": (r["referer"] or "")[:60] or "(прямой)",
+        "events": r["n"],
+        "customer": f"c{r['customer_id']}" if r["customer_id"] else "",
+        "first": r["first_seen"][:16].replace("T", " "),
+        "last": r["last_seen"][:16].replace("T", " "),
+    } for r in rows]
+
+    total_visitors = db.execute(
+        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
+        " WHERE visitor_id IS NOT NULL AND created_at >= ?", (since,)).fetchone()["c"]
+
+    return _render("admin.visits", "admin/visits.html",
+                   days=days, periods=PERIODS, devices=devices_view,
+                   sources=sources, visitors=visitors_view, total=total_visitors)
+
+
+@bp_admin.get("/actions")
+def actions():
+    """Действия: количество сработавших событий (с фильтром по имени)."""
+    _guard()
+    days, since = _period()
+    q = (request.args.get("q") or "").strip()
+    db = get_db()
+
+    params: list = [since]
+    where = "created_at >= ?"
+    if q:
+        where += " AND type LIKE ?"
+        params.append(f"%{q}%")
+
+    summary = db.execute(
+        f"SELECT type, COUNT(*) n, COUNT(DISTINCT visitor_id) u, MAX(created_at) last"
+        f" FROM events WHERE {where} GROUP BY type ORDER BY n DESC", params).fetchall()
+    summary_view = [{
+        "type": r["type"], "n": r["n"], "users": r["u"],
+        "last": r["last"][:16].replace("T", " ") if r["last"] else "",
+    } for r in summary]
+    total = sum(r["n"] for r in summary)
+
+    recent = db.execute(
+        f"SELECT type, visitor_id, device, payload_json, created_at"
+        f" FROM events WHERE {where} ORDER BY id DESC LIMIT 100", params).fetchall()
+    recent_view = [{
+        "time": e["created_at"][:19].replace("T", " "),
+        "type": e["type"],
+        "who": (e["visitor_id"] or "")[:8],
+        "device": e["device"] or "—",
+        "payload": (e["payload_json"] or "")[:80],
+    } for e in recent]
+
+    return _render("admin.actions", "admin/actions.html",
+                   days=days, periods=PERIODS, q=q,
+                   summary=summary_view, total=total, recent=recent_view)
 
 
 @bp_admin.get("/orders")

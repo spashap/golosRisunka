@@ -1,5 +1,6 @@
 {% extends "_base.html" %}
 {% block title %}Кабинет — Голос рисунка{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
 {% block body %}
 <div class="section">
   <div class="wrap" style="max-width: 720px; padding-bottom: 60px">
@@ -9,19 +10,19 @@
       <div>
         <h2 style="margin: 0">Кабинет</h2>
         <div class="hint" style="margin-top: 4px">{{ customer.email }}
-          <button class="cab-link-soon" type="button"
+          <button class="cab-link-soon" type="button" data-ym-goal="cabinet_email_change_soon"
                   title="Появится в ближайшем обновлении">изменить email · скоро</button>
         </div>
       </div>
       <form method="post" action="/logout">
-        <button class="btn btn--ghost" type="submit">Выйти</button>
+        <button class="btn btn--ghost" type="submit" data-ym-goal="cabinet_logout">Выйти</button>
       </form>
     </div>
 
     {% if not has_orders %}
     <div class="form-card" style="margin-top: 24px; text-align: center">
       <p class="sub">Пока здесь пусто — закажите первый отчёт, и он появится в кабинете.</p>
-      <a class="btn btn--primary" href="/order" style="margin-top: 16px">Заказать отчёт</a>
+      <a class="btn btn--primary" href="/order" style="margin-top: 16px" data-ym-goal="cabinet_order_empty">Заказать отчёт</a>
     </div>
     {% endif %}
 
@@ -48,9 +49,9 @@
         {% endif %}
         {% if o.ready %}
         <div class="order-card__actions">
-          <a class="btn btn--primary" href="{{ o.report_url }}">Открыть отчёт</a>
-          <a class="btn btn--ghost" href="/cabinet/order/{{ o.id }}/report.pdf">Скачать PDF</a>
-          <button class="btn btn--ghost btn--soon" type="button"
+          <a class="btn btn--primary" href="{{ o.report_url }}" data-ym-goal="cabinet_open_report">Открыть отчёт</a>
+          <a class="btn btn--ghost" href="/cabinet/order/{{ o.id }}/report.pdf" data-ym-goal="cabinet_download_pdf">Скачать PDF</a>
+          <button class="btn btn--ghost btn--soon" type="button" data-ym-goal="cabinet_compare_soon"
                   title="Отчёт о развитии: добавите свежие рисунки — сравним с этим отчётом. Скоро">
             📈 Сравнить с новыми рисунками · скоро</button>
         </div>

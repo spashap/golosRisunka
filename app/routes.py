@@ -39,6 +39,24 @@ def _inline_css() -> str:
 
 def _schema_jsonld() -> str:
     base = f"https://{settings.SITE_DOMAIN}"
+    org = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": settings.SITE_NAME,
+        "url": base + "/",
+        "logo": f"{base}/static/img/og-default.png",
+        "description": "Образовательный анализ детского рисунка по фото: PDF-отчёт "
+                       "о развитии ребёнка для родителей. На основе методик Пиаже, "
+                       "Ловенфельда, Выготского. Без диагноза.",
+        "knowsLanguage": "ru",
+    }
+    website = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": settings.SITE_NAME,
+        "url": base + "/",
+        "inLanguage": "ru",
+    }
     product = {
         "@context": "https://schema.org",
         "@type": "Product",
@@ -62,7 +80,7 @@ def _schema_jsonld() -> str:
             for q, a in FAQ_ITEMS
         ],
     }
-    return json.dumps([product, faq], ensure_ascii=False)
+    return json.dumps([org, website, product, faq], ensure_ascii=False)
 
 
 @bp.get("/")
@@ -80,6 +98,32 @@ def landing():
         inline_css=_inline_css(),
         schema_jsonld=_schema_jsonld(),
     )
+
+
+_GOAL_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_:-")
+
+
+@bp.post("/t/e")
+def track_beacon():
+    """First-party приём UI-целей (data-ym-goal) через navigator.sendBeacon.
+    Дешёвый, анонимный, не роняет ничего. Пишем как событие 'click:<goal>'
+    с device/utm из request — для вкладок «Действия»/«Визиты» в админке."""
+    goal = (request.form.get("g") or request.args.get("g") or "").strip().lower()
+    if goal and len(goal) <= 64 and set(goal) <= _GOAL_CHARS:
+        track_event("click:" + goal)
+    return ("", 204)
+
+
+@bp.get("/primer/<token>")
+def sample_page(token: str):
+    """Индексируемая страница-пример отчёта (SEO: «пример анализа детского рисунка»).
+    Сам полный отчёт-документ живёт на /r/<token> (закрыт в robots — там же приватные
+    отчёты заказов). Здесь — лёгкая обёртка с метаданными и ссылкой на полный отчёт."""
+    sample = get_sample_by_token(token)
+    if sample is None:
+        abort(404)
+    track_event("sample_view", {"token": token, "page": "primer"})
+    return render_template("sample.html", s=sample)
 
 
 @bp.get("/r/<token>")
@@ -390,32 +434,39 @@ def legal():
 
 # --- SEO-служебное ---
 
+# Боты, которым явно разрешаем индексацию/обход (Яндекс + ИИ-поисковики).
+SEO_BOTS = ["YandexBot", "Yandex", "Googlebot", "Google-Extended", "Bingbot",
+            "GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot",
+            "Claude-SearchBot", "anthropic-ai", "PerplexityBot", "PerplexityBot/1.0"]
+# Что закрываем у всех: админка, кабинет, вход, оплата, непубличные отчёты, служебное.
+SEO_DISALLOW = ["/admin", "/cabinet", "/login", "/logout", "/order/success",
+                "/pay/", "/r/", "/t/", "/track/"]
+
+
 @bp.get("/robots.txt")
 def robots():
-    lines = [
-        "User-agent: *",
-        "Allow: /",
-        "Disallow: /r/",        # отчёты непубличные
-        "Disallow: /order",
-        "Disallow: /login",
-        "Disallow: /cabinet",
-        "Disallow: /admin",
-        f"Sitemap: https://{settings.SITE_DOMAIN}/sitemap.xml",
-    ]
-    return Response("\n".join(lines), mimetype="text/plain")
+    def group(ua: str) -> str:
+        return "\n".join([f"User-agent: {ua}", "Allow: /",
+                          *(f"Disallow: {d}" for d in SEO_DISALLOW)])
+    blocks = [group(ua) for ua in SEO_BOTS] + [group("*")]
+    body = "\n\n".join(blocks) + f"\n\nSitemap: https://{settings.SITE_DOMAIN}/sitemap.xml\n"
+    return Response(body, mimetype="text/plain")
 
 
 @bp.get("/sitemap.xml")
 def sitemap():
     base = f"https://{settings.SITE_DOMAIN}"
     today = datetime.date.today().isoformat()
-    urls = [("/", "1.0"), ("/blog", "0.6"), ("/privacy", "0.2"),
-            ("/terms", "0.2"), ("/contacts", "0.3")]
-    urls += [(f"/blog/{p.slug}", "0.7") for p in get_posts()]
+    # (path, priority, lastmod)
+    urls = [("/", "1.0", today), ("/blog", "0.7", today),
+            ("/privacy", "0.2", today), ("/terms", "0.2", today),
+            ("/contacts", "0.3", today)]
+    urls += [(f"/primer/{s.token}", "0.8", today) for s in get_samples()]
+    urls += [(f"/blog/{p.slug}", "0.7", p.date.isoformat()) for p in get_posts()]
     items = "\n".join(
-        f"<url><loc>{base}{path}</loc><lastmod>{today}</lastmod>"
+        f"<url><loc>{base}{path}</loc><lastmod>{lastmod}</lastmod>"
         f"<priority>{prio}</priority></url>"
-        for path, prio in urls
+        for path, prio, lastmod in urls
     )
     xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -461,10 +512,21 @@ FAQ_ITEMS = [
      "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о "
      "контексте: возраст, чем рисовал, что было задано. Ничего специально "
      "рисовать не нужно."),
-    ("Это психологическая диагностика?",
-     "Нет. Это образовательное наблюдение за навыками, которые видны в рисунке: "
-     "композиция, контроль линий, вариативность решений. Мы принципиально не "
-     "делаем выводов об эмоциях или психологическом состоянии ребёнка."),
+    ("Это психологическая диагностика? Это не диагноз?",
+     "Нет, это не диагноз. Это образовательное наблюдение за навыками, которые видны "
+     "в рисунке: композиция, контроль линий, вариативность решений. Мы принципиально не "
+     "делаем выводов об эмоциях или психологическом состоянии ребёнка — анализ рисунка "
+     "ребёнка здесь не диагноз, а наблюдение за признаками развития."),
+    ("Как понять рисунок ребёнка 4–5 лет?",
+     "В 4–5 лет ребёнок переходит от «головоногов» к более полным фигурам, появляются "
+     "сюжет и любимые цвета. Понять рисунок — значит увидеть, какие навыки уже освоены "
+     "(замкнутый контур, детали, расположение на листе), а не искать в нём скрытый смысл. "
+     "Именно это показывает наш образовательный отчёт — по возрастным особенностям, без диагноза."),
+    ("Как интерпретировать детский рисунок дома самому?",
+     "Дома полезно смотреть на признаки развития навыков, а не на «значения». "
+     "Обратите внимание на нажим и уверенность линий, насколько детальны фигуры, "
+     "как ребёнок использует пространство листа и повторяет ли любимые сюжеты. "
+     "Это наблюдения за возрастными особенностями, а не психологическая интерпретация."),
     ("А если отчёт мне не понравится?",
      "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов."),
     ("Кто увидит рисунки моего ребёнка?",

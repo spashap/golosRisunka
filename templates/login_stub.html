@@ -1,5 +1,6 @@
 {% extends "_base.html" %}
 {% block title %}Вход — Голос рисунка{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
 {% block body %}
 <div class="section">
   <div class="wrap" style="text-align:center; max-width: 560px; padding: 60px 0">
@@ -9,7 +10,7 @@
       После покупки отчёта кабинет открывается автоматически — в нём хранятся
       все ваши отчёты и рисунки. Повторный вход — по коду из письма, без паролей.
     </p>
-    <a class="btn btn--primary" href="/order">Получить первый отчёт</a>
+    <a class="btn btn--primary" href="/order" data-ym-goal="loginstub_order">Получить первый отчёт</a>
   </div>
 </div>
 {% endblock %}

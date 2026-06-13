@@ -4,8 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Голос рисунка{% endblock %}</title>
-<meta name="description" content="{% block description %}Профессиональный отчёт о развитии ребёнка по его рисункам{% endblock %}">
-{% block og %}{% endblock %}
+<meta name="description" content="{% block description %}Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей, без диагноза.{% endblock %}">
+{% block og %}
+<link rel="canonical" href="https://{{ site_domain }}{{ request.path }}">
+<meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ self.title() }}">
+<meta property="og:description" content="{{ self.description() }}">
+<meta property="og:url" content="https://{{ site_domain }}{{ request.path }}">
+<meta property="og:site_name" content="Голос рисунка">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://{{ site_domain }}/static/img/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ self.title() }}">
+<meta name="twitter:description" content="{{ self.description() }}">
+<meta name="twitter:image" content="https://{{ site_domain }}/static/img/og-default.png">
+{% endblock %}
+{% include "_seo_jsonld.html" %}
 <link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>

@@ -4,13 +4,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Голос рисунка — отчёт о развитии ребёнка по его рисункам</title>
-<meta name="description" content="Профессиональный PDF-отчёт по детскому рисунку: 8 направлений развития, оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский. {{ min_price }} ₽, готов за час.">
+<meta name="yandex-verification" content="680070446ea2c51f">
+<title>Анализ детского рисунка по фото — образовательный PDF-отчёт без диагноза | Голос рисунка</title>
+<meta name="description" content="Анализ рисунка ребёнка по фото: образовательный PDF-отчёт о развитии — 8 направлений, оценки с объяснениями и занятия для родителей. На основе методик Пиаже, Ловенфельда, Выготского. Без диагноза, для родителей. {{ min_price }} ₽, готов за час.">
+<meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Голос рисунка — у каждого рисунка есть голос. Услышьте его.">
-<meta property="og:description" content="PDF-отчёт о развитии ребёнка по его рисункам: 8 направлений, оценки, занятия. {{ min_price }} ₽.">
+<meta property="og:title" content="Анализ детского рисунка по фото — образовательный отчёт без диагноза">
+<meta property="og:description" content="Образовательный PDF-отчёт о развитии ребёнка по его рисункам: 8 направлений, оценки, занятия для родителей. Без диагноза. {{ min_price }} ₽.">
 <meta property="og:url" content="https://golosrisunka.ru/">
+<meta property="og:site_name" content="Голос рисунка">
 <meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://golosrisunka.ru/static/img/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Анализ детского рисунка по фото — образовательный отчёт без диагноза">
+<meta name="twitter:description" content="Образовательный PDF-отчёт о развитии ребёнка по его рисункам. Без диагноза. {{ min_price }} ₽, готов за час.">
+<meta name="twitter:image" content="https://golosrisunka.ru/static/img/og-default.png">
 <link rel="canonical" href="https://golosrisunka.ru/">
 <link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
@@ -32,7 +40,7 @@
       <h1>У каждого рисунка есть <span class="hand">голос</span>.<br>Услышьте его.</h1>
       <p class="lead">Профессиональный отчёт о развитии ребёнка по его рисункам: 8 направлений,
         оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский.</p>
-      <a class="btn btn--primary" href="/order">Получить отчёт — {{ min_price }} ₽</a>
+      <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order">Получить отчёт — {{ min_price }} ₽</a>
       <div class="note">
         <svg width="42" height="28" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
         PDF за час · ничего специально рисовать не нужно
@@ -54,11 +62,11 @@
 <!-- 3. Примеры отчётов (главный proof-блок) -->
 <section class="section section--alt" id="primery">
   <div class="wrap">
-    <h2>Посмотрите настоящие отчёты</h2>
-    <div class="sub">Эти отчёты сгенерированы нашей системой по реальным рисункам — листайте и открывайте полные версии.</div>
+    <h2>Примеры анализа детского рисунка</h2>
+    <div class="sub">Настоящие образовательные отчёты, сгенерированные по реальным рисункам — листайте и открывайте полные примеры.</div>
     <div class="carousel-wrap">
-    <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1">‹</button>
-    <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1">›</button>
+    <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1" data-ym-goal="landing_samples_prev">‹</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1" data-ym-goal="landing_samples_next">›</button>
     <div class="carousel">
       {% for s in samples %}
       <article class="report-card">
@@ -78,7 +86,7 @@
           {% endfor %}
         </div>
         <div class="report-card__quote">«{{ s.quote }}»</div>
-        <a class="report-card__link" href="/r/{{ s.token }}">Смотреть полный отчёт →</a>
+        <a class="report-card__link" href="/primer/{{ s.token }}" data-ym-goal="landing_sample_open_{{ s.token }}">Смотреть пример отчёта →</a>
       </article>
       {% endfor %}
     </div>
@@ -103,8 +111,8 @@
 <section class="section section--alt section--strip">
   <div class="wrap quote-rotator" data-interval="7000">
     <div class="strip-title">Что говорят родители</div>
-    <button class="car-btn car-btn--prev" type="button" aria-label="Предыдущий отзыв" data-rot="-1">‹</button>
-    <button class="car-btn car-btn--next" type="button" aria-label="Следующий отзыв" data-rot="1">›</button>
+    <button class="car-btn car-btn--prev" type="button" aria-label="Предыдущий отзыв" data-rot="-1" data-ym-goal="landing_reviews_prev">‹</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="Следующий отзыв" data-rot="1" data-ym-goal="landing_reviews_next">›</button>
     <div class="quote-rotator__stage">
       {% for text, who in testimonials %}
       <figure class="quote-slim{% if loop.first %} is-active{% endif %}">
@@ -116,7 +124,7 @@
     <div class="rot-dots" role="tablist" aria-label="Отзывы">
       {% for t in testimonials %}
       <button class="rot-dot{% if loop.first %} is-active{% endif %}" type="button"
-              data-dot="{{ loop.index0 }}" aria-label="Отзыв {{ loop.index }}"></button>
+              data-dot="{{ loop.index0 }}" aria-label="Отзыв {{ loop.index }}" data-ym-goal="landing_reviews_dot"></button>
       {% endfor %}
     </div>
   </div>
@@ -153,7 +161,7 @@
           {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
         </ul>
         {% if p.enabled %}
-        <a class="btn btn--primary" href="/order?product={{ code }}">Заказать за {{ p.price_rub }} ₽</a>
+        <a class="btn btn--primary" href="/order?product={{ code }}" data-ym-goal="landing_price_order_{{ code }}">Заказать за {{ p.price_rub }} ₽</a>
         {% else %}
         <span class="p-soon-note">Появится после запуска — следите за новостями</span>
         {% endif %}
@@ -168,7 +176,7 @@
   <div class="wrap">
     <h2>Частые вопросы</h2>
     {% for q, a in faq %}
-    <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
+    <details class="faq"><summary data-ym-goal="landing_faq_open">{{ q }}</summary><p>{{ a }}</p></details>
     {% endfor %}
   </div>
 </section>
@@ -180,11 +188,11 @@
     <h2>Разбираемся в детском рисунке</h2>
     <div class="sub">Спокойные ответы на частые родительские вопросы — в нашем блоге.</div>
     <div class="carousel-wrap">
-      <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1">‹</button>
-      <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1">›</button>
+      <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1" data-ym-goal="landing_blog_prev">‹</button>
+      <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1" data-ym-goal="landing_blog_next">›</button>
       <div class="carousel">
         {% for p in blog_posts %}
-        <a class="blog-card" href="/blog/{{ p.slug }}">
+        <a class="blog-card" href="/blog/{{ p.slug }}" data-ym-goal="landing_blog_open_{{ p.slug }}">
           <div class="blog-card__thumb">{{ thumb(p.slug) }}</div>
           <div class="blog-card__body">
             <h3 class="blog-card__title">{{ p.title }}</h3>
@@ -194,7 +202,7 @@
         {% endfor %}
       </div>
     </div>
-    <p style="text-align: center; margin-top: 22px"><a class="btn btn--ghost" href="/blog">Все статьи →</a></p>
+    <p style="text-align: center; margin-top: 22px"><a class="btn btn--ghost" href="/blog" data-ym-goal="landing_blog_all">Все статьи →</a></p>
   </div>
 </section>
 {% endif %}

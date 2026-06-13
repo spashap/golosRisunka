@@ -1,0 +1,63 @@
+{% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
+{% block title %}Визиты{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Визиты</h1>
+  {{ period_filter(periods, days, url_for("admin.visits")) }}
+</div>
+<p class="hint">{{ total }} уникальных посетителей за период. UTM — first-touch (первое касание), устройство и origin — из событий.</p>
+
+<div class="admin-cols">
+  <div>
+    <h2>Устройства</h2>
+    <table>
+      <thead><tr><th>Тип</th><th>Посетителей</th></tr></thead>
+      <tbody>
+      {% for d in devices %}
+      <tr><td>{{ d.device }}</td><td><b>{{ d.n }}</b></td></tr>
+      {% else %}
+      <tr><td colspan="2">Пока пусто</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h2>Источники (UTM)</h2>
+    <table>
+      <thead><tr><th>Источник</th><th>Посетителей</th></tr></thead>
+      <tbody>
+      {% for name, n in sources %}
+      <tr><td>{{ name }}</td><td><b>{{ n }}</b></td></tr>
+      {% else %}
+      <tr><td colspan="2">Пока пусто</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<h2>Последние посетители <span class="hint">(до 200)</span></h2>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Посетитель</th><th>Устройство</th><th>Источник</th><th>Origin</th>
+    <th>Событий</th><th>Клиент</th><th>Первый визит</th><th>Последний</th></tr></thead>
+  <tbody>
+  {% for v in visitors %}
+  <tr>
+    <td><code>{{ v.id }}</code></td>
+    <td>{{ v.device }}</td>
+    <td>{{ v.utm }}</td>
+    <td><code style="font-size:12px">{{ v.referer }}</code></td>
+    <td>{{ v.events }}</td>
+    <td>{{ v.customer }}</td>
+    <td style="white-space:nowrap">{{ v.first }}</td>
+    <td style="white-space:nowrap">{{ v.last }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8">Посетителей за период нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

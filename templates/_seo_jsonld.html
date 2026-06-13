@@ -1,0 +1,11 @@
+{# Organization + WebSite JSON-LD на всех страницах _base (лендинг подаёт свой набор
+   из routes._schema_jsonld). Без эзотерики: образовательное позиционирование. #}
+<script type="application/ld+json">
+[{"@context":"https://schema.org","@type":"Organization",
+  "name":"{{ site_name }}","url":"https://{{ site_domain }}/",
+  "logo":"https://{{ site_domain }}/static/img/og-default.png",
+  "description":"Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей. На основе методик Пиаже, Ловенфельда, Выготского. Без диагноза.",
+  "knowsLanguage":"ru"},
+ {"@context":"https://schema.org","@type":"WebSite",
+  "name":"{{ site_name }}","url":"https://{{ site_domain }}/","inLanguage":"ru"}]
+</script>

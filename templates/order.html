@@ -65,7 +65,7 @@
     </div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" id="order-form">
+    <form method="post" enctype="multipart/form-data" id="order-form" data-ym-goal-submit="order_submit_form">
       <input type="hidden" name="product" value="{{ product_code }}">
 
       <div class="form-card">
@@ -100,7 +100,7 @@
       </div>
 
       {% if errors.get("drawings") %}<div class="err" style="margin-bottom:12px">{{ errors["drawings"] }}</div>{% endif %}
-      <p class="add-row"><button type="button" class="btn--ghost" id="add-drawing">+ Добавить ещё рисунок</button></p>
+      <p class="add-row"><button type="button" class="btn--ghost" id="add-drawing" data-ym-goal="order_add_drawing">+ Добавить ещё рисунок</button></p>
       <div class="add-msg" id="add-drawing-msg" hidden></div>
 
       <div class="form-card">
@@ -108,12 +108,12 @@
         <div class="email-suggest" id="email-suggest" hidden>
           Возможно, опечатка: вы имели в виду <b id="email-suggest-val"></b>?
           <span class="es-actions">
-            <button type="button" class="es-yes" id="email-suggest-yes">Да, исправить</button>
-            <button type="button" class="es-no" id="email-suggest-no">Нет, оставить</button>
+            <button type="button" class="es-yes" id="email-suggest-yes" data-ym-goal="order_email_fix_yes">Да, исправить</button>
+            <button type="button" class="es-no" id="email-suggest-no" data-ym-goal="order_email_fix_no">Нет, оставить</button>
           </span>
         </div>
         {{ render_field(coupon_field, "", values, errors) }}
-        <button type="submit" class="btn btn--primary" style="width:100%">
+        <button type="submit" class="btn btn--primary" style="width:100%" data-ym-goal="order_submit">
           Перейти к оплате — {{ product.price_rub }} ₽
         </button>
         <p class="hint" style="margin-top: 12px; text-align: center">

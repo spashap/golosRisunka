@@ -1,0 +1,54 @@
+{% extends "_base.html" %}
+{% block title %}Пример анализа детского рисунка: {{ s.caption }} — образовательный отчёт | Голос рисунка{% endblock %}
+{% block description %}Пример образовательного отчёта по детскому рисунку ({{ s.caption }}): оценки по направлениям развития, наблюдения по видимым деталям и занятия для родителей. Без диагноза — анализ рисунка ребёнка по фото.{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article",
+ "headline": {{ ("Пример анализа детского рисунка: " ~ s.caption) | tojson }},
+ "inLanguage":"ru",
+ "about":"образовательный анализ детского рисунка по фото",
+ "isPartOf":{"@type":"WebSite","name":"{{ site_name }}","url":"https://{{ site_domain }}/"},
+ "publisher":{"@type":"Organization","name":"{{ site_name }}"},
+ "image":"https://{{ site_domain }}/static/img/og-default.png"}
+</script>
+{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap prose" style="max-width: 760px">
+    <p class="hint" style="margin-bottom: 6px"><a href="/#primery" data-ym-goal="sample_back">Примеры</a></p>
+    <h1 class="h2">Пример анализа детского рисунка: {{ s.caption }}</h1>
+    <p class="sub">Так выглядит образовательный отчёт «Голоса рисунка»: оценки по направлениям
+      развития с объяснениями и занятия для родителей. Это наблюдение за признаками развития
+      по видимым деталям рисунка — без диагноза.</p>
+
+    <div class="report-card" style="max-width: 460px; margin: 24px auto">
+      <span class="badge badge--flat report-card__badge">{% if s.n_drawings > 1 %}пример · {{ s.n_drawings }} рисунка{% else %}пример отчёта{% endif %}</span>
+      <div class="report-card__top">
+        <div class="report-card__draw"><img src="{{ s.thumb_url }}" alt="Детский рисунок — {{ s.caption }}, пример для анализа" loading="lazy" width="84" height="84"></div>
+        <div class="report-card__name">{{ s.name }}</div>
+        <div class="report-card__age">{{ s.age_display }}</div>
+      </div>
+      <div class="report-card__body">
+        {% for t in s.top_scores %}
+        <div class="score-bar">
+          <span>{{ t.title }}</span>
+          <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ t.score * 10 }}%"></i></div>
+          <b>{{ t.score }}</b>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="report-card__quote">«{{ s.quote }}»</div>
+    </div>
+
+    <p style="text-align:center; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+      <a class="btn btn--ghost" href="/r/{{ s.token }}" data-ym-goal="sample_open_full" rel="nofollow">Открыть полный пример отчёта →</a>
+      <a class="btn btn--primary" href="/order" data-ym-goal="sample_order">Заказать отчёт по своему рисунку</a>
+    </p>
+
+    <p class="hint" style="text-align:center; margin-top:18px">
+      Образовательное наблюдение по методикам Пиаже, Ловенфельда и Выготского.
+      Не медицинская и не психологическая диагностика.
+    </p>
+  </div>
+</div>
+{% endblock %}

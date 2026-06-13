@@ -1,11 +1,15 @@
 # секреты — никогда в git
 .env
-scripts/deploy/install_cert.sh      # содержит приватный ключ Cloudflare Origin
-scripts/deploy/*.tar.gz             # бандлы с приватными рисунками (golos_samples и т.п.)
+# содержит приватный ключ Cloudflare Origin
+scripts/deploy/install_cert.sh
+# бандлы с приватными рисунками (golos_samples и т.п.)
+scripts/deploy/*.tar.gz
 
 # данные клиентов/тестов и сгенерированные артефакты
 data/
 component-gallery.html
+# webp-миниатюры сэмплов — генерируются в рантайме
+static/img/samples/
 
 # приватные материалы (детские рисунки с ФИО, старые сэмплы заказчика, базовый промпт)
 projectSpec/testDrawings/
