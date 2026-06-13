@@ -6,7 +6,8 @@
   <h1 class="h2">Визиты</h1>
   {{ period_filter(periods, days, url_for("admin.visits")) }}
 </div>
-<p class="hint">{{ total }} уникальных посетителей-людей за период{% if bots %} · ботов отфильтровано: {{ bots }}{% endif %}. UTM — first-touch (первое касание), устройство и origin — из событий.</p>
+<p class="hint">{{ total }} уникальных посетителей-людей за период · <b>вовлечённых: {{ engaged }}</b> · отказы: {{ bounce }}{% if bots %} · ботов отфильтровано: {{ bots }}{% endif %}.<br>
+  «Вовлечённый» = был скролл/клик/нажатие или ≥15 c видимого пребывания (как «отказ» в Метрике). UTM — first-touch; устройство и origin — из событий.</p>
 
 <div class="admin-cols">
   <div>
@@ -40,12 +41,13 @@
 <h2>Последние посетители <span class="hint">(до 200)</span></h2>
 <div class="admin-scroll">
 <table>
-  <thead><tr><th>Посетитель</th><th>Устройство</th><th>Источник</th><th>Origin</th>
+  <thead><tr><th>Посетитель</th><th>Вовлечён</th><th>Устройство</th><th>Источник</th><th>Origin</th>
     <th>Событий</th><th>Клиент</th><th>Первый визит</th><th>Последний</th></tr></thead>
   <tbody>
   {% for v in visitors %}
   <tr>
     <td><code>{{ v.id }}</code></td>
+    <td>{% if v.engaged %}✓{% else %}<span class="hint">—</span>{% endif %}</td>
     <td>{{ v.device }}</td>
     <td>{{ v.utm }}</td>
     <td><code style="font-size:12px">{{ v.referer }}</code></td>
@@ -55,7 +57,7 @@
     <td style="white-space:nowrap">{{ v.last }}</td>
   </tr>
   {% else %}
-  <tr><td colspan="8">Посетителей за период нет</td></tr>
+  <tr><td colspan="9">Посетителей за период нет</td></tr>
   {% endfor %}
   </tbody>
 </table>

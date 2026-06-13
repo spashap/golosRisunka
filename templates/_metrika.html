@@ -37,6 +37,38 @@
     var f = ev.target.closest && ev.target.closest("[data-ym-goal-submit]");
     if (f) { window.ymGoal(f.getAttribute("data-ym-goal-submit")); }
   }, true);
+
+  // --- Вовлечённость: один beacon "engaged" при ПЕРВОМ из:
+  //   скролл / клик / клавиша / тач  ИЛИ  15 секунд ВИДИМОГО пребывания на странице.
+  //   Модель «engaged session» (как GA4); порог 15с совпадает с «отказом» Метрики.
+  //   Боты без JS и мгновенные отказы (без скролла, <15с) НЕ шлют его → в админке
+  //   они не попадают в «вовлечённых». Фоновые/предзагруженные вкладки не копят время
+  //   (visibilityState). Шлётся максимум один раз.
+  (function () {
+    var sent = false, visibleSec = 0, THRESHOLD = 15;
+    var EVENTS = ["scroll", "wheel", "click", "keydown", "touchstart"];
+    var tick = null;
+    function cleanup() {
+      EVENTS.forEach(function (ev) { document.removeEventListener(ev, onInteract, true); });
+      if (tick) { clearInterval(tick); tick = null; }
+    }
+    function fire() {
+      if (sent) { return; }
+      sent = true;
+      try { navigator.sendBeacon("/t/e", new URLSearchParams({ engaged: "1" })); } catch (e) {}
+      cleanup();
+    }
+    function onInteract() { fire(); }
+    EVENTS.forEach(function (ev) {
+      document.addEventListener(ev, onInteract, { capture: true, passive: true });
+    });
+    tick = setInterval(function () {
+      if (document.visibilityState === "visible") {
+        visibleSec += 1;
+        if (visibleSec >= THRESHOLD) { fire(); }
+      }
+    }, 1000);
+  })();
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/{{ metrika_id }}"
   style="position:absolute; left:-9999px;" alt=""></div></noscript>

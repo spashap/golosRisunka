@@ -105,9 +105,14 @@ _GOAL_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_:-")
 
 @bp.post("/t/e")
 def track_beacon():
-    """First-party приём UI-целей (data-ym-goal) через navigator.sendBeacon.
-    Дешёвый, анонимный, не роняет ничего. Пишем как событие 'click:<goal>'
-    с device/utm из request — для вкладок «Действия»/«Визиты» в админке."""
+    """First-party приём через navigator.sendBeacon. Дёшево, анонимно, не роняет ничего.
+    - g=<goal>  -> событие 'click:<goal>' (UI-цели data-ym-goal);
+    - engaged=1 -> событие 'engaged' (вовлечённость: скролл/взаимодействие/15с видимого
+      пребывания — см. _metrika.html). Шлётся максимум раз за загрузку страницы; в админке
+      «Визиты» считаем вовлечённых = DISTINCT visitor_id с событием 'engaged'."""
+    if request.form.get("engaged") or request.args.get("engaged"):
+        track_event("engaged")
+        return ("", 204)
     goal = (request.form.get("g") or request.args.get("g") or "").strip().lower()
     if goal and len(goal) <= 64 and set(goal) <= _GOAL_CHARS:
         track_event("click:" + goal)

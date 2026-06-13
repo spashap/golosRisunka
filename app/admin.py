@@ -40,6 +40,7 @@ SECTIONS = [
 
 FUNNEL_STEPS = [
     ("landing_view", "Лендинг"),
+    ("engaged", "Вовлёкся (скролл/15с)"),
     ("sample_view", "Смотрел примеры"),
     ("order_form_view", "Открыл форму"),
     ("form_started", "Начал заполнять"),
@@ -235,7 +236,8 @@ def visits():
     rows = db.execute(
         "SELECT visitor_id, COUNT(*) n, MIN(created_at) first_seen, MAX(created_at) last_seen,"
         " MAX(device) device, MAX(referer) referer, MAX(utm_json) utm_json,"
-        " MAX(customer_id) customer_id"
+        " MAX(customer_id) customer_id,"
+        " MAX(CASE WHEN type = 'engaged' THEN 1 ELSE 0 END) engaged"
         f" FROM events WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?"
         " GROUP BY visitor_id ORDER BY last_seen DESC LIMIT 200", (since,)).fetchall()
     visitors_view = [{
@@ -244,6 +246,7 @@ def visits():
         "utm": _utm_label(r["utm_json"]),
         "referer": (r["referer"] or "")[:60] or "(прямой)",
         "events": r["n"],
+        "engaged": bool(r["engaged"]),
         "customer": f"c{r['customer_id']}" if r["customer_id"] else "",
         "first": r["first_seen"][:16].replace("T", " "),
         "last": r["last_seen"][:16].replace("T", " "),
@@ -252,13 +255,19 @@ def visits():
     total_visitors = db.execute(
         "SELECT COUNT(DISTINCT visitor_id) c FROM events"
         f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?", (since,)).fetchone()["c"]
+    engaged = db.execute(
+        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
+        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND type = 'engaged' AND created_at >= ?",
+        (since,)).fetchone()["c"]
     bots = db.execute(
         "SELECT COUNT(DISTINCT visitor_id) c FROM events"
         " WHERE visitor_id IS NOT NULL AND device = 'bot' AND created_at >= ?", (since,)).fetchone()["c"]
+    bounce = f"{(total_visitors - engaged) / total_visitors * 100:.0f}%" if total_visitors else "—"
 
     return _render("admin.visits", "admin/visits.html",
                    days=days, periods=PERIODS, devices=devices_view,
-                   sources=sources, visitors=visitors_view, total=total_visitors, bots=bots)
+                   sources=sources, visitors=visitors_view, total=total_visitors,
+                   engaged=engaged, bounce=bounce, bots=bots)
 
 
 @bp_admin.get("/actions")
