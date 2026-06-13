@@ -1,0 +1,4 @@
+# Shell scripts MUST stay LF — they run directly on the Linux server (./deploy.sh).
+*.sh text eol=lf
+# Python runs on the Linux server too; keep LF to avoid CRLF surprises.
+*.py text eol=lf

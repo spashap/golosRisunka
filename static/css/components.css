@@ -294,6 +294,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 
 /* --- Футер --- */
 .foot { padding: 40px 0; color: var(--soft); font-size: 14px; text-align: center; }
+.foot-ver { display: block; margin-top: 8px; font-size: 12px; opacity: .55; }
 
 /* --- Hero (двухколоночный первый экран) --- */
 .hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 48px;

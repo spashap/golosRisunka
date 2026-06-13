@@ -52,6 +52,12 @@ def get_products() -> dict:
 # --- Site ---
 SITE_NAME = "Голос рисунка"
 SITE_DOMAIN = "golosrisunka.ru"
+# Версия сайта: единый источник — файл VERSION (major.minor, minor в 3 знака).
+# Минор поднимается перед КАЖДЫМ git push (scripts/bump_version.py); мажор — вручную.
+try:
+    APP_VERSION = (BASE_DIR / "VERSION").read_text(encoding="utf-8").strip()
+except OSError:
+    APP_VERSION = "0.000"
 # Базовый URL для ссылок в письмах (на VPS станет https://golosrisunka.ru)
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:5000")
 PALETTE = ""  # css class on <html>: "" = Синий (default), "pu" = Фиолет, "dk" = Тёмный, "cl" = Облака

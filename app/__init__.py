@@ -44,6 +44,7 @@ def create_app() -> Flask:
         return {"static": "/static", "palette": settings.PALETTE,
                 "site_name": settings.SITE_NAME,
                 "site_domain": settings.SITE_DOMAIN,
-                "metrika_id": settings.YANDEX_METRIKA_ID}
+                "metrika_id": settings.YANDEX_METRIKA_ID,
+                "version": settings.APP_VERSION}
 
     return app
