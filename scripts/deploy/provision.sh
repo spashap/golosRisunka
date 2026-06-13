@@ -74,14 +74,12 @@ Nothing public has changed yet. Before running go_live.sh do these TWO things:
       - GEMINI_API_KEY = the value from your LOCAL project's .env
       - ADMIN_PASS     = a strong password for /admin
 
-(B) CLOUDFLARE ORIGIN CERTIFICATE:
-      1. Cloudflare dashboard -> SSL/TLS -> Origin Server -> Create Certificate
-         (defaults: RSA, hostnames  golosrisunka.ru, *.golosrisunka.ru, 15 years)
-      2. On the server create the folder:   mkdir -p /etc/ssl/cloudflare
-      3. Save the CERTIFICATE block to:      /etc/ssl/cloudflare/golosrisunka.pem
-         Save the PRIVATE KEY block to:      /etc/ssl/cloudflare/golosrisunka.key
-      4. Lock down the key:                  chmod 600 /etc/ssl/cloudflare/golosrisunka.key
-      5. Cloudflare -> SSL/TLS -> Overview -> set mode = Full (strict)
+(B) DNS (Cloudflare DNS-only / grey cloud — same as shepotzvezd.ru):
+      1. Cloudflare dashboard -> DNS: A records for  golosrisunka.ru  and  www
+         must point to THIS server's public IP, proxy status = DNS only (grey cloud).
+      2. certbot must be installed:  apt-get install -y certbot python3-certbot-nginx
+      go_live.sh then obtains a Let's Encrypt cert automatically (no Origin cert needed).
+      (If you ever switch to Cloudflare orange-cloud, use a CF Origin cert instead.)
 
 Then upload & run go_live.sh.
 NEXT

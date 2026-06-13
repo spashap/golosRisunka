@@ -559,3 +559,35 @@ canonical+OG, Article-schema, нет сырого markdown, ссылка /order,
 **Phase 8 — ЮKassa + Unisender** (ждём аккаунты заказчика). Всё за абстракциями (payments.py,
 mailer.py): подключение = один backend каждый. После — боевой платёж + рассылки, затем гейт M8/M9.
 Заказчику: submit sitemap в Я.Вебмастер; по желанию — `seo-audit`/`seo-technical` по живому сайту.
+
+---
+
+## 2026-06-13 (вечер) — Прод TLS: Cloudflare Origin → Let's Encrypt (DNS-only)
+
+**Контекст:** заказчик переключил golosrisunka.ru в Cloudflare на **DNS-only (grey cloud)** ради
+доступности из РФ — как у работающего shepotzvezd.ru на этом же сервере. CF Origin-cert после этого
+невалиден для прямого трафика (его доверяет только edge Cloudflare).
+
+**Сделано на сервере (root@31.172.67.220):**
+- Проверено: DNS обоих имён (apex+www) теперь указывает прямо на 31.172.67.220; firewall 80/443 open;
+  certbot 2.9.0 стоит; certbot.timer enabled+active. Бэкап vhost → `/root/golosrisunka.vhost.bak.*`.
+- Выпущен **Let's Encrypt** cert через nginx-плагин, ключ **ECDSA**, оба имени (как shepotzvezd):
+  `certbot --nginx -d golosrisunka.ru -d www.golosrisunka.ru --key-type ecdsa --redirect`.
+- certbot переписал vhost: `ssl_certificate` → `/etc/letsencrypt/live/golosrisunka.ru/{fullchain,privkey}.pem`;
+  старые CF-Origin директивы убраны. `nginx -t` ок, reload. Renewal-conf: authenticator/installer=nginx,
+  key_type=ecdsa (идентично shepotzvezd) → `certbot renew --dry-run` = success.
+- **Проверка снаружи (публичный trust store, без `-k`):** apex и www → HTTP 200,
+  `ssl_verify_result: 0`, `openssl ... Verify return code: 0 (ok)`, issuer = Let's Encrypt (CN=YE1),
+  SAN покрывает оба имени, http→https 301. Истёк 2026-09-11, продлевается автоматически.
+- Старые `/etc/ssl/cloudflare/golosrisunka.{pem,key}` оставлены на месте (не используются, безвредны).
+
+**Репозиторий (синхронизация с реальностью, без bump версии — по команде заказчика):**
+- `scripts/deploy/go_live.sh` — переписан под LE: bootstrap HTTP-vhost → `certbot certonly --nginx`
+  (ECDSA, идемпотентно) → финальный HTTPS-vhost; убран CF real_ip-блок (DNS-only → IP клиента прямой);
+  preflight теперь проверяет certbot + DNS, а не CF-cert.
+- `scripts/deploy/setup_letsencrypt.sh` — новый committable скрипт выдачи/починки LE-cert
+  (заменяет роль gitignored `install_cert.sh`, который держал приватный CF-ключ).
+- `scripts/deploy/provision.sh` — финальные инструкции: DNS-only + certbot вместо CF Origin cert.
+- `CLAUDE.md` (Деплой/Состояние/Watch list/кредензалы), `UseCasesData.md` (#21), память обновлены.
+- ⚠️ `deploy.sh` nginx/TLS НЕ трогает — обновление этих скриптов в git не меняет живой TLS
+  автоматически; смена cert была разовым ручным `certbot`-прогоном (уже сделан, прод уже на LE).
