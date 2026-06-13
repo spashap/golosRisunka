@@ -19,7 +19,7 @@
   {% if q %}<a class="btn btn--ghost" href="{{ url_for('admin.actions') }}?days={{ days }}">Сброс</a>{% endif %}
 </form>
 
-<p class="hint">Всего срабатываний за период{% if q %} (фильтр «{{ q }}»){% endif %}: <b>{{ total }}</b>.
+<p class="hint">Всего срабатываний (только люди) за период{% if q %} (фильтр «{{ q }}»){% endif %}: <b>{{ total }}</b>{% if bots %} · ботов отфильтровано: {{ bots }}{% endif %}.
   Серверные события воронки (<code>landing_view</code>…) и клики UI (<code>click:*</code>) — вместе.</p>
 
 <table>

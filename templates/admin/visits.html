@@ -6,7 +6,7 @@
   <h1 class="h2">Визиты</h1>
   {{ period_filter(periods, days, url_for("admin.visits")) }}
 </div>
-<p class="hint">{{ total }} уникальных посетителей за период. UTM — first-touch (первое касание), устройство и origin — из событий.</p>
+<p class="hint">{{ total }} уникальных посетителей-людей за период{% if bots %} · ботов отфильтровано: {{ bots }}{% endif %}. UTM — first-touch (первое касание), устройство и origin — из событий.</p>
 
 <div class="admin-cols">
   <div>

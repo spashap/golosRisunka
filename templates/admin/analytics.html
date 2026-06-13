@@ -10,6 +10,7 @@
 <p class="hint">Яндекс.Метрика не подключена — добавьте <code>YANDEX_METRIKA_ID</code>
   в <code>.env</code>, и счётчик появится на всех страницах сайта.</p>
 {% endif %}
+<p class="hint">Показаны только люди — боты (мониторы/сканеры/утилиты) отсечены{% if bots %}; за период отфильтровано ботов: {{ bots }}{% endif %}.</p>
 
 <div class="admin-kpis">
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.visitors }}</div><div class="admin-kpi__l">посетителей</div></div>

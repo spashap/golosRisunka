@@ -44,13 +44,38 @@ def after_request(response):
     return response
 
 
+# Маркеры ботов в User-Agent (всё в lower-case). Сетевые защиты:
+#  1) "+http"/"+https" — самоидентифицирующийся краулер/монитор (PingAdmin, leakix, Claude-User…);
+#  2) нет "mozilla" — это утилита/сканер (curl, wget, *-Audit-Scanner, greedyhand…), не браузер;
+#  3) явный список имён — на случай ботов с браузерным UA без само-URL.
+# Яндекс.Браузер (YaBrowser) НЕ ловится этими правилами — он шлёт нормальный Mozilla-UA без +http.
+BOT_UA_MARKERS = (
+    "bot", "crawler", "spider", "headless", "slurp", "monitor",
+    "scan", "audit", "sniff", "uptime", "pingdom", "pingadmin", "leakix",
+    "masscan", "zgrab", "nmap", "nuclei", "wpscan", "sqlmap", "nikto",
+    "scrapy", "phantomjs", "selenium", "puppeteer", "playwright",
+    "curl", "wget", "python-requests", "urllib", "aiohttp", "httpx",
+    "go-http", "okhttp", "java/", "libwww", "httpclient", "node-fetch",
+    "gptbot", "chatgpt", "claude", "anthropic", "perplexity", "bytespider",
+    "ccbot", "google-extended", "amazonbot", "applebot", "ai2bot",
+    "ahrefs", "semrush", "mj12", "dotbot", "dataforseo", "petalbot", "blexbot",
+    "facebookexternalhit", "telegrambot", "whatsapp", "twitterbot",
+    "linkedinbot", "discordbot", "slackbot", "vkshare", "embedly",
+)
+
+
 def parse_device(ua: str | None) -> str:
-    """Грубое определение устройства по User-Agent. YaBrowser/боты-краулеры
-    помечаем аккуратно (не путаем Яндекс.Браузер с ботом — он популярен в RU)."""
-    s = (ua or "").lower()
+    """Определение устройства по User-Agent; ботов/сканеры/утилиты помечаем 'bot'.
+    Боты складываются в device='bot' и отсекаются в админ-аналитике (только люди).
+    Яндекс.Браузер популярен в RU — он шлёт обычный Mozilla-UA и НЕ помечается ботом."""
+    s = (ua or "").lower().strip()
     if not s:
         return "unknown"
-    if any(b in s for b in ("bot", "crawler", "spider", "headless", "slurp", "monitor")):
+    if "+http" in s:                       # самоидентифицирующийся краулер/монитор
+        return "bot"
+    if "mozilla" not in s:                 # curl/wget/сканеры — не браузеры
+        return "bot"
+    if any(b in s for b in BOT_UA_MARKERS):
         return "bot"
     if "ipad" in s or "tablet" in s or ("android" in s and "mobile" not in s):
         return "tablet"

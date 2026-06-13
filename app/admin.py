@@ -51,6 +51,11 @@ FUNNEL_STEPS = [
 
 PERIODS = [("1", "сегодня"), ("7", "7 дней"), ("30", "30 дней"), ("all", "всё время")]
 
+# Аналитика показывает ТОЛЬКО людей: боты (device='bot', см. app/track.parse_device)
+# отсекаются во всех человеко-ориентированных запросах. device IS NULL — серверные
+# события воркера (оплата/доставка отчёта) — это не бот, оставляем.
+NOT_BOT = "(device IS NULL OR device <> 'bot')"
+
 
 # --- Авторизация ---
 
@@ -145,7 +150,10 @@ def analytics():
 
     visitors = db.execute(
         "SELECT COUNT(DISTINCT visitor_id) c FROM events"
-        " WHERE visitor_id IS NOT NULL AND created_at >= ?", (since,)).fetchone()["c"]
+        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?", (since,)).fetchone()["c"]
+    bots = db.execute(
+        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
+        " WHERE visitor_id IS NOT NULL AND device = 'bot' AND created_at >= ?", (since,)).fetchone()["c"]
     orders_total = db.execute(
         "SELECT COUNT(*) c FROM orders WHERE created_at >= ?", (since,)).fetchone()["c"]
     paid = db.execute(
@@ -161,7 +169,7 @@ def analytics():
     for ev, label in FUNNEL_STEPS:
         n = db.execute(
             "SELECT COUNT(DISTINCT COALESCE(visitor_id, 'c' || customer_id)) c"
-            " FROM events WHERE type = ? AND created_at >= ?", (ev, since)).fetchone()["c"]
+            f" FROM events WHERE type = ? AND {NOT_BOT} AND created_at >= ?", (ev, since)).fetchone()["c"]
         funnel.append({
             "label": label, "n": n,
             "pct_prev": f"{n / prev * 100:.0f}%" if prev else "",
@@ -173,7 +181,7 @@ def analytics():
     sources: dict[str, dict] = {}
     for row in db.execute(
             "SELECT utm_json, COUNT(DISTINCT visitor_id) c FROM events"
-            " WHERE type = 'landing_view' AND created_at >= ? GROUP BY utm_json", (since,)):
+            f" WHERE type = 'landing_view' AND {NOT_BOT} AND created_at >= ? GROUP BY utm_json", (since,)):
         s = sources.setdefault(_utm_label(row["utm_json"]),
                                {"visitors": 0, "orders": 0, "paid": 0, "rub": 0})
         s["visitors"] += row["c"]
@@ -189,7 +197,7 @@ def analytics():
 
     events = db.execute(
         "SELECT type, visitor_id, customer_id, payload_json, created_at FROM events"
-        " WHERE created_at >= ? ORDER BY id DESC LIMIT 60", (since,)).fetchall()
+        f" WHERE {NOT_BOT} AND created_at >= ? ORDER BY id DESC LIMIT 60", (since,)).fetchall()
     events_view = [{
         "time": e["created_at"][:19].replace("T", " "),
         "type": e["type"],
@@ -200,7 +208,7 @@ def analytics():
     return _render("admin.analytics", "admin/analytics.html",
                    days=days, periods=PERIODS, kpi=kpi, funnel=funnel,
                    sources=sorted(sources.items(), key=lambda kv: -kv[1]["visitors"]),
-                   events=events_view,
+                   events=events_view, bots=bots,
                    metrika_configured=bool(settings.YANDEX_METRIKA_ID))
 
 
@@ -213,14 +221,14 @@ def visits():
 
     devices = db.execute(
         "SELECT COALESCE(device, '—') d, COUNT(DISTINCT visitor_id) c FROM events"
-        " WHERE visitor_id IS NOT NULL AND created_at >= ? GROUP BY device"
+        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ? GROUP BY device"
         " ORDER BY c DESC", (since,)).fetchall()
     devices_view = [{"device": r["d"], "n": r["c"]} for r in devices]
 
     src: dict[str, int] = {}
     for row in db.execute(
             "SELECT utm_json, COUNT(DISTINCT visitor_id) c FROM events"
-            " WHERE visitor_id IS NOT NULL AND created_at >= ? GROUP BY utm_json", (since,)):
+            f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ? GROUP BY utm_json", (since,)):
         src[_utm_label(row["utm_json"])] = src.get(_utm_label(row["utm_json"]), 0) + row["c"]
     sources = sorted(src.items(), key=lambda kv: -kv[1])
 
@@ -228,7 +236,7 @@ def visits():
         "SELECT visitor_id, COUNT(*) n, MIN(created_at) first_seen, MAX(created_at) last_seen,"
         " MAX(device) device, MAX(referer) referer, MAX(utm_json) utm_json,"
         " MAX(customer_id) customer_id"
-        " FROM events WHERE visitor_id IS NOT NULL AND created_at >= ?"
+        f" FROM events WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?"
         " GROUP BY visitor_id ORDER BY last_seen DESC LIMIT 200", (since,)).fetchall()
     visitors_view = [{
         "id": (r["visitor_id"] or "")[:10],
@@ -243,11 +251,14 @@ def visits():
 
     total_visitors = db.execute(
         "SELECT COUNT(DISTINCT visitor_id) c FROM events"
-        " WHERE visitor_id IS NOT NULL AND created_at >= ?", (since,)).fetchone()["c"]
+        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?", (since,)).fetchone()["c"]
+    bots = db.execute(
+        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
+        " WHERE visitor_id IS NOT NULL AND device = 'bot' AND created_at >= ?", (since,)).fetchone()["c"]
 
     return _render("admin.visits", "admin/visits.html",
                    days=days, periods=PERIODS, devices=devices_view,
-                   sources=sources, visitors=visitors_view, total=total_visitors)
+                   sources=sources, visitors=visitors_view, total=total_visitors, bots=bots)
 
 
 @bp_admin.get("/actions")
@@ -259,10 +270,15 @@ def actions():
     db = get_db()
 
     params: list = [since]
-    where = "created_at >= ?"
+    where = f"created_at >= ? AND {NOT_BOT}"
     if q:
         where += " AND type LIKE ?"
         params.append(f"%{q}%")
+
+    bots = db.execute(
+        "SELECT COUNT(*) c FROM events WHERE created_at >= ? AND device = 'bot'"
+        + (" AND type LIKE ?" if q else ""),
+        [since] + ([f"%{q}%"] if q else [])).fetchone()["c"]
 
     summary = db.execute(
         f"SELECT type, COUNT(*) n, COUNT(DISTINCT visitor_id) u, MAX(created_at) last"
@@ -286,7 +302,7 @@ def actions():
 
     return _render("admin.actions", "admin/actions.html",
                    days=days, periods=PERIODS, q=q,
-                   summary=summary_view, total=total, recent=recent_view)
+                   summary=summary_view, total=total, recent=recent_view, bots=bots)
 
 
 @bp_admin.get("/orders")
