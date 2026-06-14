@@ -7,9 +7,9 @@
   {{ period_filter(periods, days, url_for("admin.visits")) }}
 </div>
 <p class="hint">{{ total }} уникальных посетителей-людей за период · <b>вовлечённых: {{ engaged }}</b> · отказы: {{ bounce }}{% if bots %} · ботов отфильтровано: {{ bots }}{% endif %}.<br>
-  «Вовлечённый» = был скролл/клик/нажатие или ≥15 c видимого пребывания (как «отказ» в Метрике). UTM — first-touch; устройство и origin — из событий.</p>
+  «Вовлечённый» = был скролл/клик/нажатие или ≥15 c видимого пребывания (как «отказ» в Метрике). UTM — first-touch; устройство, origin и гео — из событий.</p>
 
-<div class="admin-cols">
+<div class="admin-cols admin-cols--3">
   <div>
     <h2>Устройства</h2>
     <table>
@@ -36,30 +36,76 @@
       </tbody>
     </table>
   </div>
+  <div>
+    <h2>География</h2>
+    <table>
+      <thead><tr><th>Страна</th><th>Посетителей</th></tr></thead>
+      <tbody>
+      {% for gview in geo %}
+      <tr><td>{{ gview.country }}</td><td><b>{{ gview.n }}</b></td></tr>
+      {% else %}
+      <tr><td colspan="2">Гео-база ещё не собрана</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<h2>Последние посетители <span class="hint">(до 200)</span></h2>
-<div class="admin-scroll">
-<table>
-  <thead><tr><th>Посетитель</th><th>Вовлечён</th><th>Устройство</th><th>Источник</th><th>Origin</th>
-    <th>Событий</th><th>Клиент</th><th>Первый визит</th><th>Последний</th></tr></thead>
-  <tbody>
+<div class="admin-head" style="margin-top:26px">
+  <h2 style="margin:0">Посетители <span class="hint">(показано {{ shown }}, до 200)</span></h2>
+  <div class="admin-periods">
+    <a class="status-pill {% if show != 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.visits') }}?days={{ days }}">Не вовлечённые</a>
+    <a class="status-pill {% if show == 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.visits') }}?days={{ days }}&show=all">Все</a>
+  </div>
+</div>
+<p class="hint">Кликните по строке — раскроется всё, что мы собрали по посетителю.</p>
+
+<div class="vis-list">
+  <div class="vis-head">
+    <span>Вовл.</span><span>Посетитель</span><span>Гео</span><span>Устройство</span>
+    <span>Источник</span><span>Событий</span><span>Клиент</span><span>Последний</span>
+  </div>
   {% for v in visitors %}
-  <tr>
-    <td><code>{{ v.id }}</code></td>
-    <td>{% if v.engaged %}✓{% else %}<span class="hint">—</span>{% endif %}</td>
-    <td>{{ v.device }}</td>
-    <td>{{ v.utm }}</td>
-    <td><code style="font-size:12px">{{ v.referer }}</code></td>
-    <td>{{ v.events }}</td>
-    <td>{{ v.customer }}</td>
-    <td style="white-space:nowrap">{{ v.first }}</td>
-    <td style="white-space:nowrap">{{ v.last }}</td>
-  </tr>
+  <details class="vis">
+    <summary>
+      <span>{% if v.engaged %}✓{% else %}<span class="hint">—</span>{% endif %}</span>
+      <code>{{ v.id }}</code>
+      <span>{{ v.geo }}</span>
+      <span>{{ v.device }}</span>
+      <span>{{ v.utm }}</span>
+      <span>{{ v.events }}</span>
+      <span>{{ v.customer }}</span>
+      <span style="white-space:nowrap">{{ v.last }}</span>
+    </summary>
+    <div class="vis-body">
+      <p class="hint">
+        Первый визит: {{ v.first }} · Origin: <code>{{ v.referer }}</code>
+        {%- if v.orders %} · Заказы:
+          {% for o in v.orders %}<code>#{{ o.id }} {{ o.status }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+        {%- endif %}
+      </p>
+      <table class="vis-events">
+        <thead><tr><th>Время</th><th>Событие</th><th>Устройство</th><th>Гео</th><th>Origin / payload</th></tr></thead>
+        <tbody>
+        {% for e in v.timeline %}
+        <tr>
+          <td style="white-space:nowrap">{{ e.time }}</td>
+          <td><code>{{ e.type }}</code></td>
+          <td>{{ e.device }}</td>
+          <td>{{ e.geo }}</td>
+          <td><code style="font-size:11px">{{ e.payload or e.referer }}</code></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="hint">Событий нет</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
   {% else %}
-  <tr><td colspan="9">Посетителей за период нет</td></tr>
+  <p class="hint">{% if show == 'all' %}Посетителей за период нет.{% else %}Невовлечённых посетителей за период нет — попробуйте «Все».{% endif %}</p>
   {% endfor %}
-  </tbody>
-</table>
 </div>
 {% endblock %}

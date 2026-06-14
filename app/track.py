@@ -84,10 +84,27 @@ def parse_device(ua: str | None) -> str:
     return "desktop"
 
 
+def client_ip() -> str | None:
+    """Реальный IP клиента за nginx (он шлёт X-Real-IP и X-Forwarded-For).
+    DNS-only/grey-cloud -> это настоящий IP посетителя, не Cloudflare. Сам IP
+    нигде не сохраняется — только используется для гео-резолва в track_event()."""
+    if not request:
+        return None
+    real = request.headers.get("X-Real-IP")
+    if real:
+        return real.strip()
+    fwd = request.headers.get("X-Forwarded-For")
+    if fwd:
+        return fwd.split(",")[0].strip()      # первый хоп = клиент
+    return request.remote_addr
+
+
 def track_event(event_type: str, payload: dict | None = None,
                 customer_id: int | None = None) -> None:
+    from app import geoip
     from app.db import track
     ua = request.user_agent.string if request else None
+    geo = geoip.lookup(client_ip()) or {}
     track(event_type,
           visitor_id=getattr(g, "visitor_id", None),
           customer_id=customer_id,
@@ -95,4 +112,6 @@ def track_event(event_type: str, payload: dict | None = None,
           utm=getattr(g, "utm", None),
           user_agent=(ua or None),
           device=parse_device(ua),
-          referer=(request.referrer if request else None))
+          referer=(request.referrer if request else None),
+          geo_country=geo.get("country"),
+          geo_region=geo.get("region"))

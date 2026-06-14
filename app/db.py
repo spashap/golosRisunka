@@ -97,6 +97,9 @@ CREATE TABLE IF NOT EXISTS events (
     user_agent TEXT,                      -- сырой UA (для разбора устройства)
     device TEXT,                          -- mobile / tablet / desktop / bot
     referer TEXT,                         -- откуда пришёл (origin)
+    geo_country TEXT,                     -- страна по IP (код или назв.); сам IP НЕ храним
+    geo_region TEXT,                      -- регион (для РФ — область/край и т.п.)
+    geo_city TEXT,                        -- город (если есть в базе)
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_events_type ON events(type, created_at);
@@ -134,7 +137,8 @@ def _migrate(conn: sqlite3.Connection) -> None:
     """Лёгкие миграции для уже существующих БД (CREATE IF NOT EXISTS не добавляет
     колонки в готовую таблицу). Идемпотентно: только ADD COLUMN, если колонки нет."""
     cols = {r["name"] for r in conn.execute("PRAGMA table_info(events)")}
-    for col in ("user_agent", "device", "referer"):
+    for col in ("user_agent", "device", "referer",
+                "geo_country", "geo_region", "geo_city"):
         if col not in cols:
             conn.execute(f"ALTER TABLE events ADD COLUMN {col} TEXT")
 
@@ -154,20 +158,23 @@ def track(event_type: str, visitor_id: str | None = None,
           customer_id: int | None = None, payload: dict | None = None,
           utm: dict | None = None, conn: sqlite3.Connection | None = None,
           user_agent: str | None = None, device: str | None = None,
-          referer: str | None = None) -> None:
+          referer: str | None = None, geo_country: str | None = None,
+          geo_region: str | None = None, geo_city: str | None = None) -> None:
     """Серверное событие аналитики. Никогда не роняет запрос.
     conn — явное соединение для процессов без Flask (воркер).
-    user_agent/device/referer заполняются из request (track.py); воркер их не шлёт."""
+    user_agent/device/referer/geo_* заполняются из request (track.py); воркер их не шлёт.
+    Сам IP НЕ сохраняется — только производная гео-метка (страна/регион/город)."""
     try:
         db = conn if conn is not None else get_db()
         db.execute(
             "INSERT INTO events (visitor_id, customer_id, type, payload_json, utm_json,"
-            " user_agent, device, referer, created_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " user_agent, device, referer, geo_country, geo_region, geo_city, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (visitor_id, customer_id, event_type,
              json.dumps(payload, ensure_ascii=False) if payload else None,
              json.dumps(utm, ensure_ascii=False) if utm else None,
-             user_agent, device, referer, now()),
+             user_agent, device, referer,
+             geo_country, geo_region, geo_city, now()),
         )
         db.commit()
     except Exception:

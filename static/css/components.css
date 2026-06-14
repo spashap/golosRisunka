@@ -534,7 +534,30 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .admin-scroll { overflow-x: auto; }
 .admin-scroll table { min-width: 760px; }
 .admin-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.admin-cols--3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 900px) { .admin-cols--3 { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .admin-cols { grid-template-columns: 1fr; } }
+
+/* Визиты: раскрывающийся список посетителей (drill-down без JS) */
+.vis-list { margin-top: 12px; }
+.vis-head, .vis > summary {
+  display: grid; gap: 10px; align-items: center;
+  grid-template-columns: 42px 92px 1.4fr 88px 1.3fr 70px 64px 110px;
+}
+.vis-head { padding: 6px 12px; color: var(--soft); font-size: 12px; font-weight: 600; }
+.vis { border: 1px solid var(--alt); border-radius: 8px; margin-bottom: 6px; background: var(--paper); }
+.vis > summary { padding: 9px 12px; cursor: pointer; list-style: none; font-size: 13.5px; }
+.vis > summary::-webkit-details-marker { display: none; }
+.vis > summary:hover { background: var(--bg); }
+.vis[open] { border-color: var(--accent); }
+.vis[open] > summary { background: var(--bg); border-bottom: 1px solid var(--alt); }
+.vis-body { padding: 12px 14px; }
+.vis-events { width: 100%; font-size: 12.5px; }
+.vis-events th, .vis-events td { padding: 4px 8px; }
+@media (max-width: 760px) {
+  .vis-head { display: none; }
+  .vis > summary { grid-template-columns: 1fr 1fr; }
+}
 .admin-filter { display: flex; gap: 8px; margin: 16px 0; max-width: 520px; }
 .admin-filter .input { flex: 1; }
 .admin-status { font-weight: 600; font-size: 13px; }

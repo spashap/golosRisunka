@@ -19,6 +19,7 @@ import re
 from flask import (Blueprint, abort, redirect, render_template, request,
                    Response, url_for)
 
+from app import geoip
 from app.db import get_db
 from config import settings
 
@@ -215,9 +216,12 @@ def analytics():
 
 @bp_admin.get("/visits")
 def visits():
-    """Визиты: устройства, источники (UTM), последние посетители с origin."""
+    """Визиты: устройства, источники (UTM), гео, последние посетители.
+    По умолчанию показываем НЕ вовлечённых (отказы); ?show=all — всех.
+    Каждая строка раскрывается inline в полную ленту событий посетителя."""
     _guard()
     days, since = _period()
+    show = request.args.get("show")          # None/'' = не вовлечённые; 'all' = все
     db = get_db()
 
     devices = db.execute(
@@ -233,23 +237,41 @@ def visits():
         src[_utm_label(row["utm_json"])] = src.get(_utm_label(row["utm_json"]), 0) + row["c"]
     sources = sorted(src.items(), key=lambda kv: -kv[1])
 
+    geo_rows = db.execute(
+        "SELECT geo_country, COUNT(DISTINCT visitor_id) c FROM events"
+        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND geo_country IS NOT NULL"
+        " AND created_at >= ? GROUP BY geo_country ORDER BY c DESC LIMIT 15", (since,)).fetchall()
+    geo_view = [{"country": geoip.country_name(r["geo_country"]), "n": r["c"]} for r in geo_rows]
+
+    engaged_expr = "MAX(CASE WHEN type = 'engaged' THEN 1 ELSE 0 END)"
+    having = "" if show == "all" else f" HAVING {engaged_expr} = 0"
     rows = db.execute(
         "SELECT visitor_id, COUNT(*) n, MIN(created_at) first_seen, MAX(created_at) last_seen,"
         " MAX(device) device, MAX(referer) referer, MAX(utm_json) utm_json,"
-        " MAX(customer_id) customer_id,"
-        " MAX(CASE WHEN type = 'engaged' THEN 1 ELSE 0 END) engaged"
+        " MAX(customer_id) customer_id, MAX(geo_country) geo_country,"
+        " MAX(geo_region) geo_region,"
+        f" {engaged_expr} engaged"
         f" FROM events WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?"
-        " GROUP BY visitor_id ORDER BY last_seen DESC LIMIT 200", (since,)).fetchall()
+        f" GROUP BY visitor_id{having} ORDER BY last_seen DESC LIMIT 200", (since,)).fetchall()
+
+    ids = [r["visitor_id"] for r in rows]
+    timeline = _visitor_timelines(db, ids, since)
+    orders_by_vis = _visitor_orders(db, ids)
+
     visitors_view = [{
         "id": (r["visitor_id"] or "")[:10],
+        "full_id": r["visitor_id"],
         "device": r["device"] or "—",
         "utm": _utm_label(r["utm_json"]),
         "referer": (r["referer"] or "")[:60] or "(прямой)",
         "events": r["n"],
         "engaged": bool(r["engaged"]),
         "customer": f"c{r['customer_id']}" if r["customer_id"] else "",
+        "geo": geoip.geo_label(r["geo_country"], r["geo_region"]),
         "first": r["first_seen"][:16].replace("T", " "),
         "last": r["last_seen"][:16].replace("T", " "),
+        "timeline": timeline.get(r["visitor_id"], []),
+        "orders": orders_by_vis.get(r["visitor_id"], []),
     } for r in rows]
 
     total_visitors = db.execute(
@@ -265,9 +287,55 @@ def visits():
     bounce = f"{(total_visitors - engaged) / total_visitors * 100:.0f}%" if total_visitors else "—"
 
     return _render("admin.visits", "admin/visits.html",
-                   days=days, periods=PERIODS, devices=devices_view,
-                   sources=sources, visitors=visitors_view, total=total_visitors,
+                   days=days, periods=PERIODS, show=show, shown=len(rows),
+                   devices=devices_view, sources=sources, geo=geo_view,
+                   visitors=visitors_view, total=total_visitors,
                    engaged=engaged, bounce=bounce, bots=bots)
+
+
+def _visitor_timelines(db, ids: list[str], since: str,
+                       cap: int = 100) -> dict[str, list[dict]]:
+    """Полная лента событий для показанных посетителей (до cap на каждого)."""
+    if not ids:
+        return {}
+    ph = ",".join("?" * len(ids))
+    rows = db.execute(
+        "SELECT visitor_id, type, payload_json, device, referer,"
+        " geo_country, geo_region, created_at"
+        f" FROM events WHERE visitor_id IN ({ph}) AND created_at >= ?"
+        " ORDER BY id DESC", (*ids, since)).fetchall()
+    out: dict[str, list[dict]] = {}
+    for e in rows:
+        lst = out.setdefault(e["visitor_id"], [])
+        if len(lst) >= cap:
+            continue
+        lst.append({
+            "time": e["created_at"][:19].replace("T", " "),
+            "type": e["type"],
+            "payload": (e["payload_json"] or ""),
+            "device": e["device"] or "",
+            "referer": (e["referer"] or ""),
+            "geo": geoip.geo_label(e["geo_country"], e["geo_region"]),
+        })
+    return out
+
+
+def _visitor_orders(db, ids: list[str]) -> dict[str, list[dict]]:
+    """Заказы, привязанные к показанным посетителям (orders.visitor_id)."""
+    if not ids:
+        return {}
+    ph = ",".join("?" * len(ids))
+    out: dict[str, list[dict]] = {}
+    try:
+        rows = db.execute(
+            f"SELECT id, visitor_id, status FROM orders WHERE visitor_id IN ({ph})",
+            tuple(ids)).fetchall()
+    except Exception:
+        return {}
+    for r in rows:
+        out.setdefault(r["visitor_id"], []).append(
+            {"id": r["id"], "status": r["status"]})
+    return out
 
 
 @bp_admin.get("/actions")
