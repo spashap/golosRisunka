@@ -144,15 +144,49 @@ def _utm_label(j: str | None) -> str:
 
 # --- Разделы ---
 
+# Дрилл-даун: сколько посетителей раскрывать под каждым шагом воронки / источником.
+DRILL_CAP = 60
+
+
+def _drill_member(row) -> dict:
+    """Строка посетителя для раскрытия (воронка/источник): кто + дешёвое гео/устройство."""
+    vid = row["visitor_id"]
+    cid = row["cid"]
+    return {
+        "id": (vid or (f"c{cid}" if cid else ""))[:12],
+        "geo": geoip.geo_label(row["gc"], row["gr"]),
+        "device": row["dev"] or "—",
+        "customer": f"c{cid}" if cid else "",
+        "time": row["last"][:16].replace("T", " "),
+    }
+
+
 @bp_admin.get("/analytics")
 def analytics():
     _guard()
     days, since = _period()
+    # По умолчанию считаем только ВОВЛЕЧЁННЫХ (был engaged): landing-only (отказы)
+    # отсекаются как и боты. ?show=all — вернуть всех людей. Серверные события
+    # (NULL visitor_id: оплата/доставка) — это конверсии, их фильтр не трогает.
+    show_all = request.args.get("show") == "all"
+    if show_all:
+        eng, eng_p = "", []
+    else:
+        eng = (" AND (visitor_id IS NULL OR visitor_id IN"
+               " (SELECT visitor_id FROM events WHERE type='engaged' AND created_at >= ?))")
+        eng_p = [since]
     db = get_db()
 
-    visitors = db.execute(
+    # «Все люди» и «вовлечённые» нужны всегда — чтобы показать размер отказов.
+    humans = db.execute(
         "SELECT COUNT(DISTINCT visitor_id) c FROM events"
         f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?", (since,)).fetchone()["c"]
+    engaged = db.execute(
+        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
+        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND type = 'engaged' AND created_at >= ?",
+        (since,)).fetchone()["c"]
+    landing_only = humans - engaged
+    visitors = humans if show_all else engaged
     bots = db.execute(
         "SELECT COUNT(DISTINCT visitor_id) c FROM events"
         " WHERE visitor_id IS NOT NULL AND device = 'bot' AND created_at >= ?", (since,)).fetchone()["c"]
@@ -167,26 +201,49 @@ def analytics():
         "conversion": f"{paid['c'] / visitors * 100:.1f}%" if visitors else "—",
     }
 
+    # Воронка: счётчики одним grouped-запросом + посетители для раскрытия (capped).
+    ftypes = [ev for ev, _ in FUNNEL_STEPS]
+    ph = ",".join("?" * len(ftypes))
+    counts = {r["type"]: r["c"] for r in db.execute(
+        "SELECT type, COUNT(DISTINCT COALESCE(visitor_id, 'c' || customer_id)) c FROM events"
+        f" WHERE type IN ({ph}) AND {NOT_BOT} AND created_at >= ?{eng} GROUP BY type",
+        (*ftypes, since, *eng_p))}
+    fmembers: dict[str, list] = {}
+    for row in db.execute(
+            "SELECT type, COALESCE(visitor_id, 'c' || customer_id) who, visitor_id,"
+            " MAX(geo_country) gc, MAX(geo_region) gr, MAX(device) dev,"
+            " MAX(customer_id) cid, MAX(created_at) last FROM events"
+            f" WHERE type IN ({ph}) AND {NOT_BOT} AND created_at >= ?{eng}"
+            " GROUP BY type, who ORDER BY last DESC", (*ftypes, since, *eng_p)):
+        lst = fmembers.setdefault(row["type"], [])
+        if len(lst) < DRILL_CAP:
+            lst.append(_drill_member(row))
     funnel, prev = [], None
     for ev, label in FUNNEL_STEPS:
-        n = db.execute(
-            "SELECT COUNT(DISTINCT COALESCE(visitor_id, 'c' || customer_id)) c"
-            f" FROM events WHERE type = ? AND {NOT_BOT} AND created_at >= ?", (ev, since)).fetchone()["c"]
+        n = counts.get(ev, 0)
         funnel.append({
-            "label": label, "n": n,
+            "label": label, "n": n, "type": ev,
+            "members": fmembers.get(ev, []),
             "pct_prev": f"{n / prev * 100:.0f}%" if prev else "",
             "pct_top": (f"{n / funnel[0]['n'] * 100:.1f}%"
                         if funnel and funnel[0]["n"] else ""),
         })
         prev = n or None
 
+    # Источники: посетители по landing_view (с раскрытием) + заказы/оплаты из orders.
     sources: dict[str, dict] = {}
+    src_members: dict[str, list] = {}
     for row in db.execute(
-            "SELECT utm_json, COUNT(DISTINCT visitor_id) c FROM events"
-            f" WHERE type = 'landing_view' AND {NOT_BOT} AND created_at >= ? GROUP BY utm_json", (since,)):
-        s = sources.setdefault(_utm_label(row["utm_json"]),
-                               {"visitors": 0, "orders": 0, "paid": 0, "rub": 0})
-        s["visitors"] += row["c"]
+            "SELECT utm_json, visitor_id, MAX(geo_country) gc, MAX(geo_region) gr,"
+            " MAX(device) dev, MAX(customer_id) cid, MAX(created_at) last FROM events"
+            f" WHERE type = 'landing_view' AND {NOT_BOT} AND created_at >= ?{eng}"
+            " GROUP BY utm_json, visitor_id ORDER BY last DESC", (since, *eng_p)):
+        label = _utm_label(row["utm_json"])
+        s = sources.setdefault(label, {"visitors": 0, "orders": 0, "paid": 0, "rub": 0})
+        s["visitors"] += 1
+        lst = src_members.setdefault(label, [])
+        if len(lst) < DRILL_CAP:
+            lst.append(_drill_member(row))
     for row in db.execute(
             "SELECT utm_json, paid_at, price_kopecks FROM orders"
             " WHERE created_at >= ?", (since,)):
@@ -198,19 +255,25 @@ def analytics():
             s["rub"] += row["price_kopecks"] // 100
 
     events = db.execute(
-        "SELECT type, visitor_id, customer_id, payload_json, created_at FROM events"
-        f" WHERE {NOT_BOT} AND created_at >= ? ORDER BY id DESC LIMIT 60", (since,)).fetchall()
+        "SELECT type, visitor_id, customer_id, device, geo_country, geo_region,"
+        f" payload_json, created_at FROM events WHERE {NOT_BOT} AND created_at >= ?{eng}"
+        " ORDER BY id DESC LIMIT 60", (since, *eng_p)).fetchall()
     events_view = [{
         "time": e["created_at"][:19].replace("T", " "),
         "type": e["type"],
-        "who": (e["visitor_id"] or "")[:8] or (f"c{e['customer_id']}" if e["customer_id"] else ""),
+        "geo": geoip.geo_label(e["geo_country"], e["geo_region"]),
+        "device": e["device"] or ("—" if e["visitor_id"] else "сервер"),
+        "who": f"c{e['customer_id']}" if e["customer_id"] else (e["visitor_id"] or "")[:8],
         "payload": (e["payload_json"] or "")[:90],
     } for e in events]
 
+    sources_view = [(name, s, src_members.get(name, []))
+                    for name, s in sorted(sources.items(), key=lambda kv: -kv[1]["visitors"])]
     return _render("admin.analytics", "admin/analytics.html",
-                   days=days, periods=PERIODS, kpi=kpi, funnel=funnel,
-                   sources=sorted(sources.items(), key=lambda kv: -kv[1]["visitors"]),
+                   days=days, periods=PERIODS, show=request.args.get("show"),
+                   kpi=kpi, funnel=funnel, sources=sources_view,
                    events=events_view, bots=bots,
+                   humans=humans, engaged=engaged, landing_only=landing_only,
                    metrika_configured=bool(settings.YANDEX_METRIKA_ID))
 
 

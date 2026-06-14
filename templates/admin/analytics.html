@@ -1,6 +1,26 @@
 {% extends "admin/_base_admin.html" %}
 {% from "admin/_period.html" import period_filter %}
 {% block title %}Аналитика{% endblock %}
+
+{# Таблица посетителей под раскрытым шагом воронки / источником #}
+{% macro members_table(members) %}
+<table class="vis-events">
+  <thead><tr><th>Кто</th><th>Гео</th><th>Устройство</th><th>Клиент</th><th>Когда (UTC)</th></tr></thead>
+  <tbody>
+  {% for m in members %}
+  <tr>
+    <td><code style="font-size:11px">{{ m.id }}</code></td>
+    <td>{{ m.geo }}</td><td>{{ m.device }}</td>
+    <td>{% if m.customer %}<code>{{ m.customer }}</code>{% endif %}</td>
+    <td style="white-space:nowrap">{{ m.time }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" class="hint">Никого</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
 {% block content %}
 <div class="admin-head">
   <h1 class="h2">Аналитика</h1>
@@ -10,48 +30,82 @@
 <p class="hint">Яндекс.Метрика не подключена — добавьте <code>YANDEX_METRIKA_ID</code>
   в <code>.env</code>, и счётчик появится на всех страницах сайта.</p>
 {% endif %}
-<p class="hint">Показаны только люди — боты (мониторы/сканеры/утилиты) отсечены{% if bots %}; за период отфильтровано ботов: {{ bots }}{% endif %}.</p>
+
+<div class="admin-head" style="margin:14px 0 4px">
+  <p class="hint" style="margin:0">
+    {% if show == 'all' %}Считаем <b>всех людей</b>: {{ humans }}{% else %}Считаем только <b>вовлечённых</b>: {{ engaged }}{% endif %}
+    · landing-only (отказы): <b>{{ landing_only }}</b>{% if humans %} из {{ humans }} ({{ (landing_only / humans * 100) | round | int }}%){% endif %}{% if bots %} · ботов отсечено: {{ bots }}{% endif %}.<br>
+    «Вовлечённый» = был скролл/клик/нажатие или ≥15 c на странице. landing-only = зашёл на лендинг и ушёл.
+  </p>
+  <div class="admin-periods">
+    <a class="status-pill {% if show != 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.analytics') }}?days={{ days }}">Без отказов</a>
+    <a class="status-pill {% if show == 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.analytics') }}?days={{ days }}&show=all">Все люди</a>
+  </div>
+</div>
 
 <div class="admin-kpis">
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.visitors }}</div><div class="admin-kpi__l">посетителей</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.visitors }}</div><div class="admin-kpi__l">{% if show == 'all' %}посетителей{% else %}вовлечённых{% endif %}</div></div>
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.orders }}</div><div class="admin-kpi__l">заказов создано</div></div>
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.paid }}</div><div class="admin-kpi__l">оплачено</div></div>
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.revenue_rub }} ₽</div><div class="admin-kpi__l">выручка</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.conversion }}</div><div class="admin-kpi__l">посетитель → оплата</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.conversion }}</div><div class="admin-kpi__l">{% if show == 'all' %}посетитель{% else %}вовлечённый{% endif %} → оплата</div></div>
 </div>
 
 <h2>Воронка</h2>
-<table>
-  <thead><tr><th>Шаг</th><th>Уникальных</th><th>От пред. шага</th><th>От лендинга</th></tr></thead>
-  <tbody>
+<p class="hint">Кликните по шагу — раскроется список тех, кто его прошёл (до {{ 60 }}).</p>
+<div class="vis-list">
+  <div class="drill-head">
+    <span>Шаг</span><span>Уникальных</span><span>От пред.</span><span>От лендинга</span>
+  </div>
   {% for f in funnel %}
-  <tr><td>{{ f.label }}</td><td><b>{{ f.n }}</b></td><td>{{ f.pct_prev }}</td><td>{{ f.pct_top }}</td></tr>
+  <details class="drill">
+    <summary>
+      <span>{{ f.label }}</span>
+      <span><b>{{ f.n }}</b></span>
+      <span>{{ f.pct_prev }}</span>
+      <span>{{ f.pct_top }}</span>
+    </summary>
+    <div class="vis-body">{{ members_table(f.members) }}</div>
+  </details>
   {% endfor %}
-  </tbody>
-</table>
+</div>
 
-<h2>Источники (first-touch UTM)</h2>
-<table>
-  <thead><tr><th>Источник</th><th>Посетителей</th><th>Заказов</th><th>Оплат</th><th>Выручка</th></tr></thead>
-  <tbody>
-  {% for name, s in sources %}
-  <tr><td>{{ name }}</td><td>{{ s.visitors }}</td><td>{{ s.orders }}</td><td>{{ s.paid }}</td><td>{{ s.rub }} ₽</td></tr>
+<h2 style="margin-top:26px">Источники (first-touch UTM)</h2>
+<p class="hint">Кликните по источнику — кто с него пришёл.</p>
+<div class="vis-list">
+  <div class="drill-head drill-head--src">
+    <span>Источник</span><span>Посетителей</span><span>Заказов</span><span>Оплат</span><span>Выручка</span>
+  </div>
+  {% for name, s, members in sources %}
+  <details class="drill drill--src">
+    <summary>
+      <span>{{ name }}</span>
+      <span><b>{{ s.visitors }}</b></span>
+      <span>{{ s.orders }}</span>
+      <span>{{ s.paid }}</span>
+      <span>{{ s.rub }} ₽</span>
+    </summary>
+    <div class="vis-body">{{ members_table(members) }}</div>
+  </details>
   {% else %}
-  <tr><td colspan="5">Пока пусто</td></tr>
+  <p class="hint">Пока пусто</p>
   {% endfor %}
-  </tbody>
-</table>
+</div>
 
-<h2>Последние события <span class="hint">(до 60)</span></h2>
+<h2 style="margin-top:26px">Последние события <span class="hint">(до 60)</span></h2>
 <div class="admin-scroll">
 <table>
-  <thead><tr><th>Время (UTC)</th><th>Событие</th><th>Кто</th><th>Данные</th></tr></thead>
+  <thead><tr><th>Время (UTC)</th><th>Событие</th><th>Гео</th><th>Устройство</th><th>Кто</th><th>Данные</th></tr></thead>
   <tbody>
   {% for e in events %}
   <tr><td style="white-space:nowrap">{{ e.time }}</td><td>{{ e.type }}</td>
-      <td><code>{{ e.who }}</code></td><td><code style="font-size:12px">{{ e.payload }}</code></td></tr>
+      <td>{{ e.geo }}</td><td>{{ e.device }}</td>
+      <td><code style="font-size:11px">{{ e.who }}</code></td>
+      <td><code style="font-size:12px">{{ e.payload }}</code></td></tr>
   {% else %}
-  <tr><td colspan="4">Событий за период нет</td></tr>
+  <tr><td colspan="6">Событий за период нет</td></tr>
   {% endfor %}
   </tbody>
 </table>

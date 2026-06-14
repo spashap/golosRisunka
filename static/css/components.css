@@ -558,6 +558,27 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
   .vis-head { display: none; }
   .vis > summary { grid-template-columns: 1fr 1fr; }
 }
+
+/* Дрилл-даун воронки/источников: раскрывающийся шаг -> список посетителей */
+.drill-head, .drill > summary {
+  display: grid; gap: 10px; align-items: center;
+  grid-template-columns: 1.8fr 100px 90px 110px;
+}
+.drill-head--src, .drill--src > summary {
+  grid-template-columns: 1.8fr 110px 90px 90px 100px;
+}
+.drill-head { padding: 6px 12px; color: var(--soft); font-size: 12px; font-weight: 600; }
+.drill { border: 1px solid var(--alt); border-radius: 8px; margin-bottom: 6px; background: var(--paper); }
+.drill > summary { padding: 9px 12px; cursor: pointer; list-style: none; font-size: 13.5px; }
+.drill > summary::-webkit-details-marker { display: none; }
+.drill > summary:hover { background: var(--bg); }
+.drill[open] { border-color: var(--accent); }
+.drill[open] > summary { background: var(--bg); border-bottom: 1px solid var(--alt); }
+@media (max-width: 760px) {
+  .drill-head { display: none; }
+  .drill > summary { grid-template-columns: 1fr 1fr; }
+}
+
 .admin-filter { display: flex; gap: 8px; margin: 16px 0; max-width: 520px; }
 .admin-filter .input { flex: 1; }
 .admin-status { font-weight: 600; font-size: 13px; }
