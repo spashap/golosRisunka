@@ -24,12 +24,15 @@ venv\Scripts\python.exe scripts\generate_report.py IMG [IMG2] --context C1.txt [
 venv\Scripts\python.exe scripts\render_sample.py                # отчёт из fake JSON (шаблон)
 venv\Scripts\python.exe scripts\render_gallery.py [dk|pu|cl]    # галерея компонентов
 venv\Scripts\python.exe scripts\build_fonts.py                  # пересборка шрифтов (subsets)
+venv\Scripts\python.exe scripts\build_geoip.py CSV.gz           # сборка гео-базы data/geoip.db из DB-IP City Lite (строить НА сервере)
 venv\Scripts\python.exe scripts\hello_pdf.py                    # smoke-тест WeasyPrint+кириллица
 venv\Scripts\python.exe scripts\bump_version.py                 # минор +1 (ПЕРЕД каждым git push)
 venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 (ТОЛЬКО по команде заказчика)
 ```
 
-## Деплой (прод: golosrisunka.ru, Ubuntu VPS 31.172.67.220)
+## Деплой (прод: golosrisunka.ru, Ubuntu VPS 31.172.67.220 — провайдер Fornex, fornex.com)
+- Ресурсы (апгрейд 14.06): 40 ГБ диск (~23 ГБ free), 3 vCPU, 3.8 ГБ RAM (НЕ апгрейдили), swap НЕТ.
+  Бокс делит с shepotzvezd.ru. SSH/доступы — `C:\projects\serverdata.txt` (root, пароль).
 - Код в `/var/www/golosrisunka` (git clone, www-data владеет только `data/` + `static/img/`),
   gunicorn+worker как systemd (`golosrisunka-web`, `golosrisunka-worker`), nginx-vhost,
   **DNS-only (Cloudflare grey cloud) + Let's Encrypt** (certbot nginx-plagin, ключ ECDSA,
@@ -75,8 +78,8 @@ venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 
   `_metrika.html` сам шлёт `reachGoal` — JS дописывать не нужно. Имя цели уникальное, по схеме
   `<страница>_<действие>` (напр. `order_submit`, `cabinet_download_pdf`). Админку НЕ трекать.
 
-## Состояние на 13.06.2026 (детали в DevelopmentStatus.md)
-- **🚀 СОФТ-ЗАПУЩЕНО В ПРОД (13.06): сайт ЖИВ на golosrisunka.ru, V1.003.** Фазы 0–7 готовы,
+## Состояние на 14.06.2026 (детали в DevelopmentStatus.md)
+- **🚀 СОФТ-ЗАПУЩЕНО В ПРОД (13.06): сайт ЖИВ на golosrisunka.ru, V1.010 (14.06).** Фазы 0–7 готовы,
   Phase 9 (деплой) сделан РАНЬШЕ Phase 8 — прод со stub-оплатой (публичный,
   индексируемый по решению заказчика). **TLS: DNS-only + Let's Encrypt** (13.06 ушли с CF
   orange ради доступности из РФ — UseCase #21). Следующий гейт — Phase 8 (ЮKassa + Unisender), ждём аккаунты.
@@ -110,8 +113,15 @@ venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 
   Сид кабинета: data/tmp/tmp_seed_cabinet.py (заказы 9/10/11).
 - **Аналитика ЖИВА (13.06)**: Я.Метрика на всех страницах кроме /admin (webvisor=ON по решению
   заказчика), first-party трекинг кликов (data-ym-goal → reachGoal + beacon /t/e), админ-вкладки
-  **Визиты** (устройства/UTM/origin) и **Действия** (счётчик событий с фильтром); events получил
+  **Визиты** (устройства/UTM/origin/гео) и **Действия** (счётчик событий с фильтром); events получил
   device/user_agent/referer (миграция в init_db). `scripts/reset_analytics.py` — чистка тест-данных.
+- **Аналитика V1.010 (14.06)**: «Визиты» по умолчанию показывают НЕвовлечённых (отказы) +
+  тумблер «Все»; **гео** (страна всем, регион РФ) из своей офлайн-базы `data/geoip.db`
+  (`scripts/build_geoip.py` ← DB-IP City Lite, CC BY 4.0; ~30 МБ — город выкинут, диапазоны
+  слиты под маленький диск; строить НА сервере, обновлять раз в месяц + `./restart.sh`);
+  **IP НЕ храним** — только производную метку (миграция events +geo_country/region/city, city=NULL).
+  Inline drill-down посетителя (`<details>`, без JS): полная лента событий + заказы. `app/geoip.py`
+  (graceful-degrade «—» без базы), забор IP из `X-Real-IP`. Привязка фавиконок (static/img/favico/).
 - **SEO Yandex+AI (13.06)**: robots.txt (YandexBot/GPTBot/ClaudeBot/Perplexity allow; block
   admin/cabinet/r), sitemap (23 URL), OG+Twitter+canonical глобально, schema Org/WebSite/Product/
   FAQPage/Article, индексируемые `/primer/<token>` (приватные /r/ закрыты), OG-картинка
