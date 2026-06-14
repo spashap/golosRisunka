@@ -6,7 +6,7 @@ import json
 from functools import lru_cache
 
 from flask import (Blueprint, Response, abort, g, redirect, render_template,
-                   request, url_for)
+                   request, send_from_directory, url_for)
 
 from app.auth import (SESSION_COOKIE, AuthError, current_customer,
                       destroy_session, request_code, verify_code)
@@ -446,6 +446,13 @@ SEO_BOTS = ["YandexBot", "Yandex", "Googlebot", "Google-Extended", "Bingbot",
 # Что закрываем у всех: админка, кабинет, вход, оплата, непубличные отчёты, служебное.
 SEO_DISALLOW = ["/admin", "/cabinet", "/login", "/logout", "/order/success",
                 "/pay/", "/r/", "/t/", "/track/"]
+
+
+@bp.get("/favicon.ico")
+def favicon():
+    # Браузеры/боты запрашивают /favicon.ico напрямую (без чтения <link>).
+    return send_from_directory(settings.BASE_DIR / "static" / "img" / "favico",
+                               "favicon.ico", mimetype="image/x-icon")
 
 
 @bp.get("/robots.txt")
