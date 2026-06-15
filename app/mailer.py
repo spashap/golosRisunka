@@ -15,6 +15,7 @@ import datetime
 import json
 import logging
 import re
+import urllib.error
 import urllib.request
 from html import escape, unescape
 from pathlib import Path
@@ -80,13 +81,18 @@ def _unisender_send(to: str, subject: str, html_body: str,
     if atts:
         message["attachments"] = atts
 
-    payload = json.dumps({"api_key": settings.UNISENDER_GO_API_KEY, "message": message},
-                         ensure_ascii=False).encode("utf-8")
+    # Unisender Go: ключ — в HTTP-заголовке X-API-KEY (НЕ в теле, как у старого Unisender API).
+    payload = json.dumps({"message": message}, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         settings.UNISENDER_GO_API_URL, data=payload, method="POST",
-        headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=settings.UNISENDER_GO_TIMEOUT) as resp:
-        raw = resp.read().decode("utf-8", "replace")
+        headers={"Content-Type": "application/json",
+                 "X-API-KEY": settings.UNISENDER_GO_API_KEY})
+    try:
+        with urllib.request.urlopen(req, timeout=settings.UNISENDER_GO_TIMEOUT) as resp:
+            raw = resp.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as he:           # 4xx/5xx: тело содержит причину
+        body = he.read().decode("utf-8", "replace")
+        raise MailSendError(f"HTTP {he.code}: {body[:300]}")
     try:
         data = json.loads(raw)
     except ValueError:

@@ -76,10 +76,11 @@ OUTBOX_DIR = DATA_DIR / "outbox"       # backend 'outbox': письма как H
 # Отправитель транзакционных писем (домен golosrisunka.ru, DKIM настраивается в Unisender).
 MAIL_FROM_EMAIL = os.getenv("MAIL_FROM_EMAIL", "sales@golosrisunka.ru")
 MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", SITE_NAME)
-# Транзакционный API Unisender Go (регион go1; переопределяемо через env при смене региона).
+# Транзакционный API Unisender Go. Аккаунт golosrisunka — регион go2 (EU); go1 даёт
+# 401 "User ... not found". Переопределяемо через env, если аккаунт сменит регион.
 UNISENDER_GO_API_URL = os.getenv(
     "UNISENDER_GO_API_URL",
-    "https://go1.unisender.ru/ru/transactional/api/v1/email/send.json")
+    "https://go2.unisender.ru/ru/transactional/api/v1/email/send.json")
 UNISENDER_GO_TIMEOUT = 20              # сек на HTTP-запрос к Unisender Go
 
 # --- Auth (spec §9) ---
