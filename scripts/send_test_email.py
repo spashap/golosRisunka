@@ -20,9 +20,10 @@ from config import settings       # noqa: E402
 
 
 def _sample_email() -> tuple[str, str]:
+    # Реальный транзакционный сабж (как в auth.py) — чтобы тест был репрезентативным.
     html = mailer.render_email("login_code.html", code="123456",
                                ttl_minutes=settings.LOGIN_CODE_TTL_MINUTES)
-    return "Test Unisender Go", html
+    return f"Код входа — {settings.SITE_NAME}", html
 
 
 def _dry_run(to: str, subject: str, html: str) -> None:
