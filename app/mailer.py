@@ -80,6 +80,8 @@ def _unisender_send(to: str, subject: str, html_body: str,
                      "content": base64.b64encode(p.read_bytes()).decode("ascii")})
     if atts:
         message["attachments"] = atts
+    if settings.MAIL_SKIP_UNSUBSCRIBE:             # требует allow_skip_unsubscribe на аккаунте
+        message["skip_unsubscribe"] = 1
 
     # Unisender Go: ключ — в HTTP-заголовке X-API-KEY (НЕ в теле, как у старого Unisender API).
     payload = json.dumps({"message": message}, ensure_ascii=False).encode("utf-8")

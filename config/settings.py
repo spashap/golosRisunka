@@ -82,6 +82,10 @@ UNISENDER_GO_API_URL = os.getenv(
     "UNISENDER_GO_API_URL",
     "https://go2.unisender.ru/ru/transactional/api/v1/email/send.json")
 UNISENDER_GO_TIMEOUT = 20              # сек на HTTP-запрос к Unisender Go
+# Unisender Go добавляет блок «отписаться» (сигнал «рассылка» для Gmail → вкладка «Промоакции»).
+# Для транзакционных писем его убирает skip_unsubscribe, НО аккаунту нужен флаг
+# allow_skip_unsubscribe (включает поддержка Unisender Go). После включения — MAIL_SKIP_UNSUBSCRIBE=1.
+MAIL_SKIP_UNSUBSCRIBE = os.getenv("MAIL_SKIP_UNSUBSCRIBE", "0").strip().lower() in ("1", "true", "yes")
 
 # --- Auth (spec §9) ---
 SESSION_DAYS = 30
