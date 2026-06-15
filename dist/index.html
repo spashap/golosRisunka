@@ -5,14 +5,27 @@
 <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Голос рисунка — отчёт о развитии ребёнка по его рисункам</title>
-<meta name="description" content="Профессиональный PDF-отчёт по детскому рисунку: 8 направлений развития, оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский. 2999 ₽, готов за час.">
+<meta name="yandex-verification" content="680070446ea2c51f">
+<title>Анализ детского рисунка по фото — образовательный PDF-отчёт без диагноза | Голос рисунка</title>
+<meta name="description" content="Анализ детского рисунка по фото: персональный PDF-отчёт о том, что рисунки расскажут о ребёнке — сильные стороны, интересы, формирующиеся навыки и занятия для дома. Без диагнозов. 2999 ₽, обычно готов за час.">
+<meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Голос рисунка — у каждого рисунка есть голос. Услышьте его.">
-<meta property="og:description" content="PDF-отчёт о развитии ребёнка по его рисункам: 8 направлений, оценки, занятия. 2999 ₽.">
+<meta property="og:title" content="Услышьте, что рисунки вашего ребёнка могут рассказать о нём">
+<meta property="og:description" content="Персональный PDF-отчёт по рисункам ребёнка: сильные стороны, интересы, формирующиеся навыки и простые занятия для дома. Без диагнозов и страшных трактовок. 2999 ₽.">
 <meta property="og:url" content="https://golosrisunka.ru/">
+<meta property="og:site_name" content="Голос рисунка">
 <meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://golosrisunka.ru/static/img/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Услышьте, что рисунки вашего ребёнка могут рассказать о нём">
+<meta name="twitter:description" content="Персональный PDF-отчёт по рисункам ребёнка: сильные стороны, интересы и занятия для дома. Без диагнозов. 2999 ₽, обычно готов за час.">
+<meta name="twitter:image" content="https://golosrisunka.ru/static/img/og-default.png">
 <link rel="canonical" href="https://golosrisunka.ru/">
+<link rel="icon" type="image/png" href="/static/img/favico/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/svg+xml" href="/static/img/favico/favicon.svg">
+<link rel="shortcut icon" href="/static/img/favico/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/img/favico/apple-touch-icon.png">
+<link rel="manifest" href="/static/img/favico/site.webmanifest">
 <link rel="preload" href="/static/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
@@ -93,12 +106,13 @@ body {
   font-family: var(--font-body);
   background: var(--bg);
   color: var(--ink);
+  overflow-x: clip;   /* страховка от горизонтального скролла (тени/бейджи с офсетами) */
 }
 
 /* --- Layout --- */
 .wrap { max-width: var(--wrap-max); margin: 0 auto; padding: 0 24px; }
 
-.section { padding: 72px 0; position: relative; }
+.section { padding: 52px 0; position: relative; }
 .section--alt { background: var(--alt); }
 
 /* --- Типографика --- */
@@ -373,10 +387,11 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 
 /* --- Футер --- */
 .foot { padding: 40px 0; color: var(--soft); font-size: 14px; text-align: center; }
+.foot-ver { display: block; margin-top: 8px; font-size: 12px; opacity: .55; }
 
 /* --- Hero (двухколоночный первый экран) --- */
 .hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 48px;
-        align-items: center; padding: 56px 0 84px; }
+        align-items: center; padding: 36px 0 10px; }
 .hero p.lead { font-size: 19px; color: var(--muted); margin: 24px 0 32px; max-width: 47ch; }
 
 /* --- «Стол» с разбросанными полароидами --- */
@@ -429,31 +444,117 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: 14px;
                            font-family: var(--font-hand); font-size: 19px; }
 
+/* --- Чипы доверия (hero badges) --- */
+.chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+        border-radius: var(--radius-pill); font-size: 13.5px; font-weight: 600;
+        background: color-mix(in srgb, var(--badge) 14%, var(--paper)); color: var(--ink); }
+.chip::before { content: &#34;✓&#34;; color: var(--accent2); font-weight: 700; }
+
+/* --- Hero H1: вторая строка — мельче, слово «рисунки» в оранжевом тоне лого --- */
+.h1-lead { display: block; margin-top: 12px;
+           font-family: var(--font-head); font-weight: 700;
+           font-size: clamp(18px, 2.3vw, 27px); line-height: 1.25; letter-spacing: -0.2px; }
+.h1-accent { color: var(--accent2); }
+
+/* --- Hero: рукописная бренд-строка над H1 + вторичный текст под лидом --- */
+.hero-brand { font-family: var(--font-hand); font-weight: 700; font-size: 24px;
+              color: var(--accent2); margin-bottom: 6px; }
+.hero-secondary { color: var(--soft); font-size: 15px; line-height: 1.55; margin: -16px 0 0; max-width: 47ch; }
+
+/* --- Hero: визуальный «выход» — карточка-превью отчёта + полароиды детских рисунков за ней --- */
+.hero-output { position: relative; min-height: 360px;
+               display: flex; align-items: center; justify-content: center; }
+.report-preview { position: relative; width: 330px; max-width: 100%; z-index: 3;
+                  padding: 22px 22px 20px; }
+.report-preview__logo { font-family: var(--font-hand); font-weight: 700; font-size: 20px; }
+.report-preview__logo b { color: var(--accent); }
+.report-preview__logo i { color: var(--accent2); font-style: normal; }
+.report-preview__title { font-family: var(--font-head); font-weight: 900; font-size: 18px;
+                         line-height: 1.15; margin: 8px 0 2px; }
+.report-preview__child { color: var(--accent); font-weight: 700; font-size: 14px; }
+.report-preview__body { margin: 16px 0 12px; padding-top: 14px;
+                        border-top: 2px dashed rgba(0, 0, 0, .08); }
+.report-preview__body .score-bar { grid-template-columns: 110px 1fr 22px; font-size: 12.5px; margin-bottom: 10px; }
+.report-preview__foot { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+
+/* полароиды детских рисунков — веером ЗА карточкой, выглядывают по бокам */
+.hero-polaroids { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.hero-pol { position: absolute; background: var(--paper); padding: 9px 9px 22px;
+            border-radius: 3px; box-shadow: var(--shadow-pol); }
+.hero-pol .polaroid__cap { font-size: 12px; margin-top: 4px; }
+.hero-pol--1 { width: 152px; left: -50px; top: 4px; transform: rotate(-12deg); }
+.hero-pol--2 { width: 146px; right: -22px; top: -10px; transform: rotate(10deg); z-index: 2; }
+.hero-pol--3 { width: 138px; right: -24px; bottom: -36px; transform: rotate(7deg); }
+
+/* --- «Что внутри отчёта»: чек-лист в карточке (2 колонки на десктопе) --- */
+.check-list ul { list-style: none; columns: 2; column-gap: 36px; }
+.check-list li { break-inside: avoid; padding: 9px 0 9px 28px; position: relative;
+                 color: var(--ink); font-size: 15.5px; line-height: 1.45; }
+.check-list li::before { content: &#34;✓&#34;; position: absolute; left: 0; top: 9px;
+                         color: var(--accent2); font-weight: 700; }
+@media (max-width: 680px) { .check-list ul { columns: 1; } }
+
+/* --- Mini-logic: 3 связанные карточки со стрелками --- */
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 16px; align-items: stretch; }
+.flow-card { display: flex; flex-direction: column; }
+.flow-card__label { font-family: var(--font-hand); font-weight: 700; font-size: 22px;
+                    color: var(--accent2); margin-bottom: 8px; }
+.flow-card p { color: var(--muted); font-size: 15px; line-height: 1.55; }
+.flow-arrow { display: flex; align-items: center; justify-content: center;
+              font-size: 30px; font-weight: 700; color: var(--accent); }
+.flow-closing { text-align: center; margin-top: 26px;
+                font-family: var(--font-hand); font-weight: 600; font-size: 21px; color: var(--ink); }
+@media (max-width: 880px) {
+  .flow { grid-template-columns: 1fr; gap: 8px; }
+  .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
+}
+
+/* --- «Без мифов»: две колонки «не делаем / делаем» (спокойно, без красного) --- */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.compare-col h3 { font-size: 20px; margin-bottom: 12px; }
+.compare-col ul { list-style: none; }
+.compare-col li { padding: 10px 0 10px 30px; position: relative; color: var(--muted);
+                  font-size: 15px; line-height: 1.5;
+                  border-bottom: 1px solid color-mix(in srgb, var(--soft) 16%, transparent); }
+.compare-col li:last-child { border-bottom: none; }
+.compare-col li::before { position: absolute; left: 0; top: 10px;
+                          font-family: var(--font-head); font-weight: 700; }
+.compare-col--no li::before { content: &#34;✕&#34;; color: var(--soft); }
+.compare-col--yes { background: color-mix(in srgb, var(--badge) 8%, var(--paper)); }
+.compare-col--yes li::before { content: &#34;✓&#34;; color: var(--accent2); }
+@media (max-width: 880px) { .compare { grid-template-columns: 1fr; } }
+
+/* --- Мелкая поясняющая заметка под блоком (оценки у примеров) --- */
+.scores-note { max-width: 760px; margin: 6px auto 0; color: var(--soft);
+               font-size: 13.5px; line-height: 1.5; text-align: center; }
+
+/* --- Отзывы: подпись «закрытое тестирование» под заголовком ленты --- */
+.strip-note { text-align: center; color: var(--soft); font-size: 12.5px; margin: -4px 0 14px; }
+
+/* --- Цена на запуске (без выдуманной зачёркнутой цены) --- */
+.price-card .p-launch { font-size: 13px; color: var(--soft); font-weight: 600; margin-bottom: 2px; }
+
 /* --- Мобильная адаптация базовых сеток --- */
 @media (max-width: 880px) {
-  body { overflow-x: hidden; }  /* страховка: бейджи/тени с отрицательными офсетами */
   .steps { grid-template-columns: 1fr; }
   .price-grid { grid-template-columns: 1fr; }
-  .hero { grid-template-columns: 1fr; padding: 32px 0 40px; gap: 10px; }
+  .hero { grid-template-columns: 1fr; padding: 22px 0 18px; gap: 14px; }
 
-  /* полароиды: не карусель — все три в ряд, просто меньше */
-  .pol-table {
-    min-height: 0;
-    display: flex; gap: 10px; justify-content: space-between;
-    padding: 22px 2px 6px;             /* сверху место под скотч и бейдж */
-  }
-  .pol-table .polaroid {
-    position: static !important;        /* перебиваем inline top/left из шаблона */
-    flex: 1 1 0;
-    width: auto !important; min-width: 0;
-    padding: 8px 8px 22px;
-  }
-  .pol-table .polaroid:nth-child(odd) { transform: rotate(-2deg); }
-  .pol-table .polaroid:nth-child(even) { transform: rotate(2deg); }
-  .pol-table .polaroid::before { width: 48px; height: 14px; top: -7px; }
-  .pol-table .polaroid__cap { font-size: 12px; margin-top: 5px; }
-  .pol-table .badge--corner { font-size: 11px; padding: 2px 8px;
-                              top: -9px; right: -6px; box-shadow: 2px 2px 0 var(--ink); }
+  /* мобайл: компактнее вертикальный ритм — меньше пустот между блоками */
+  .section { padding: 40px 0; }
+  .sub { margin-bottom: 20px; }
+  .card--pad { padding: 18px 16px; }
+  .chips { margin-top: 18px; gap: 8px; }
+
+  /* мобайл: списки используют всю ширину карточки — без большого отступа слева */
+  .check-list li, .compare-col li { padding-top: 7px; padding-bottom: 7px; padding-left: 22px; }
+  .compare-col li::before, .check-list li::before { top: 7px; }
+
+  /* hero-визуал на мобайле: только карточка отчёта по центру, полароиды-веер скрыты */
+  .hero-output { min-height: 0; padding: 2px 0 0; }
+  .hero-polaroids { display: none; }
+  .report-preview { width: 100%; max-width: 330px; margin: 0 auto; }
 
   /* карусель примеров: full-bleed, карточка почти на весь экран, снап по центру */
   .carousel {
@@ -611,6 +712,54 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .admin-kpi__l { color: var(--soft); font-size: 12.5px; margin-top: 4px; }
 .admin-scroll { overflow-x: auto; }
 .admin-scroll table { min-width: 760px; }
+.admin-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.admin-cols--3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 900px) { .admin-cols--3 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .admin-cols { grid-template-columns: 1fr; } }
+
+/* Визиты: раскрывающийся список посетителей (drill-down без JS) */
+.vis-list { margin-top: 12px; }
+.vis-head, .vis &gt; summary {
+  display: grid; gap: 10px; align-items: center;
+  grid-template-columns: 42px 92px 1.4fr 88px 1.3fr 70px 64px 110px;
+}
+.vis-head { padding: 6px 12px; color: var(--soft); font-size: 12px; font-weight: 600; }
+.vis { border: 1px solid var(--alt); border-radius: 8px; margin-bottom: 6px; background: var(--paper); }
+.vis &gt; summary { padding: 9px 12px; cursor: pointer; list-style: none; font-size: 13.5px; }
+.vis &gt; summary::-webkit-details-marker { display: none; }
+.vis &gt; summary:hover { background: var(--bg); }
+.vis[open] { border-color: var(--accent); }
+.vis[open] &gt; summary { background: var(--bg); border-bottom: 1px solid var(--alt); }
+.vis-body { padding: 12px 14px; }
+.vis-events { width: 100%; font-size: 12.5px; }
+.vis-events th, .vis-events td { padding: 4px 8px; }
+@media (max-width: 760px) {
+  .vis-head { display: none; }
+  .vis &gt; summary { grid-template-columns: 1fr 1fr; }
+}
+
+/* Дрилл-даун воронки/источников: раскрывающийся шаг -&gt; список посетителей */
+.drill-head, .drill &gt; summary {
+  display: grid; gap: 10px; align-items: center;
+  grid-template-columns: 1.8fr 100px 90px 110px;
+}
+.drill-head--src, .drill--src &gt; summary {
+  grid-template-columns: 1.8fr 110px 90px 90px 100px;
+}
+.drill-head { padding: 6px 12px; color: var(--soft); font-size: 12px; font-weight: 600; }
+.drill { border: 1px solid var(--alt); border-radius: 8px; margin-bottom: 6px; background: var(--paper); }
+.drill &gt; summary { padding: 9px 12px; cursor: pointer; list-style: none; font-size: 13.5px; }
+.drill &gt; summary::-webkit-details-marker { display: none; }
+.drill &gt; summary:hover { background: var(--bg); }
+.drill[open] { border-color: var(--accent); }
+.drill[open] &gt; summary { background: var(--bg); border-bottom: 1px solid var(--alt); }
+@media (max-width: 760px) {
+  .drill-head { display: none; }
+  .drill &gt; summary { grid-template-columns: 1fr 1fr; }
+}
+
+.admin-filter { display: flex; gap: 8px; margin: 16px 0; max-width: 520px; }
+.admin-filter .input { flex: 1; }
 .admin-status { font-weight: 600; font-size: 13px; }
 .admin-status--delivered { color: #2E7D32; }
 .admin-status--paid, .admin-status--generating { color: var(--accent); }
@@ -692,8 +841,76 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
   font-size: 14px; line-height: 1.55; color: var(--muted);
 }
 </style>
-<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Product", "name": "Отчёт о развитии ребёнка по детскому рисунку", "description": "PDF-отчёт: 8 направлений развития, оценки с объяснениями, занятия для родителей. Образовательное наблюдение.", "brand": {"@type": "Brand", "name": "Голос рисунка"}, "offers": [{"@type": "Offer", "name": "Отчёт по рисункам", "price": 2999, "priceCurrency": "RUB", "url": "https://golosrisunka.ru/order?product=snapshot", "availability": "https://schema.org/InStock"}]}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Какой возраст ребёнка подходит?", "acceptedAnswer": {"@type": "Answer", "text": "От 3 до 12 лет. Отчёт учитывает возрастной этап развития рисунка: то, что типично для трёх лет, оценивается иначе, чем для девяти."}}, {"@type": "Question", "name": "Как быстро придёт отчёт?", "acceptedAnswer": {"@type": "Answer", "text": "Обычно в течение часа после оплаты. PDF придёт на почту, и он же будет доступен в личном кабинете."}}, {"@type": "Question", "name": "Что нужно прислать?", "acceptedAnswer": {"@type": "Answer", "text": "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, чем рисовал, что было задано. Ничего специально рисовать не нужно."}}, {"@type": "Question", "name": "Это психологическая диагностика?", "acceptedAnswer": {"@type": "Answer", "text": "Нет. Это образовательное наблюдение за навыками, которые видны в рисунке: композиция, контроль линий, вариативность решений. Мы принципиально не делаем выводов об эмоциях или психологическом состоянии ребёнка."}}, {"@type": "Question", "name": "А если отчёт мне не понравится?", "acceptedAnswer": {"@type": "Answer", "text": "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов."}}, {"@type": "Question", "name": "Кто увидит рисунки моего ребёнка?", "acceptedAnswer": {"@type": "Answer", "text": "Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам."}}]}]</script>
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Organization", "name": "Голос рисунка", "url": "https://golosrisunka.ru/", "logo": "https://golosrisunka.ru/static/img/og-default.png", "description": "Анализ детского рисунка по фото: персональный отчёт о том, что рисунки расскажут о ребёнке — сильные стороны, интересы и навыки. На основе методик Пиаже, Ловенфельда, Выготского. Без диагнозов.", "knowsLanguage": "ru"}, {"@context": "https://schema.org", "@type": "WebSite", "name": "Голос рисунка", "url": "https://golosrisunka.ru/", "inLanguage": "ru"}, {"@context": "https://schema.org", "@type": "Product", "name": "Персональный отчёт по рисункам ребёнка", "description": "Персональный PDF-отчёт по рисункам ребёнка: сильные стороны, интересы, формирующиеся навыки и занятия для дома. 8 направлений развития с оценками и объяснениями. Образовательное наблюдение, без диагнозов.", "brand": {"@type": "Brand", "name": "Голос рисунка"}, "offers": [{"@type": "Offer", "name": "Персональный отчёт о рисунках вашего ребёнка", "price": 2999, "priceCurrency": "RUB", "url": "https://golosrisunka.ru/order?product=snapshot", "availability": "https://schema.org/InStock"}]}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Что интересного я могу узнать о ребёнке из отчёта?", "acceptedAnswer": {"@type": "Answer", "text": "Вы увидите сильные стороны ребёнка, что повторяется из рисунка в рисунок, что привлекает его внимание, какие творческие привычки и навыки сейчас формируются. Всё это — наблюдения по видимым деталям рисунка: без диагнозов и скрытых смыслов."}}, {"@type": "Question", "name": "Какой возраст ребёнка подходит?", "acceptedAnswer": {"@type": "Answer", "text": "От 3 до 12 лет. Отчёт учитывает возрастной этап развития рисунка: то, что типично для трёх лет, оценивается иначе, чем для девяти."}}, {"@type": "Question", "name": "Что нужно прислать?", "acceptedAnswer": {"@type": "Answer", "text": "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, материалы, тема, было ли задание. Ничего специально рисовать не нужно."}}, {"@type": "Question", "name": "Как быстро придёт отчёт?", "acceptedAnswer": {"@type": "Answer", "text": "Обычно в течение часа после оплаты. PDF придёт на почту и будет доступен в личном кабинете."}}, {"@type": "Question", "name": "Это психологическая диагностика? Это не диагноз?", "acceptedAnswer": {"@type": "Answer", "text": "Нет, это не диагноз. Это образовательное наблюдение за навыками, которые видны в рисунке: линия, форма, детали, композиция, сюжет, контроль движений и возрастной этап. Мы не делаем выводов о психологическом состоянии ребёнка по одному рисунку."}}, {"@type": "Question", "name": "Что означают оценки 6/10, 8/10 или 9/10?", "acceptedAnswer": {"@type": "Answer", "text": "Оценки относятся к конкретному рисунку или серии рисунков, а не к ребёнку в целом. Средний балл не означает проблему. Иногда направление просто меньше видно в выбранном сюжете — например, если на рисунке один объект и нет персонажей."}}, {"@type": "Question", "name": "Как понять, что отчёт не общий шаблон?", "acceptedAnswer": {"@type": "Answer", "text": "В отчёте выводы должны быть привязаны к конкретным деталям рисунка: линии, композиции, цветовым решениям, деталям, сюжету, материалам и возрасту ребёнка. Именно поэтому мы просим не только фото, но и короткий контекст."}}, {"@type": "Question", "name": "А если рисунок меня тревожит?", "acceptedAnswer": {"@type": "Answer", "text": "Отчёт поможет спокойно посмотреть на видимые признаки рисунка и отделить наблюдения от популярных мифов. Но если вас серьёзно беспокоит состояние, поведение или безопасность ребёнка, лучше обратиться к профильному специалисту — отчёт не заменяет консультацию."}}, {"@type": "Question", "name": "А если отчёт мне не понравится?", "acceptedAnswer": {"@type": "Answer", "text": "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов."}}, {"@type": "Question", "name": "Кто увидит рисунки моего ребёнка?", "acceptedAnswer": {"@type": "Answer", "text": "Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам."}}, {"@type": "Question", "name": "Как понять рисунок ребёнка 4–5 лет?", "acceptedAnswer": {"@type": "Answer", "text": "В 4–5 лет ребёнок переходит от «головоногов» к более полным фигурам, появляются сюжет и любимые цвета. Понять рисунок — значит увидеть, какие навыки уже освоены (замкнутый контур, детали, расположение на листе), а не искать в нём скрытый смысл. Именно это показывает наш образовательный отчёт — по возрастным особенностям, без диагноза."}}, {"@type": "Question", "name": "Как интерпретировать детский рисунок дома самому?", "acceptedAnswer": {"@type": "Answer", "text": "Дома полезно смотреть на признаки развития навыков, а не на «значения». Обратите внимание на нажим и уверенность линий, насколько детальны фигуры, как ребёнок использует пространство листа и повторяет ли любимые сюжеты. Это наблюдения за возрастными особенностями, а не психологическая интерпретация."}}]}]</script>
 
+
+<script type="text/javascript">
+  (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+  m[i].l=1*new Date();
+  for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+  k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+  (window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=109824945", "ym");
+  ym(109824945, "init", {
+    ssr: true,
+    webvisor: true,
+    clickmap: true,
+    ecommerce: "dataLayer",
+    referrer: document.referrer,
+    url: location.href,
+    accurateTrackBounce: true,
+    trackLinks: true
+  });
+
+  // --- Цели по кликам/сабмитам (data-ym-goal / data-ym-goal-submit) ---
+  // Шлём и в Яндекс (reachGoal), и первой стороной (beacon -> /t/e) для админки.
+  window.ymGoal = function (goal, params) {
+    if (!goal) { return; }
+    if (window.ym) { try { ym(109824945, "reachGoal", goal, params || {}); } catch (e) {} }
+    try { navigator.sendBeacon("/t/e", new URLSearchParams({ g: goal })); } catch (e) {}
+  };
+  document.addEventListener("click", function (ev) {
+    var el = ev.target.closest && ev.target.closest("[data-ym-goal]");
+    if (el) { window.ymGoal(el.getAttribute("data-ym-goal")); }
+  }, true);
+  document.addEventListener("submit", function (ev) {
+    var f = ev.target.closest && ev.target.closest("[data-ym-goal-submit]");
+    if (f) { window.ymGoal(f.getAttribute("data-ym-goal-submit")); }
+  }, true);
+
+  // --- Вовлечённость: один beacon "engaged" при ПЕРВОМ из:
+  //   скролл / клик / клавиша / тач  ИЛИ  15 секунд ВИДИМОГО пребывания на странице.
+  //   Модель «engaged session» (как GA4); порог 15с совпадает с «отказом» Метрики.
+  //   Боты без JS и мгновенные отказы (без скролла, <15с) НЕ шлют его → в админке
+  //   они не попадают в «вовлечённых». Фоновые/предзагруженные вкладки не копят время
+  //   (visibilityState). Шлётся максимум один раз.
+  (function () {
+    var sent = false, visibleSec = 0, THRESHOLD = 15;
+    var EVENTS = ["scroll", "wheel", "click", "keydown", "touchstart"];
+    var tick = null;
+    function cleanup() {
+      EVENTS.forEach(function (ev) { document.removeEventListener(ev, onInteract, true); });
+      if (tick) { clearInterval(tick); tick = null; }
+    }
+    function fire() {
+      if (sent) { return; }
+      sent = true;
+      try { navigator.sendBeacon("/t/e", new URLSearchParams({ engaged: "1" })); } catch (e) {}
+      cleanup();
+    }
+    function onInteract() { fire(); }
+    EVENTS.forEach(function (ev) {
+      document.addEventListener(ev, onInteract, { capture: true, passive: true });
+    });
+    tick = setInterval(function () {
+      if (document.visibilityState === "visible") {
+        visibleSec += 1;
+        if (visibleSec >= THRESHOLD) { fire(); }
+      }
+    }, 1000);
+  })();
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/109824945"
+  style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 </head>
 <body>
@@ -701,68 +918,151 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 
 <header class="site-header">
   <div class="wrap site-header__row">
-    <a class="logo" href="/"><b>Голос</b> <i>рисунка</i></a>
+    <a class="logo" href="/" data-ym-goal="header_logo"><b>Голос</b> <i>рисунка</i></a>
     <nav class="site-nav">
-      <a href="/#primery">Примеры</a>
-      <a href="/#kak">Как это работает</a>
-      <a href="/#ceny">Цены</a>
-      <a href="/blog">Блог</a>
+      <a href="/#primery" data-ym-goal="header_nav_examples">Примеры</a>
+      <a href="/#kak" data-ym-goal="header_nav_how">Как это работает</a>
+      <a href="/#ceny" data-ym-goal="header_nav_prices">Цены</a>
+      <a href="/blog" data-ym-goal="header_nav_blog">Блог</a>
     </nav>
     <div class="site-header__actions">
-      <a class="site-nav__login" href="/login">Войти</a>
-      <a class="btn" href="/order">Получить отчёт</a>
+      <a class="site-nav__login" href="/login" data-ym-goal="header_login">Войти</a>
+      <a class="btn" href="/order" data-ym-goal="header_order">Получить отчёт</a>
     </div>
   </div>
 </header>
 
-<!-- 2. Hero -->
+<!-- 2. Hero: ведущее сообщение — спокойный персональный отчёт, без диагнозов -->
+
+
 <div class="wrap">
   <header class="hero">
     <div>
-      <h1>У каждого рисунка есть <span class="hand">голос</span>.<br>Услышьте его.</h1>
-      <p class="lead">Профессиональный отчёт о развитии ребёнка по его рисункам: 8 направлений,
-        оценки с объяснениями и занятия для родителей. Научная база — Пиаже, Ловенфельд, Выготский.</p>
-      <a class="btn btn--primary" href="/order">Получить отчёт — 2999 ₽</a>
+      <h1>У каждого рисунка есть <span class="hand">голос</span>.<span class="h1-lead">Услышьте, что <span class="h1-accent">рисунки</span> вашего ребёнка могут рассказать о нём.</span></h1>
+      <p class="lead">Персональный отчёт по рисункам ребёнка: сильные стороны, особенности
+        мышления, творческие привычки и идеи для занятий дома. Мы показываем то, что родители
+        часто не замечают сами.</p>
+      <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order" style="margin-top:24px">Получить отчёт — 2999 ₽</a>
       <div class="note">
         <svg width="42" height="28" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-        PDF за час · ничего специально рисовать не нужно
+        PDF на почту в течение часа · 1–3 рисунка · личный кабинет
+      </div>
+      <div class="chips">
+        <span class="chip">около 8 страниц</span>
+        <span class="chip">8 направлений</span>
+        <span class="chip">Занятия для дома</span>
+        <span class="chip">Без диагнозов</span>
+        <span class="chip">Рисунки видите только вы</span>
+        <span class="chip">Возврат 7 дней</span>
       </div>
     </div>
-    <div class="pol-table" aria-hidden="true">
+    <div class="hero-output" aria-hidden="true">
       
-      <div class="polaroid polaroid--tilt-l"
-           style="width: 242px; top:0;left:3%">
-        <div class="badge badge--corner">креативность 8/10</div>
-        <img class="polaroid__img" src="/static/img/samples/primer-3-goda.webp" alt="Детский рисунок: Алексей, 3,5 года" width="471" height="331" style="width:100%;height:auto">
-        <div class="polaroid__cap">Алексей, 3,5 года</div>
+      <div class="hero-polaroids">
+        
+        <div class="hero-pol hero-pol--1">
+          <img class="polaroid__img" src="/static/img/samples/primer-3-goda.webp" alt="" width="471" height="331" style="width:100%;height:auto">
+          <div class="polaroid__cap">Алексей, 3,5 года</div>
+        </div>
+        
+        <div class="hero-pol hero-pol--2">
+          <img class="polaroid__img" src="/static/img/samples/primer-6-let.webp" alt="" width="480" height="322" style="width:100%;height:auto">
+          <div class="polaroid__cap">«Семья», Никита, 6 лет</div>
+        </div>
+        
+        <div class="hero-pol hero-pol--3">
+          <img class="polaroid__img" src="/static/img/samples/primer-8-let.webp" alt="" width="480" height="344" style="width:100%;height:auto">
+          <div class="polaroid__cap">«Кот», Алина, 8 лет</div>
+        </div>
+        
       </div>
       
-      <div class="polaroid polaroid--tilt-r"
-           style="width: 222px; top:128px;right:2%">
-        <div class="badge badge--corner">социальная направленность 9/10</div>
-        <img class="polaroid__img" src="/static/img/samples/primer-6-let.webp" alt="Детский рисунок: «Семья», Никита, 6 лет" width="480" height="322" style="width:100%;height:auto">
-        <div class="polaroid__cap">«Семья», Никита, 6 лет</div>
+      <div class="card report-preview">
+        <span class="badge badge--corner">около 8 страниц</span>
+        <div class="report-preview__logo"><b>Голос</b> <i>рисунка</i></div>
+        <div class="report-preview__title">Отчёт о развитии<br>по детскому рисунку</div>
+        <div class="report-preview__child">Алексей, 3 года 6 мес.</div>
+        <div class="report-preview__body">
+          
+          <div class="score-bar">
+            <span>Креативность</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Уверенность исполнения</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+          <div class="score-bar">
+            <span>Решение задач</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+          
+        </div>
+        <div class="report-preview__foot">8 направлений · объяснения по деталям рисунка · занятия для дома</div>
       </div>
-      
-      <div class="polaroid polaroid--tilt-sl"
-           style="width: 204px; bottom:0;left:28%">
-        <div class="badge badge--corner">креативность 9/10</div>
-        <img class="polaroid__img" src="/static/img/samples/primer-8-let.webp" alt="Детский рисунок: «Кот», Алина, 8 лет" width="480" height="344" style="width:100%;height:auto">
-        <div class="polaroid__cap">«Кот», Алина, 8 лет</div>
-      </div>
-      
     </div>
   </header>
 </div>
 
-<!-- 3. Примеры отчётов (главный proof-блок) -->
-<section class="section section--alt" id="primery">
+<!-- 3. Что внутри персонального отчёта (оправдываем цену до прайса) -->
+<section class="section" id="vnutri">
   <div class="wrap">
-    <h2>Посмотрите настоящие отчёты</h2>
-    <div class="sub">Эти отчёты сгенерированы нашей системой по реальным рисункам — листайте и открывайте полные версии.</div>
+    <h2>Что вы узнаете из отчёта</h2>
+    <div class="sub">Иногда родители смотрят на рисунок и видят просто дом, кота или человечка.
+      Мы помогаем увидеть больше — в рисунках вашего ребёнка.</div>
+    <div class="card card--pad check-list">
+      <ul>
+        <li>Какие сильные стороны уже заметны в рисунках ребёнка</li>
+        <li>Что привлекает его внимание снова и снова</li>
+        <li>Какие навыки сейчас активно развиваются</li>
+        <li>Какие занятия могут поддержать развитие дома</li>
+        <li>Какие особенности повторяются в разных рисунках</li>
+      </ul>
+    </div>
+    <p class="scores-note" style="margin-top: 18px">Также отчёт содержит оценки по 8 направлениям
+      развития и подробные объяснения по каждому из них.</p>
+  </div>
+</section>
+
+<!-- 4. Как строится вывод: видимая деталь -> объяснение -> занятие -->
+<section class="section section--alt" id="logika">
+  <div class="wrap">
+    <h2>Как строится вывод в отчёте</h2>
+    <div class="sub">Мы смотрим на детали рисунка и объясняем, что они могут говорить о привычках,
+      интересах и текущем этапе развития ребёнка.</div>
+    <div class="flow">
+      <div class="card card--pad flow-card">
+        <div class="flow-card__label">Видимая деталь</div>
+        <p>Персонаж нарисован крупно, линии уверенные, исправлений почти нет.</p>
+      </div>
+      <div class="flow-arrow" aria-hidden="true">→</div>
+      <div class="card card--pad flow-card">
+        <div class="flow-card__label">Что это показывает</div>
+        <p>В этом рисунке хорошо проявлены уверенность исполнения и работа с масштабом.</p>
+      </div>
+      <div class="flow-arrow" aria-hidden="true">→</div>
+      <div class="card card--pad flow-card">
+        <div class="flow-card__label">Что попробовать дома</div>
+        <p>Дать большой лист и предложить нарисовать героя непрерывной линией — 10 минут без оценки результата.</p>
+      </div>
+    </div>
+    <p class="flow-closing">Так устроен отчёт: не общие фразы, а наблюдение → объяснение → простое действие.</p>
+  </div>
+</section>
+
+<!-- 5. Примеры отчётов (proof-блок) -->
+<section class="section" id="primery">
+  <div class="wrap">
+    <h2>Посмотрите, какие наблюдения родители получают в отчёте</h2>
+    <div class="sub">Откройте реальные примеры: внутри — рисунок, контекст, сильные стороны, наблюдения и задания для родителей.</div>
     <div class="carousel-wrap">
-    <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1">‹</button>
-    <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1">›</button>
+    <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1" data-ym-goal="landing_samples_prev">‹</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1" data-ym-goal="landing_samples_next">›</button>
     <div class="carousel">
       
       <article class="report-card">
@@ -794,7 +1094,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
           
         </div>
         <div class="report-card__quote">«Рисунок Алексея демонстрирует уверенное владение линией и формой, что является отличным показателем для его возраста.»</div>
-        <a class="report-card__link" href="/r/primer-3-goda">Смотреть полный отчёт →</a>
+        <a class="report-card__link" href="/primer/primer-3-goda" data-ym-goal="landing_sample_open_primer-3-goda">Смотреть пример отчёта →</a>
       </article>
       
       <article class="report-card">
@@ -826,7 +1126,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
           
         </div>
         <div class="report-card__quote">«Рисунки Алисы демонстрируют высокий для её возраста уровень развития изобразительных навыков.»</div>
-        <a class="report-card__link" href="/r/primer-2-risunka">Смотреть полный отчёт →</a>
+        <a class="report-card__link" href="/primer/primer-2-risunka" data-ym-goal="landing_sample_open_primer-2-risunka">Смотреть пример отчёта →</a>
       </article>
       
       <article class="report-card">
@@ -858,7 +1158,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
           
         </div>
         <div class="report-card__quote">«В рисунке Никиты Н. ярко проявлены навыки построения сюжетной композиции и передачи социальных связей.»</div>
-        <a class="report-card__link" href="/r/primer-6-let">Смотреть полный отчёт →</a>
+        <a class="report-card__link" href="/primer/primer-6-let" data-ym-goal="landing_sample_open_primer-6-let">Смотреть пример отчёта →</a>
       </article>
       
       <article class="report-card">
@@ -890,43 +1190,76 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
           
         </div>
         <div class="report-card__quote">«В этом рисунке Алины Н. ярко проявлены её сильные стороны: очень высокий уровень креативности, уверенность в исполнении и развитое чувство композиции.»</div>
-        <a class="report-card__link" href="/r/primer-8-let">Смотреть полный отчёт →</a>
+        <a class="report-card__link" href="/primer/primer-8-let" data-ym-goal="landing_sample_open_primer-8-let">Смотреть пример отчёта →</a>
       </article>
       
     </div>
     </div>
+    <p class="scores-note">Оценки относятся к конкретному рисунку, а не к ребёнку в целом.
+      Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете.</p>
   </div>
 </section>
 
-<!-- 4. Как это работает -->
-<section class="section" id="kak">
+<!-- 6. Без мифов и страшных трактовок (главный trust-блок) -->
+<section class="section section--alt" id="bez-mifov">
   <div class="wrap">
-    <h2>Как это работает</h2>
-    <div class="sub">Три шага — и отчёт у вас на почте.</div>
-    <div class="steps">
-      <div class="step"><div class="step__n">1</div><h3>Сфотографируйте рисунок</h3><p>Подойдёт любой рисунок, который ребёнок уже нарисовал. Ничего специально рисовать не нужно.</p></div>
-      <div class="step"><div class="step__n">2</div><h3>Расскажите контекст</h3><p>Возраст, чем рисовал, что было задано — короткая форма на 2–3 минуты.</p></div>
-      <div class="step"><div class="step__n">3</div><h3>Получите отчёт</h3><p>PDF на почту в течение часа + личный кабинет, где хранятся все ваши отчёты и рисунки.</p></div>
+    <h2>Без мифов и страшных трактовок</h2>
+    <div class="sub">Мы не ищем скрытые диагнозы по цветам и символам. Мы смотрим на видимые
+      навыки и возрастной этап рисунка.</div>
+    <div class="compare">
+      <div class="card card--pad compare-col compare-col--no">
+        <h3>Мы не делаем</h3>
+        <ul>
+          <li>не ставим диагнозы по рисунку</li>
+          <li>не говорим, что чёрный цвет означает депрессию</li>
+          <li>не ищем «скрытые травмы» по одному изображению</li>
+          <li>не оцениваем личность ребёнка</li>
+        </ul>
+      </div>
+      <div class="card card--pad compare-col compare-col--yes">
+        <h3>Мы делаем</h3>
+        <ul>
+          <li>смотрим на видимые элементы рисунка: линию, форму, детали, композицию, сюжет и движение руки</li>
+          <li>учитываем возраст и контекст</li>
+          <li>показываем сильные стороны и зоны роста</li>
+          <li>даём простые занятия для дома</li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- 5. Отзывы — узкая лента-ротатор (тексты заменит заказчик после закрытого тестирования) -->
+<!-- 7. Как это работает -->
+<section class="section" id="kak">
+  <div class="wrap">
+    <h2>Как это работает</h2>
+    <div class="sub">Три шага — и персональный отчёт у вас на почте.</div>
+    <div class="steps">
+      <div class="step"><div class="step__n">1</div><h3>Загрузите рисунки</h3><p>Подойдёт 1–3 рисунка, которые ребёнок уже нарисовал. Ничего специально рисовать не нужно.</p></div>
+      <div class="step"><div class="step__n">2</div><h3>Добавьте короткий контекст</h3><p>Возраст, материалы, тема и что было задано — форма занимает 2–3 минуты.</p></div>
+      <div class="step"><div class="step__n">3</div><h3>Получите PDF-отчёт</h3><p>Обычно в течение часа. Отчёт придёт на почту и будет доступен в личном кабинете.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Отзывы — узкая лента-ротатор. ПЛЕЙСХОЛДЕРЫ закрытого тестирования: помечены явно,
+     не выдаём за отзывы платящих клиентов до подтверждения заказчиком (spec B10). -->
 <section class="section section--alt section--strip">
   <div class="wrap quote-rotator" data-interval="7000">
-    <div class="strip-title">Что говорят родители</div>
-    <button class="car-btn car-btn--prev" type="button" aria-label="Предыдущий отзыв" data-rot="-1">‹</button>
-    <button class="car-btn car-btn--next" type="button" aria-label="Следующий отзыв" data-rot="1">›</button>
+    <div class="strip-title">Что родители неожиданно заметили о своих детях</div>
+    <div class="strip-note">Отзывы из закрытого тестирования</div>
+    <button class="car-btn car-btn--prev" type="button" aria-label="Предыдущий отзыв" data-rot="-1" data-ym-goal="landing_reviews_prev">‹</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="Следующий отзыв" data-rot="1" data-ym-goal="landing_reviews_next">›</button>
     <div class="quote-rotator__stage">
       
       <figure class="quote-slim is-active">
-        <blockquote class="quote-slim__text">«Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений я бы сама никогда не заметила.»</blockquote>
-        <figcaption class="quote-slim__who">Мария, мама Сони (6 лет) — из закрытого тестирования</figcaption>
+        <blockquote class="quote-slim__text">«Сын месяц рисовал только чёрной ручкой, я успела напридумывать себе всякого. Отчёт спокойно показал, что он сейчас осваивает контур — и правда, через месяц вернулись цвета.»</blockquote>
+        <figcaption class="quote-slim__who">Анна, мама Миши (5 лет)</figcaption>
       </figure>
       
       <figure class="quote-slim">
-        <blockquote class="quote-slim__text">«Сын месяц рисовал только чёрной ручкой, я успела напридумывать себе всякого. Отчёт спокойно показал, что он сейчас осваивает контур — и правда, через месяц вернулись цвета.»</blockquote>
-        <figcaption class="quote-slim__who">Анна, мама Миши (5 лет)</figcaption>
+        <blockquote class="quote-slim__text">«Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений я бы сама никогда не заметила.»</blockquote>
+        <figcaption class="quote-slim__who">Мария, мама Сони (6 лет)</figcaption>
       </figure>
       
       <figure class="quote-slim">
@@ -953,75 +1286,77 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
     <div class="rot-dots" role="tablist" aria-label="Отзывы">
       
       <button class="rot-dot is-active" type="button"
-              data-dot="0" aria-label="Отзыв 1"></button>
+              data-dot="0" aria-label="Отзыв 1" data-ym-goal="landing_reviews_dot"></button>
       
       <button class="rot-dot" type="button"
-              data-dot="1" aria-label="Отзыв 2"></button>
+              data-dot="1" aria-label="Отзыв 2" data-ym-goal="landing_reviews_dot"></button>
       
       <button class="rot-dot" type="button"
-              data-dot="2" aria-label="Отзыв 3"></button>
+              data-dot="2" aria-label="Отзыв 3" data-ym-goal="landing_reviews_dot"></button>
       
       <button class="rot-dot" type="button"
-              data-dot="3" aria-label="Отзыв 4"></button>
+              data-dot="3" aria-label="Отзыв 4" data-ym-goal="landing_reviews_dot"></button>
       
       <button class="rot-dot" type="button"
-              data-dot="4" aria-label="Отзыв 5"></button>
+              data-dot="4" aria-label="Отзыв 5" data-ym-goal="landing_reviews_dot"></button>
       
       <button class="rot-dot" type="button"
-              data-dot="5" aria-label="Отзыв 6"></button>
+              data-dot="5" aria-label="Отзыв 6" data-ym-goal="landing_reviews_dot"></button>
       
     </div>
   </div>
 </section>
 
-<!-- 6. Гарантия / доверие -->
+<!-- 9. Гарантия / доверие -->
 <section class="section">
   <div class="wrap">
     <h2>Почему нам можно доверять</h2>
     <div class="steps">
-      <div class="step"><div class="step__n">✓</div><h3>Возврат денег</h3><p>Отчёт не понравился — напишите в течение 7 дней, вернём оплату без лишних вопросов.</p></div>
-      <div class="step"><div class="step__n">✓</div><h3>Рисунки видите только вы</h3><p>Работы вашего ребёнка не публикуются и не передаются третьим лицам.</p></div>
-      <div class="step"><div class="step__n">✓</div><h3>Честные наблюдения</h3><p>Каждый вывод привязан к видимой детали рисунка. Это образовательное наблюдение, а не диагностика.</p></div>
+      <div class="step"><div class="step__n">✓</div><h3>Возврат денег</h3><p>Если отчёт не понравился, напишите в течение 7 дней — вернём оплату без лишних вопросов.</p></div>
+      <div class="step"><div class="step__n">✓</div><h3>Рисунки видите только вы</h3><p>Работы ребёнка не публикуются, не используются в рекламе и не передаются третьим лицам.</p></div>
+      <div class="step"><div class="step__n">✓</div><h3>Наблюдения по видимым деталям</h3><p>Мы не придумываем скрытые смыслы — каждое наблюдение связано с тем, что действительно видно в рисунке.</p></div>
     </div>
   </div>
 </section>
 
-<!-- 7. Выбор продукта (2 продукта, цены из config/products.json) -->
+<!-- 10. Выбор продукта (2 продукта, цены из config/products.json; без выдуманной старой цены) -->
 <section class="section section--alt" id="ceny">
   <div class="wrap">
     <h2>Выберите отчёт</h2>
-    <div class="sub">Один отчёт охватывает до 3 рисунков — загрузите несколько работ, и мы сведём наблюдения воедино.</div>
+    <div class="sub">Для старта доступен отчёт по 1–3 рисункам одного периода. Отчёт о развитии во времени появится позже.</div>
     <div class="price-grid">
       
       <div class="card price-card">
         
-        <div class="p-title">Отчёт по рисункам</div>
+        <div class="p-title">Персональный отчёт о рисунках вашего ребёнка</div>
         <div class="p-sub">1–3 рисунка одного периода</div>
         <div class="p-prices">
-          <span class="p-old">4900 ₽</span>
+          <div class="p-launch">Цена на запуске</div>
+          
           <span class="p-price">2999 ₽</span>
         </div>
         <ul class="p-features">
-          <li>Единый отчёт по 1–3 рисункам</li><li>8 направлений развития с оценками</li><li>Занятия для родителей по каждому направлению</li><li>PDF на почту + личный кабинет</li>
+          <li>Персональный PDF — около 8 страниц</li><li>Единый отчёт по 1–3 рисункам</li><li>8 направлений развития с оценками и объяснениями</li><li>Занятия для родителей после каждого направления</li><li>PDF на почту + личный кабинет</li><li>Возврат денег в течение 7 дней</li>
         </ul>
         
-        <a class="btn btn--primary" href="/order?product=snapshot">Заказать за 2999 ₽</a>
+        <a class="btn btn--primary" href="/order?product=snapshot" data-ym-goal="landing_price_order_snapshot">Заказать отчёт — 2999 ₽</a>
         
       </div>
       
       <div class="card price-card price-card--soon">
         <span class="badge badge--corner">скоро</span>
         <div class="p-title">Отчёт о развитии во времени</div>
-        <div class="p-sub">2 набора рисунков с интервалом от 6 месяцев</div>
+        <div class="p-sub">Сравнение рисунков «тогда и сейчас»</div>
         <div class="p-prices">
-          <span class="p-old">6900 ₽</span>
+          
+          
           <span class="p-price">4999 ₽</span>
         </div>
         <ul class="p-features">
-          <li>Сравнение двух периодов «тогда и сейчас»</li><li>Динамика по каждому из 8 направлений</li><li>Что изменилось и что развивать дальше</li><li>PDF на почту + личный кабинет</li>
+          <li>2 набора рисунков с интервалом от 6 месяцев</li><li>Динамика по каждому из 8 направлений</li><li>Что изменилось и что развивать дальше</li><li>PDF на почту + личный кабинет</li>
         </ul>
         
-        <span class="p-soon-note">Появится после запуска — следите за новостями</span>
+        <span class="p-soon-note">Появится после запуска MVP</span>
         
       </div>
       
@@ -1029,38 +1364,196 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
   </div>
 </section>
 
-<!-- 8. FAQ — снятие возражений сразу после цен -->
+<!-- 11. FAQ — снятие возражений сразу после цен -->
 <section class="section" id="faq">
   <div class="wrap">
     <h2>Частые вопросы</h2>
     
-    <details class="faq"><summary>Какой возраст ребёнка подходит?</summary><p>От 3 до 12 лет. Отчёт учитывает возрастной этап развития рисунка: то, что типично для трёх лет, оценивается иначе, чем для девяти.</p></details>
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Что интересного я могу узнать о ребёнке из отчёта?</summary><p>Вы увидите сильные стороны ребёнка, что повторяется из рисунка в рисунок, что привлекает его внимание, какие творческие привычки и навыки сейчас формируются. Всё это — наблюдения по видимым деталям рисунка: без диагнозов и скрытых смыслов.</p></details>
     
-    <details class="faq"><summary>Как быстро придёт отчёт?</summary><p>Обычно в течение часа после оплаты. PDF придёт на почту, и он же будет доступен в личном кабинете.</p></details>
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Какой возраст ребёнка подходит?</summary><p>От 3 до 12 лет. Отчёт учитывает возрастной этап развития рисунка: то, что типично для трёх лет, оценивается иначе, чем для девяти.</p></details>
     
-    <details class="faq"><summary>Что нужно прислать?</summary><p>Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, чем рисовал, что было задано. Ничего специально рисовать не нужно.</p></details>
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Что нужно прислать?</summary><p>Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, материалы, тема, было ли задание. Ничего специально рисовать не нужно.</p></details>
     
-    <details class="faq"><summary>Это психологическая диагностика?</summary><p>Нет. Это образовательное наблюдение за навыками, которые видны в рисунке: композиция, контроль линий, вариативность решений. Мы принципиально не делаем выводов об эмоциях или психологическом состоянии ребёнка.</p></details>
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Как быстро придёт отчёт?</summary><p>Обычно в течение часа после оплаты. PDF придёт на почту и будет доступен в личном кабинете.</p></details>
     
-    <details class="faq"><summary>А если отчёт мне не понравится?</summary><p>Напишите нам в течение 7 дней — вернём деньги без лишних вопросов.</p></details>
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Это психологическая диагностика? Это не диагноз?</summary><p>Нет, это не диагноз. Это образовательное наблюдение за навыками, которые видны в рисунке: линия, форма, детали, композиция, сюжет, контроль движений и возрастной этап. Мы не делаем выводов о психологическом состоянии ребёнка по одному рисунку.</p></details>
     
-    <details class="faq"><summary>Кто увидит рисунки моего ребёнка?</summary><p>Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам.</p></details>
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Что означают оценки 6/10, 8/10 или 9/10?</summary><p>Оценки относятся к конкретному рисунку или серии рисунков, а не к ребёнку в целом. Средний балл не означает проблему. Иногда направление просто меньше видно в выбранном сюжете — например, если на рисунке один объект и нет персонажей.</p></details>
+    
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Как понять, что отчёт не общий шаблон?</summary><p>В отчёте выводы должны быть привязаны к конкретным деталям рисунка: линии, композиции, цветовым решениям, деталям, сюжету, материалам и возрасту ребёнка. Именно поэтому мы просим не только фото, но и короткий контекст.</p></details>
+    
+    <details class="faq"><summary data-ym-goal="landing_faq_open">А если рисунок меня тревожит?</summary><p>Отчёт поможет спокойно посмотреть на видимые признаки рисунка и отделить наблюдения от популярных мифов. Но если вас серьёзно беспокоит состояние, поведение или безопасность ребёнка, лучше обратиться к профильному специалисту — отчёт не заменяет консультацию.</p></details>
+    
+    <details class="faq"><summary data-ym-goal="landing_faq_open">А если отчёт мне не понравится?</summary><p>Напишите нам в течение 7 дней — вернём деньги без лишних вопросов.</p></details>
+    
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Кто увидит рисунки моего ребёнка?</summary><p>Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам.</p></details>
+    
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Как понять рисунок ребёнка 4–5 лет?</summary><p>В 4–5 лет ребёнок переходит от «головоногов» к более полным фигурам, появляются сюжет и любимые цвета. Понять рисунок — значит увидеть, какие навыки уже освоены (замкнутый контур, детали, расположение на листе), а не искать в нём скрытый смысл. Именно это показывает наш образовательный отчёт — по возрастным особенностям, без диагноза.</p></details>
+    
+    <details class="faq"><summary data-ym-goal="landing_faq_open">Как интерпретировать детский рисунок дома самому?</summary><p>Дома полезно смотреть на признаки развития навыков, а не на «значения». Обратите внимание на нажим и уверенность линий, насколько детальны фигуры, как ребёнок использует пространство листа и повторяет ли любимые сюжеты. Это наблюдения за возрастными особенностями, а не психологическая интерпретация.</p></details>
     
   </div>
 </section>
 
 
-<!-- 9. Блог: прогрев недокупивших + внутренняя перелинковка (SEO) -->
+<!-- 12. Блог: прогрев недокупивших + внутренняя перелинковка (SEO) -->
 <section class="section section--alt" id="blog">
   <div class="wrap">
-    <h2>Разбираемся в детском рисунке</h2>
-    <div class="sub">Спокойные ответы на частые родительские вопросы — в нашем блоге.</div>
+    <h2>Разбираемся в детских рисунках без мифов и страшных трактовок</h2>
+    <div class="sub">Спокойные ответы на вопросы, которые возникают почти у каждого родителя.</div>
     <div class="carousel-wrap">
-      <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1">‹</button>
-      <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1">›</button>
+      <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1" data-ym-goal="landing_blog_prev">‹</button>
+      <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1" data-ym-goal="landing_blog_next">›</button>
       <div class="carousel">
         
-        <a class="blog-card" href="/blog/rebenok-ne-risuet-litso-ruki">
+        <a class="blog-card" href="/blog/analiz-detskogo-risunka-7-priznakov" data-ym-goal="landing_blog_open_analiz-detskogo-risunka-7-priznakov">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="60" y="18" width="80" height="90" rx="8" fill="var(--polbg)" stroke="var(--ink)" stroke-width="5"/>
+  <rect x="84" y="10" width="32" height="16" rx="5" fill="var(--badge)"/>
+  <path d="M80 46 H120 L100 92" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Анализ детского рисунка: 7 признаков развития, на которые стоит смотреть</h3>
+            <p class="blog-card__descr">Анализ детского рисунка по делу: 7 наблюдаемых признаков развития — линия и нажим, композиция, детали, фигура человека, цвет как навык, сюжет, процесс. Образовательный разбор для родителей, без диагноза.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/analiz-risunka-ne-diagnoz" data-ym-goal="landing_blog_open_analiz-risunka-ne-diagnoz">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="54" y="20" width="92" height="84" rx="8" fill="var(--polbg)" stroke="var(--ink)" stroke-width="4"/>
+  <g fill="none" stroke="var(--soft)" stroke-width="13" stroke-linecap="round">
+    <path d="M100 38 V86"/><path d="M76 62 H124"/>
+  </g>
+  <path d="M64 96 L136 30" fill="none" stroke="var(--accent2)" stroke-width="7" stroke-linecap="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Это не диагноз: образовательный анализ детского рисунка простыми словами</h3>
+            <p class="blog-card__descr">Анализ детского рисунка — это не диагноз. Чем образовательное наблюдение за развитием отличается от проективной «диагностики по рисунку», почему таблицы «значений» ненадёжны и что действительно полезно знать родителю.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/chto-uznat-po-risunku-rebenka" data-ym-goal="landing_blog_open_chto-uznat-po-risunku-rebenka">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="40" y="22" width="84" height="80" rx="6" fill="var(--polbg)" stroke="var(--ink)" stroke-width="5"/>
+  <path d="M54 50 C66 38 80 60 94 46" fill="none" stroke="var(--accent2)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M54 68 H100" stroke="var(--soft)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M54 80 H86" stroke="var(--soft)" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="132" cy="60" r="26" fill="none" stroke="var(--accent)" stroke-width="6"/>
+  <path d="M151 79 L170 98" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Что можно узнать по рисунку ребёнка (и чего по нему узнать нельзя)</h3>
+            <p class="blog-card__descr">Что на самом деле можно узнать по рисунку ребёнка — этап развития навыков, а не «скрытые» эмоции. Честный разбор: что рисунок показывает, чего не показывает и на какие признаки смотреть родителю.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/kak-ponyat-risunok-rebenka-bez-psihologa" data-ym-goal="landing_blog_open_kak-ponyat-risunok-rebenka-bez-psihologa">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M100 26 a28 28 0 0 1 18 49 l-36 0 a28 28 0 0 1 18 -49 Z" fill="var(--polbg)" stroke="var(--accent)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M84 82 H116 M88 92 H112 M95 100 H105" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 12 V4 M62 30 L56 24 M138 30 L144 24 M50 64 H42 M150 64 H158" stroke="var(--accent2)" stroke-width="4" stroke-linecap="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Как понять рисунок ребёнка без психолога: спокойная инструкция для родителей</h3>
+            <p class="blog-card__descr">Как понять рисунок ребёнка дома, без психолога: на что смотреть по возрастам, какие вопросы задавать и каких трактовок избегать. Образовательный подход — наблюдения за навыками, без диагноза.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/pdf-otchet-po-detskomu-risunku" data-ym-goal="landing_blog_open_pdf-otchet-po-detskomu-risunku">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M58 16 H116 L138 38 V104 H58 Z" fill="var(--polbg)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M116 16 V38 H138" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M70 54 H118 M70 64 H118" stroke="var(--soft)" stroke-width="4" stroke-linecap="round"/>
+  <rect x="74" y="82" width="11" height="14" fill="var(--badge)"/>
+  <rect x="92" y="74" width="11" height="22" fill="var(--accent)"/>
+  <rect x="110" y="68" width="11" height="28" fill="var(--accent2)"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">PDF-отчёт по детскому рисунку: что внутри и как это работает</h3>
+            <p class="blog-card__descr">PDF-отчёт по детскому рисунку «Голос рисунка»: что внутри, как загрузить рисунок по фото и получить разбор по 8 направлениям развития с занятиями. На основе методик Пиаже, Ловенфельда, Выготского. Без диагноза.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/pochemu-rebenok-risuet-odno-i-to-zhe" data-ym-goal="landing_blog_open_pochemu-rebenok-risuet-odno-i-to-zhe">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <g fill="none" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round">
+    <rect x="26" y="72" width="30" height="28"/><path d="M23 72 L41 54 L59 72"/>
+    <rect x="85" y="72" width="30" height="28"/><path d="M82 72 L100 54 L118 72"/>
+    <rect x="144" y="72" width="30" height="28"/><path d="M141 72 L159 54 L177 72"/>
+  </g>
+  <path d="M114 32 a18 18 0 1 1 -14 -8" fill="none" stroke="var(--accent2)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M112 22 l4 10 l9 -4" fill="none" stroke="var(--accent2)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Почему ребёнок рисует одно и то же: нормально ли это</h3>
+            <p class="blog-card__descr">Ребёнок рисует одно и то же — одного героя, дом или сюжет снова и снова? Почему повторение в детском рисунке нормально и даже полезно, что это говорит о развитии и когда стоит присмотреться.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/razvivayushchie-zadaniya-risovanie" data-ym-goal="landing_blog_open_razvivayushchie-zadaniya-risovanie">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <g stroke="var(--ink)" stroke-width="3" stroke-linejoin="round">
+    <path d="M50 96 V52 L58 38 L66 52 V96 Z" fill="var(--accent)"/>
+    <path d="M74 96 V46 L82 32 L90 46 V96 Z" fill="var(--accent2)"/>
+    <path d="M98 96 V52 L106 38 L114 52 V96 Z" fill="var(--badge)"/>
+  </g>
+  <path d="M150 36 l5 14 l14 5 l-14 5 l-5 14 l-5 -14 l-14 -5 l14 -5 Z" fill="var(--accent2)"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Развивающие задания по рисунку: 10 игр, которые поддержат развитие ребёнка</h3>
+            <p class="blog-card__descr">Развивающие задания по рисунку ребёнка: 10 простых игр по возрастам на линию, композицию, детали и воображение. По 10 минут, без давления — для родителей, на основе методик развития рисунка.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/risunok-semi-rebenka" data-ym-goal="landing_blog_open_risunok-semi-rebenka">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M100 16 c-5 -7 -16 -3 -16 5 c0 8 16 16 16 16 c0 0 16 -8 16 -16 c0 -8 -11 -12 -16 -5 Z" fill="var(--accent2)"/>
+  <g fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
+    <circle cx="48" cy="52" r="13"/><path d="M48 65 V92 M48 72 L34 84 M48 72 L62 84 M48 92 L39 108 M48 92 L57 108"/>
+    <circle cx="100" cy="60" r="11"/><path d="M100 71 V94 M100 77 L88 88 M100 77 L112 88 M100 94 L92 108 M100 94 L108 108"/>
+    <circle cx="150" cy="68" r="9"/><path d="M150 77 V96 M150 82 L140 90 M150 82 L160 90 M150 96 L143 108 M150 96 L157 108"/>
+  </g>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Что означает рисунок семьи ребёнка: что правда, а что миф</h3>
+            <p class="blog-card__descr">Что означает рисунок семьи ребёнка — кто больше, кого «забыл», кто с краю? Спокойный разбор популярных трактовок «рисунка семьи»: что действительно видно, а что домыслы. Образовательный взгляд, без диагноза.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/rebenok-ne-risuet-litso-ruki" data-ym-goal="landing_blog_open_rebenok-ne-risuet-litso-ruki">
           <div class="blog-card__thumb">
 
 <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
@@ -1079,7 +1572,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
           </div>
         </a>
         
-        <a class="blog-card" href="/blog/rebenok-risuet-chernym">
+        <a class="blog-card" href="/blog/rebenok-risuet-chernym" data-ym-goal="landing_blog_open_rebenok-risuet-chernym">
           <div class="blog-card__thumb">
 
 <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
@@ -1099,7 +1592,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
           </div>
         </a>
         
-        <a class="blog-card" href="/blog/rebenok-risuet-sebya-odnogo">
+        <a class="blog-card" href="/blog/rebenok-risuet-sebya-odnogo" data-ym-goal="landing_blog_open_rebenok-risuet-sebya-odnogo">
           <div class="blog-card__thumb">
 
 <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
@@ -1116,7 +1609,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
           </div>
         </a>
         
-        <a class="blog-card" href="/blog/strashnye-risunki-monstry">
+        <a class="blog-card" href="/blog/strashnye-risunki-monstry" data-ym-goal="landing_blog_open_strashnye-risunki-monstry">
           <div class="blog-card__thumb">
 
 <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
@@ -1136,7 +1629,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
           </div>
         </a>
         
-        <a class="blog-card" href="/blog/temnye-cveta-v-detskih-risunkah">
+        <a class="blog-card" href="/blog/temnye-cveta-v-detskih-risunkah" data-ym-goal="landing_blog_open_temnye-cveta-v-detskih-risunkah">
           <div class="blog-card__thumb">
 
 <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
@@ -1151,12 +1644,12 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Тёмные цвета в детских рисунках: что они значат на самом деле</h3>
-            <p class="blog-card__descr">Ребёнок выбирает чёрный, серый, тёмно-синий? Спокойный разбор: почему «психология цвета» в детских рисунках — миф, что типично по возрастам и какие признаки в рисунке действительно информативны.</p>
+            <h3 class="blog-card__title">Анализ детского рисунка по цветам: что значат тёмные цвета на самом деле</h3>
+            <p class="blog-card__descr">Анализ детского рисунка по цветам без мифов: почему «психология цвета» — миф, что значат чёрный, серый, тёмно-синий по возрастам и какие признаки в рисунке действительно информативны. Образовательный разбор для родителей.</p>
           </div>
         </a>
         
-        <a class="blog-card" href="/blog/zlye-risunki-silnyj-nazhim">
+        <a class="blog-card" href="/blog/zlye-risunki-silnyj-nazhim" data-ym-goal="landing_blog_open_zlye-risunki-silnyj-nazhim">
           <div class="blog-card__thumb">
 
 <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
@@ -1179,7 +1672,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
         
       </div>
     </div>
-    <p style="text-align: center; margin-top: 22px"><a class="btn btn--ghost" href="/blog">Все статьи →</a></p>
+    <p style="text-align: center; margin-top: 22px"><a class="btn btn--ghost" href="/blog" data-ym-goal="landing_blog_all">Все статьи →</a></p>
   </div>
 </section>
 
@@ -1189,6 +1682,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
   <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
   <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
   golosrisunka.ru
+  <span class="foot-ver">V1.013</span>
 </footer>
 
 <script>

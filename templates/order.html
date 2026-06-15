@@ -56,7 +56,7 @@
   <div class="wrap" style="max-width: 720px">
     <h2>Заказ отчёта</h2>
     <p class="sub">{{ product.title }} — до {{ product.drawings_max }} рисунков одного периода ·
-      <s style="color:var(--soft)">{{ product.old_price_rub }} ₽</s>
+      {% if product.old_price_rub %}<s style="color:var(--soft)">{{ product.old_price_rub }} ₽</s>{% endif %}
       <b style="color:var(--accent)">{{ product.price_rub }} ₽</b></p>
 
     {% if errors %}

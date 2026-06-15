@@ -531,6 +531,9 @@ def site_settings():
     return _render("admin.site_settings", "admin/settings.html",
                    products=settings.get_products(),
                    metrika_id=settings.YANDEX_METRIKA_ID,
+                   mail_backend=settings.MAIL_BACKEND,
+                   mail_from=settings.MAIL_FROM_EMAIL,
+                   unisender_go_key=bool(settings.UNISENDER_GO_API_KEY),
                    saved=request.args.get("saved"))
 
 
@@ -549,7 +552,12 @@ def settings_products_save():
         p["subtitle"] = f("subtitle")
         try:
             p["price_rub"] = int(f("price_rub"))
-            p["old_price_rub"] = int(f("old_price_rub"))
+            # Старая цена необязательна: пусто => нет зачёркнутой цены (не выдумываем скидку).
+            old = f("old_price_rub")
+            if old:
+                p["old_price_rub"] = int(old)
+            else:
+                p.pop("old_price_rub", None)
         except ValueError:
             return redirect(url_for("admin.site_settings", saved="err"))
         p["features"] = [ln.strip() for ln in

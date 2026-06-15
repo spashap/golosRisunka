@@ -22,7 +22,8 @@ DEV_LOGIN_CODE_EMAIL = "spashap@gmail.com"
 # ЮKassa / Unisender keys land here later (Phase 8):
 YOOKASSA_SHOP_ID = os.getenv("YOOKASSA_SHOP_ID", "")
 YOOKASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY", "")
-UNISENDER_API_KEY = os.getenv("UNISENDER_API_KEY", "")
+UNISENDER_API_KEY = os.getenv("UNISENDER_API_KEY", "")          # legacy (маркетинговый API, не используется)
+UNISENDER_GO_API_KEY = os.getenv("UNISENDER_GO_API_KEY", "")    # Unisender Go (транзакционные письма, Phase 8)
 
 # --- Paths ---
 DATA_DIR = BASE_DIR / "data"
@@ -70,8 +71,16 @@ UPLOAD_MAX_BYTES = 15 * 1024 * 1024
 # --- Worker / email (Phase 6) ---
 WORKER_POLL_SECONDS = 5                # период опроса orders.status='paid'
 WORKER_LOG = DATA_DIR / "worker.log"   # UTF-8 лог воркера (консоль — только ASCII!)
-MAIL_BACKEND = os.getenv("MAIL_BACKEND", "outbox")  # 'outbox' сейчас | 'unisender' (Phase 8)
+MAIL_BACKEND = os.getenv("MAIL_BACKEND", "outbox")  # 'outbox' (файлы) | 'unisender' (Unisender Go)
 OUTBOX_DIR = DATA_DIR / "outbox"       # backend 'outbox': письма как HTML-файлы
+# Отправитель транзакционных писем (домен golosrisunka.ru, DKIM настраивается в Unisender).
+MAIL_FROM_EMAIL = os.getenv("MAIL_FROM_EMAIL", "sales@golosrisunka.ru")
+MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", SITE_NAME)
+# Транзакционный API Unisender Go (регион go1; переопределяемо через env при смене региона).
+UNISENDER_GO_API_URL = os.getenv(
+    "UNISENDER_GO_API_URL",
+    "https://go1.unisender.ru/ru/transactional/api/v1/email/send.json")
+UNISENDER_GO_TIMEOUT = 20              # сек на HTTP-запрос к Unisender Go
 
 # --- Auth (spec §9) ---
 SESSION_DAYS = 30

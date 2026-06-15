@@ -13,7 +13,7 @@
         <div class="p-title">{{ p.title }}</div>
         <div class="p-sub">{{ p.subtitle }}</div>
         <div class="p-prices">
-          <span class="p-old">{{ p.old_price_rub }} ₽</span>
+          {% if p.old_price_rub %}<span class="p-old">{{ p.old_price_rub }} ₽</span>{% endif %}
           <span class="p-price">{{ p.price_rub }} ₽</span>
         </div>
       </div>

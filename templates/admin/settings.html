@@ -23,8 +23,8 @@
         <div class="ctl"><input class="input" name="{{ code }}_subtitle" value="{{ p.subtitle }}"></div></div>
       <div class="field"><label>Цена, ₽</label>
         <div class="ctl"><input class="input" name="{{ code }}_price_rub" type="number" min="1" value="{{ p.price_rub }}"></div></div>
-      <div class="field"><label>Старая цена (зачёркнутая), ₽</label>
-        <div class="ctl"><input class="input" name="{{ code }}_old_price_rub" type="number" min="1" value="{{ p.old_price_rub }}"></div></div>
+      <div class="field"><label>Старая цена (зачёркнутая, необязательно), ₽</label>
+        <div class="ctl"><input class="input" name="{{ code }}_old_price_rub" type="number" min="1" value="{{ p.old_price_rub or '' }}"></div></div>
       <div class="field"><label>Пункты с галочками (по одному в строке)</label>
         <div class="ctl"><textarea class="input" name="{{ code }}_features" rows="5">{{ p.features | join("\n") }}</textarea></div></div>
     </div>
@@ -40,7 +40,10 @@
       <td>{% if metrika_id %}<span class="admin-status admin-status--delivered">подключена (ID {{ metrika_id }})</span>
           {% else %}<span class="admin-status admin-status--created">нет ID</span> — добавьте <code>YANDEX_METRIKA_ID</code> в <code>.env</code>{% endif %}</td></tr>
   <tr><td>ЮKassa</td><td><span class="admin-status admin-status--created">stub</span> — реальный аккаунт подключается в Phase 8 (<code>.env</code>)</td></tr>
-  <tr><td>Unisender</td><td><span class="admin-status admin-status--created">outbox</span> — письма пишутся в <code>data/outbox/</code> до Phase 8</td></tr>
+  <tr><td>Почта (Unisender&nbsp;Go)</td>
+      <td>{% if mail_backend == 'unisender' %}
+            {% if unisender_go_key %}<span class="admin-status admin-status--delivered">Unisender Go</span> — отправка с <code>{{ mail_from }}</code>{% else %}<span class="admin-status admin-status--failed">нет ключа</span> — добавьте <code>UNISENDER_GO_API_KEY</code> в <code>.env</code>{% endif %}
+          {% else %}<span class="admin-status admin-status--created">outbox</span> — письма в <code>data/outbox/</code>; для боевой отправки выставьте <code>MAIL_BACKEND=unisender</code> в <code>.env</code>{% endif %}</td></tr>
   </tbody>
 </table>
 <p class="hint">Секреты (ключи API, пароль админки) редактируются только в <code>.env</code> на сервере — из веб-интерфейса недоступны намеренно.</p>

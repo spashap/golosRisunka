@@ -62,6 +62,13 @@ h2.r-h .num { color: var(--accent); }
 /* --- Контекст --- */
 .r-context { background: var(--alt); border-radius: 8pt; padding: 5mm 6mm; font-size: 10pt; }
 
+/* --- Спокойная плашка «как читать оценки» под сводными оценками (spec A2) --- */
+.r-callout { background: var(--alt); border-radius: 8pt; padding: 4mm 6mm; margin-top: 4mm;
+             font-size: 9.5pt; color: var(--muted); page-break-inside: avoid; }
+.r-callout-h { font-family: var(--font-head); font-weight: 800; font-size: 11pt;
+               color: var(--ink); margin-bottom: 1.5mm; }
+.r-callout p { margin: 0; }
+
 /* --- Сводный блок оценок: таблица (WeasyPrint-надёжно) --- */
 table.r-scores { width: 100%; border-collapse: collapse; page-break-inside: avoid; }
 table.r-scores td { padding: 2.2mm 0; vertical-align: middle; border: none; }
@@ -93,6 +100,14 @@ table.r-scores .num { width: 8%; text-align: right; font-family: var(--font-head
 .r-dd { page-break-inside: avoid; margin-bottom: 4mm; }
 .r-dd .t { font-weight: 600; }
 .r-dd-note { color: var(--soft); font-size: 9pt; }
+
+/* --- Приложение «Как читать оценки в отчёте» (spec A3): своя страница --- */
+.r-appendix { page-break-before: always; }
+.r-appendix p { margin: 0 0 3mm; }
+.r-appendix .r-appendix-lead { font-weight: 600; margin-bottom: 2mm; }
+.r-appendix-list { margin: 0 0 3mm 5mm; }
+.r-appendix-list li { margin-bottom: 2.5mm; }
+.r-appendix-list .t { font-weight: 600; color: var(--ink); }
 
 /* --- Заключение и дисклеймер --- */
 .r-conclusion { background: var(--alt); border-radius: 8pt; padding: 5mm 6mm; page-break-inside: avoid; }

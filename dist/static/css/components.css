@@ -14,12 +14,13 @@ body {
   font-family: var(--font-body);
   background: var(--bg);
   color: var(--ink);
+  overflow-x: clip;   /* страховка от горизонтального скролла (тени/бейджи с офсетами) */
 }
 
 /* --- Layout --- */
 .wrap { max-width: var(--wrap-max); margin: 0 auto; padding: 0 24px; }
 
-.section { padding: 72px 0; position: relative; }
+.section { padding: 52px 0; position: relative; }
 .section--alt { background: var(--alt); }
 
 /* --- Типографика --- */
@@ -294,10 +295,11 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 
 /* --- Футер --- */
 .foot { padding: 40px 0; color: var(--soft); font-size: 14px; text-align: center; }
+.foot-ver { display: block; margin-top: 8px; font-size: 12px; opacity: .55; }
 
 /* --- Hero (двухколоночный первый экран) --- */
 .hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 48px;
-        align-items: center; padding: 56px 0 84px; }
+        align-items: center; padding: 36px 0 10px; }
 .hero p.lead { font-size: 19px; color: var(--muted); margin: 24px 0 32px; max-width: 47ch; }
 
 /* --- «Стол» с разбросанными полароидами --- */
@@ -350,31 +352,117 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: 14px;
                            font-family: var(--font-hand); font-size: 19px; }
 
+/* --- Чипы доверия (hero badges) --- */
+.chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+        border-radius: var(--radius-pill); font-size: 13.5px; font-weight: 600;
+        background: color-mix(in srgb, var(--badge) 14%, var(--paper)); color: var(--ink); }
+.chip::before { content: "✓"; color: var(--accent2); font-weight: 700; }
+
+/* --- Hero H1: вторая строка — мельче, слово «рисунки» в оранжевом тоне лого --- */
+.h1-lead { display: block; margin-top: 12px;
+           font-family: var(--font-head); font-weight: 700;
+           font-size: clamp(18px, 2.3vw, 27px); line-height: 1.25; letter-spacing: -0.2px; }
+.h1-accent { color: var(--accent2); }
+
+/* --- Hero: рукописная бренд-строка над H1 + вторичный текст под лидом --- */
+.hero-brand { font-family: var(--font-hand); font-weight: 700; font-size: 24px;
+              color: var(--accent2); margin-bottom: 6px; }
+.hero-secondary { color: var(--soft); font-size: 15px; line-height: 1.55; margin: -16px 0 0; max-width: 47ch; }
+
+/* --- Hero: визуальный «выход» — карточка-превью отчёта + полароиды детских рисунков за ней --- */
+.hero-output { position: relative; min-height: 360px;
+               display: flex; align-items: center; justify-content: center; }
+.report-preview { position: relative; width: 330px; max-width: 100%; z-index: 3;
+                  padding: 22px 22px 20px; }
+.report-preview__logo { font-family: var(--font-hand); font-weight: 700; font-size: 20px; }
+.report-preview__logo b { color: var(--accent); }
+.report-preview__logo i { color: var(--accent2); font-style: normal; }
+.report-preview__title { font-family: var(--font-head); font-weight: 900; font-size: 18px;
+                         line-height: 1.15; margin: 8px 0 2px; }
+.report-preview__child { color: var(--accent); font-weight: 700; font-size: 14px; }
+.report-preview__body { margin: 16px 0 12px; padding-top: 14px;
+                        border-top: 2px dashed rgba(0, 0, 0, .08); }
+.report-preview__body .score-bar { grid-template-columns: 110px 1fr 22px; font-size: 12.5px; margin-bottom: 10px; }
+.report-preview__foot { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+
+/* полароиды детских рисунков — веером ЗА карточкой, выглядывают по бокам */
+.hero-polaroids { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.hero-pol { position: absolute; background: var(--paper); padding: 9px 9px 22px;
+            border-radius: 3px; box-shadow: var(--shadow-pol); }
+.hero-pol .polaroid__cap { font-size: 12px; margin-top: 4px; }
+.hero-pol--1 { width: 152px; left: -50px; top: 4px; transform: rotate(-12deg); }
+.hero-pol--2 { width: 146px; right: -22px; top: -10px; transform: rotate(10deg); z-index: 2; }
+.hero-pol--3 { width: 138px; right: -24px; bottom: -36px; transform: rotate(7deg); }
+
+/* --- «Что внутри отчёта»: чек-лист в карточке (2 колонки на десктопе) --- */
+.check-list ul { list-style: none; columns: 2; column-gap: 36px; }
+.check-list li { break-inside: avoid; padding: 9px 0 9px 28px; position: relative;
+                 color: var(--ink); font-size: 15.5px; line-height: 1.45; }
+.check-list li::before { content: "✓"; position: absolute; left: 0; top: 9px;
+                         color: var(--accent2); font-weight: 700; }
+@media (max-width: 680px) { .check-list ul { columns: 1; } }
+
+/* --- Mini-logic: 3 связанные карточки со стрелками --- */
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 16px; align-items: stretch; }
+.flow-card { display: flex; flex-direction: column; }
+.flow-card__label { font-family: var(--font-hand); font-weight: 700; font-size: 22px;
+                    color: var(--accent2); margin-bottom: 8px; }
+.flow-card p { color: var(--muted); font-size: 15px; line-height: 1.55; }
+.flow-arrow { display: flex; align-items: center; justify-content: center;
+              font-size: 30px; font-weight: 700; color: var(--accent); }
+.flow-closing { text-align: center; margin-top: 26px;
+                font-family: var(--font-hand); font-weight: 600; font-size: 21px; color: var(--ink); }
+@media (max-width: 880px) {
+  .flow { grid-template-columns: 1fr; gap: 8px; }
+  .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
+}
+
+/* --- «Без мифов»: две колонки «не делаем / делаем» (спокойно, без красного) --- */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.compare-col h3 { font-size: 20px; margin-bottom: 12px; }
+.compare-col ul { list-style: none; }
+.compare-col li { padding: 10px 0 10px 30px; position: relative; color: var(--muted);
+                  font-size: 15px; line-height: 1.5;
+                  border-bottom: 1px solid color-mix(in srgb, var(--soft) 16%, transparent); }
+.compare-col li:last-child { border-bottom: none; }
+.compare-col li::before { position: absolute; left: 0; top: 10px;
+                          font-family: var(--font-head); font-weight: 700; }
+.compare-col--no li::before { content: "✕"; color: var(--soft); }
+.compare-col--yes { background: color-mix(in srgb, var(--badge) 8%, var(--paper)); }
+.compare-col--yes li::before { content: "✓"; color: var(--accent2); }
+@media (max-width: 880px) { .compare { grid-template-columns: 1fr; } }
+
+/* --- Мелкая поясняющая заметка под блоком (оценки у примеров) --- */
+.scores-note { max-width: 760px; margin: 6px auto 0; color: var(--soft);
+               font-size: 13.5px; line-height: 1.5; text-align: center; }
+
+/* --- Отзывы: подпись «закрытое тестирование» под заголовком ленты --- */
+.strip-note { text-align: center; color: var(--soft); font-size: 12.5px; margin: -4px 0 14px; }
+
+/* --- Цена на запуске (без выдуманной зачёркнутой цены) --- */
+.price-card .p-launch { font-size: 13px; color: var(--soft); font-weight: 600; margin-bottom: 2px; }
+
 /* --- Мобильная адаптация базовых сеток --- */
 @media (max-width: 880px) {
-  body { overflow-x: hidden; }  /* страховка: бейджи/тени с отрицательными офсетами */
   .steps { grid-template-columns: 1fr; }
   .price-grid { grid-template-columns: 1fr; }
-  .hero { grid-template-columns: 1fr; padding: 32px 0 40px; gap: 10px; }
+  .hero { grid-template-columns: 1fr; padding: 22px 0 18px; gap: 14px; }
 
-  /* полароиды: не карусель — все три в ряд, просто меньше */
-  .pol-table {
-    min-height: 0;
-    display: flex; gap: 10px; justify-content: space-between;
-    padding: 22px 2px 6px;             /* сверху место под скотч и бейдж */
-  }
-  .pol-table .polaroid {
-    position: static !important;        /* перебиваем inline top/left из шаблона */
-    flex: 1 1 0;
-    width: auto !important; min-width: 0;
-    padding: 8px 8px 22px;
-  }
-  .pol-table .polaroid:nth-child(odd) { transform: rotate(-2deg); }
-  .pol-table .polaroid:nth-child(even) { transform: rotate(2deg); }
-  .pol-table .polaroid::before { width: 48px; height: 14px; top: -7px; }
-  .pol-table .polaroid__cap { font-size: 12px; margin-top: 5px; }
-  .pol-table .badge--corner { font-size: 11px; padding: 2px 8px;
-                              top: -9px; right: -6px; box-shadow: 2px 2px 0 var(--ink); }
+  /* мобайл: компактнее вертикальный ритм — меньше пустот между блоками */
+  .section { padding: 40px 0; }
+  .sub { margin-bottom: 20px; }
+  .card--pad { padding: 18px 16px; }
+  .chips { margin-top: 18px; gap: 8px; }
+
+  /* мобайл: списки используют всю ширину карточки — без большого отступа слева */
+  .check-list li, .compare-col li { padding-top: 7px; padding-bottom: 7px; padding-left: 22px; }
+  .compare-col li::before, .check-list li::before { top: 7px; }
+
+  /* hero-визуал на мобайле: только карточка отчёта по центру, полароиды-веер скрыты */
+  .hero-output { min-height: 0; padding: 2px 0 0; }
+  .hero-polaroids { display: none; }
+  .report-preview { width: 100%; max-width: 330px; margin: 0 auto; }
 
   /* карусель примеров: full-bleed, карточка почти на весь экран, снап по центру */
   .carousel {
@@ -532,6 +620,54 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .admin-kpi__l { color: var(--soft); font-size: 12.5px; margin-top: 4px; }
 .admin-scroll { overflow-x: auto; }
 .admin-scroll table { min-width: 760px; }
+.admin-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+.admin-cols--3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 900px) { .admin-cols--3 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .admin-cols { grid-template-columns: 1fr; } }
+
+/* Визиты: раскрывающийся список посетителей (drill-down без JS) */
+.vis-list { margin-top: 12px; }
+.vis-head, .vis > summary {
+  display: grid; gap: 10px; align-items: center;
+  grid-template-columns: 42px 92px 1.4fr 88px 1.3fr 70px 64px 110px;
+}
+.vis-head { padding: 6px 12px; color: var(--soft); font-size: 12px; font-weight: 600; }
+.vis { border: 1px solid var(--alt); border-radius: 8px; margin-bottom: 6px; background: var(--paper); }
+.vis > summary { padding: 9px 12px; cursor: pointer; list-style: none; font-size: 13.5px; }
+.vis > summary::-webkit-details-marker { display: none; }
+.vis > summary:hover { background: var(--bg); }
+.vis[open] { border-color: var(--accent); }
+.vis[open] > summary { background: var(--bg); border-bottom: 1px solid var(--alt); }
+.vis-body { padding: 12px 14px; }
+.vis-events { width: 100%; font-size: 12.5px; }
+.vis-events th, .vis-events td { padding: 4px 8px; }
+@media (max-width: 760px) {
+  .vis-head { display: none; }
+  .vis > summary { grid-template-columns: 1fr 1fr; }
+}
+
+/* Дрилл-даун воронки/источников: раскрывающийся шаг -> список посетителей */
+.drill-head, .drill > summary {
+  display: grid; gap: 10px; align-items: center;
+  grid-template-columns: 1.8fr 100px 90px 110px;
+}
+.drill-head--src, .drill--src > summary {
+  grid-template-columns: 1.8fr 110px 90px 90px 100px;
+}
+.drill-head { padding: 6px 12px; color: var(--soft); font-size: 12px; font-weight: 600; }
+.drill { border: 1px solid var(--alt); border-radius: 8px; margin-bottom: 6px; background: var(--paper); }
+.drill > summary { padding: 9px 12px; cursor: pointer; list-style: none; font-size: 13.5px; }
+.drill > summary::-webkit-details-marker { display: none; }
+.drill > summary:hover { background: var(--bg); }
+.drill[open] { border-color: var(--accent); }
+.drill[open] > summary { background: var(--bg); border-bottom: 1px solid var(--alt); }
+@media (max-width: 760px) {
+  .drill-head { display: none; }
+  .drill > summary { grid-template-columns: 1fr 1fr; }
+}
+
+.admin-filter { display: flex; gap: 8px; margin: 16px 0; max-width: 520px; }
+.admin-filter .input { flex: 1; }
 .admin-status { font-weight: 600; font-size: 13px; }
 .admin-status--delivered { color: #2E7D32; }
 .admin-status--paid, .admin-status--generating { color: var(--accent); }

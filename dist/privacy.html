@@ -5,8 +5,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Политика конфиденциальности — Голос рисунка</title>
-<meta name="description" content="Профессиональный отчёт о развитии ребёнка по его рисункам">
+<link rel="icon" type="image/png" href="/static/img/favico/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/svg+xml" href="/static/img/favico/favicon.svg">
+<link rel="shortcut icon" href="/static/img/favico/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/img/favico/apple-touch-icon.png">
+<link rel="manifest" href="/static/img/favico/site.webmanifest">
+<meta name="description" content="Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей, без диагноза.">
 
+<link rel="canonical" href="https://golosrisunka.ru/privacy">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Политика конфиденциальности — Голос рисунка">
+<meta property="og:description" content="Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей, без диагноза.">
+<meta property="og:url" content="https://golosrisunka.ru/privacy">
+<meta property="og:site_name" content="Голос рисунка">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://golosrisunka.ru/static/img/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Политика конфиденциальности — Голос рисунка">
+<meta name="twitter:description" content="Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей, без диагноза.">
+<meta name="twitter:image" content="https://golosrisunka.ru/static/img/og-default.png">
+
+
+<script type="application/ld+json">
+[{"@context":"https://schema.org","@type":"Organization",
+  "name":"Голос рисунка","url":"https://golosrisunka.ru/",
+  "logo":"https://golosrisunka.ru/static/img/og-default.png",
+  "description":"Анализ детского рисунка по фото: персональный отчёт о том, что рисунки расскажут о ребёнке — сильные стороны, интересы и навыки. На основе методик Пиаже, Ловенфельда, Выготского. Без диагнозов.",
+  "knowsLanguage":"ru"},
+ {"@context":"https://schema.org","@type":"WebSite",
+  "name":"Голос рисунка","url":"https://golosrisunka.ru/","inLanguage":"ru"}]
+</script>
 <link rel="preload" href="/static/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
@@ -16,21 +45,89 @@
 
 
 
+<script type="text/javascript">
+  (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+  m[i].l=1*new Date();
+  for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+  k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+  (window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=109824945", "ym");
+  ym(109824945, "init", {
+    ssr: true,
+    webvisor: true,
+    clickmap: true,
+    ecommerce: "dataLayer",
+    referrer: document.referrer,
+    url: location.href,
+    accurateTrackBounce: true,
+    trackLinks: true
+  });
+
+  // --- Цели по кликам/сабмитам (data-ym-goal / data-ym-goal-submit) ---
+  // Шлём и в Яндекс (reachGoal), и первой стороной (beacon -> /t/e) для админки.
+  window.ymGoal = function (goal, params) {
+    if (!goal) { return; }
+    if (window.ym) { try { ym(109824945, "reachGoal", goal, params || {}); } catch (e) {} }
+    try { navigator.sendBeacon("/t/e", new URLSearchParams({ g: goal })); } catch (e) {}
+  };
+  document.addEventListener("click", function (ev) {
+    var el = ev.target.closest && ev.target.closest("[data-ym-goal]");
+    if (el) { window.ymGoal(el.getAttribute("data-ym-goal")); }
+  }, true);
+  document.addEventListener("submit", function (ev) {
+    var f = ev.target.closest && ev.target.closest("[data-ym-goal-submit]");
+    if (f) { window.ymGoal(f.getAttribute("data-ym-goal-submit")); }
+  }, true);
+
+  // --- Вовлечённость: один beacon "engaged" при ПЕРВОМ из:
+  //   скролл / клик / клавиша / тач  ИЛИ  15 секунд ВИДИМОГО пребывания на странице.
+  //   Модель «engaged session» (как GA4); порог 15с совпадает с «отказом» Метрики.
+  //   Боты без JS и мгновенные отказы (без скролла, <15с) НЕ шлют его → в админке
+  //   они не попадают в «вовлечённых». Фоновые/предзагруженные вкладки не копят время
+  //   (visibilityState). Шлётся максимум один раз.
+  (function () {
+    var sent = false, visibleSec = 0, THRESHOLD = 15;
+    var EVENTS = ["scroll", "wheel", "click", "keydown", "touchstart"];
+    var tick = null;
+    function cleanup() {
+      EVENTS.forEach(function (ev) { document.removeEventListener(ev, onInteract, true); });
+      if (tick) { clearInterval(tick); tick = null; }
+    }
+    function fire() {
+      if (sent) { return; }
+      sent = true;
+      try { navigator.sendBeacon("/t/e", new URLSearchParams({ engaged: "1" })); } catch (e) {}
+      cleanup();
+    }
+    function onInteract() { fire(); }
+    EVENTS.forEach(function (ev) {
+      document.addEventListener(ev, onInteract, { capture: true, passive: true });
+    });
+    tick = setInterval(function () {
+      if (document.visibilityState === "visible") {
+        visibleSec += 1;
+        if (visibleSec >= THRESHOLD) { fire(); }
+      }
+    }, 1000);
+  })();
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/109824945"
+  style="position:absolute; left:-9999px;" alt=""></div></noscript>
+
 </head>
 <body>
 
 <header class="site-header">
   <div class="wrap site-header__row">
-    <a class="logo" href="/"><b>Голос</b> <i>рисунка</i></a>
+    <a class="logo" href="/" data-ym-goal="header_logo"><b>Голос</b> <i>рисунка</i></a>
     <nav class="site-nav">
-      <a href="/#primery">Примеры</a>
-      <a href="/#kak">Как это работает</a>
-      <a href="/#ceny">Цены</a>
-      <a href="/blog">Блог</a>
+      <a href="/#primery" data-ym-goal="header_nav_examples">Примеры</a>
+      <a href="/#kak" data-ym-goal="header_nav_how">Как это работает</a>
+      <a href="/#ceny" data-ym-goal="header_nav_prices">Цены</a>
+      <a href="/blog" data-ym-goal="header_nav_blog">Блог</a>
     </nav>
     <div class="site-header__actions">
-      <a class="site-nav__login" href="/login">Войти</a>
-      <a class="btn" href="/order">Получить отчёт</a>
+      <a class="site-nav__login" href="/login" data-ym-goal="header_login">Войти</a>
+      <a class="btn" href="/order" data-ym-goal="header_order">Получить отчёт</a>
     </div>
   </div>
 </header>
@@ -38,7 +135,7 @@
 <div class="section">
   <div class="wrap" style="max-width: 760px">
     <h2>Политика конфиденциальности</h2>
-    <p style="color: var(--muted); line-height: 1.6">Текст политики конфиденциальности будет размещён до запуска. Мы храним рисунки и данные только для подготовки отчёта; рисунки вашего ребёнка не публикуются и не передаются третьим лицам.</p>
+    <p style="color: var(--muted); line-height: 1.6">Текст политики конфиденциальности будет размещён до запуска. Мы храним рисунки и данные только для подготовки отчёта; рисунки вашего ребёнка не публикуются и не передаются третьим лицам. Для веб-аналитики мы по IP-адресу определяем приблизительный регион (страна/область) и сохраняем только эту производную метку — сам IP-адрес не сохраняется.</p>
   </div>
 </div>
 
@@ -46,6 +143,7 @@
   
   Голос рисунка · Образовательное наблюдение, не медицинская диагностика · golosrisunka.ru
   
+  <span class="foot-ver">V1.013</span>
 </footer>
 </body>
 </html>
