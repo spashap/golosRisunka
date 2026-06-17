@@ -42,14 +42,18 @@ class GenerationResult:
 
 
 _REPAIR_INSTRUCTION = """\
-Ты редактируешь готовый JSON-отчёт о детском рисунке. В нём найдены формулировки, \
-нарушающие правило: запрещены выводы о внутренних состояниях и качествах ребёнка \
-(желания, интересы, страхи, смелость, воображение, замысел, эмоции, самооценка).
+Ты редактируешь готовый JSON-отчёт о детском рисунке в тёплом, личном стиле «Голос \
+рисунка». Найдены формулировки, нарушающие правила подачи:
+- запрещены дословно «эмоциональный интеллект», «хороший вкус», «база для красивого \
+почерка»; инструмент тонкой линии — «линер», не «лайнер»;
+- запрещён командный тон («купите», «подарите», «приобретите», «обязательно») — пиши \
+«можно предложить / можно попробовать / хорошо подойдёт / если есть возможность»;
+- запрещены диагнозы и суждения о личности, самооценке, тревожности, «внутренней силе» \
+и о будущем таланте («станет художником» и т. п.);
+- запрещено символическое преувеличение («преодолевает») — описывай настроение, не смысл.
 
-Перепиши ТОЛЬКО проблемные места, заменив их языком видимых навыков и приёмов \
-(например: «не боится листа» -> «уверенно использует всю площадь листа»; \
-«интерес к изображению людей» -> «в рисунке появляется фигура человека — важный \
-этап для возраста»). Смысл, объём и все остальные части отчёта сохрани без изменений.
+Перепиши ТОЛЬКО проблемные места, сохранив тёплый тон, объём, смысл и опору на видимые \
+детали рисунка. Остальные части отчёта оставь без изменений.
 
 Верни ПОЛНЫЙ исправленный JSON той же структуры, без markdown-обёрток."""
 
@@ -86,9 +90,15 @@ def _strip_markdown_fence(text: str) -> str:
 def generate_report(image_paths: list[Path], contexts: list[str] | str,
                     common_context: str = "",
                     max_attempts: int = settings.GEMINI_MAX_ATTEMPTS,
-                    raw_dump_dir: Path | None = None) -> GenerationResult:
+                    raw_dump_dir: Path | None = None,
+                    system_prompt: str | None = None,
+                    enable_lint: bool = True) -> GenerationResult:
     """contexts: список историй по каждому рисунку (по порядку image_paths);
-    строка = один контекст на все рисунки (легаси/один рисунок)."""
+    строка = один контекст на все рисунки (легаси/один рисунок).
+
+    system_prompt / enable_lint — точки расширения для prompt-лаборатории
+    (scripts/prompt_lab.py). По умолчанию — боевое поведение без изменений:
+    system_prompt=None → SYSTEM_PROMPT; enable_lint=True → линтер+repair как обычно."""
     client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     if isinstance(contexts, str):
@@ -101,7 +111,7 @@ def generate_report(image_paths: list[Path], contexts: list[str] | str,
     parts.append(build_user_prompt(contexts, common_context))
 
     config = types.GenerateContentConfig(
-        system_instruction=SYSTEM_PROMPT,
+        system_instruction=system_prompt or SYSTEM_PROMPT,
         response_mime_type="application/json",
         temperature=0.5,
     )
@@ -122,7 +132,7 @@ def generate_report(image_paths: list[Path], contexts: list[str] | str,
             # лингвистический линтер + repair-проходы (не для insufficient)
             repair_rounds = 0
             violations: list[dict] = []
-            if isinstance(report, Report):
+            if enable_lint and isinstance(report, Report):
                 violations = find_violations(report.model_dump())
                 while violations and repair_rounds < 2:
                     repair_rounds += 1

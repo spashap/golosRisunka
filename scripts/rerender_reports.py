@@ -26,7 +26,7 @@ REPORTS = {
         ["projectSpec/testDrawings/set1-img1.png", "projectSpec/testDrawings/set1-img2.png"],
         ["Рисунок 1 — «Стич»", "Рисунок 2 — «Лабубу»"]),
 }
-GENERATED = "12 июня 2026"
+GENERATED = "17 июня 2026"
 
 
 def data_uri(jpeg: bytes) -> str:
