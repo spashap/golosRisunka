@@ -2,8 +2,8 @@
 .env
 # содержит приватный ключ Cloudflare Origin
 scripts/deploy/install_cert.sh
-# бандлы с приватными рисунками (golos_samples и т.п.)
-scripts/deploy/*.tar.gz
+# бандлы с приватными рисунками / сэмплами (golos_samples.tar.gz и т.п.) — где угодно
+*.tar.gz
 # исходник гео-базы DB-IP (88 МБ, скачивается отдельно; geoip.db строится из него)
 scripts/dbip-city-lite-*.csv*
 

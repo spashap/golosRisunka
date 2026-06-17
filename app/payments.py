@@ -7,10 +7,15 @@ webhook ЮKassa потом): customer+child, сессия, статус paid. И
 from __future__ import annotations
 
 import json
+import logging
 
 from flask import url_for
 
 from app.db import get_db, now
+from app.mailer import render_email, send_email
+from config import settings
+
+log = logging.getLogger("payments")
 
 
 def create_payment(order_id: int, price_kopecks: int) -> str:
@@ -71,4 +76,16 @@ def mark_paid(order_id: int) -> dict | None:
         db.execute("UPDATE coupons SET uses_count = uses_count + 1 WHERE upper(code) = ?",
                    (order["coupon_code"],))
     db.commit()
+
+    # Лёгкое письмо «оплата получена» (без вложений): задаёт ожидание отчёта и ведёт
+    # в кабинет. Шлём ТОЛЬКО при первом переходе в paid — дубли отсечены идемпотентностью
+    # выше. Сбой письма не должен ломать подтверждение оплаты.
+    try:
+        html = render_email("payment_received.html",
+                            login_url=f"{settings.PUBLIC_BASE_URL}/login")
+        send_email(email, f"Оплата получена — {settings.SITE_NAME}", html,
+                   kind="payment_received")
+    except Exception:
+        log.exception("payment_received email failed for order %s", order_id)
+
     return {"customer_id": customer_id, "session_token": token, "already_paid": False}

@@ -496,6 +496,31 @@ def order_resend(order_id: int):
     return redirect(url_for("admin.orders", days=days, msg=msg))
 
 
+@bp_admin.post("/orders/<int:order_id>/regenerate")
+def order_regenerate(order_id: int):
+    """«Жёсткая» перегенерация (для теста промпта): ставим заказ обратно в очередь
+    (paid) ВНЕ зависимости от наличия готового отчёта. Воркер заново сгенерирует
+    отчёт ТЕКУЩИМ промптом на тех же загруженных изображениях и отправит письмо.
+    public_token (ссылка /r/...) сохраняется."""
+    _guard()
+    days = request.form.get("days", "7")
+    conn = get_db()
+    order = conn.execute("SELECT id, status FROM orders WHERE id = ?",
+                         (order_id,)).fetchone()
+    if order is None:
+        abort(404)
+    if order["status"] == "created":
+        msg = f"Заказ {order_id}: не оплачен — нечего перегенерировать"
+    elif order["status"] == "generating":
+        msg = f"Заказ {order_id}: уже генерируется"
+    else:
+        conn.execute("UPDATE orders SET status = 'paid' WHERE id = ?", (order_id,))
+        conn.commit()
+        msg = (f"Заказ {order_id}: перегенерация запущена (текущий промпт) — "
+               f"воркер сгенерирует заново и отправит письмо")
+    return redirect(url_for("admin.orders", days=days, msg=msg))
+
+
 @bp_admin.get("/clients")
 def clients():
     _guard()

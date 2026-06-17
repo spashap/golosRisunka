@@ -130,12 +130,18 @@ venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 
   CF не в тракте запроса → robots.txt/Bot-Fight не вмешиваются. Вернутся, если включить orange.
 - **Git**: https://github.com/spashap/golosRisunka (PUBLIC). **Прод-деплой = VPS** (см. «Деплой»);
   Vercel-экспорт dist/ — устаревший noindex-зеркало, НЕ продакшен (продакшен на VPS).
-- **⏳ Ждём от заказчика для Phase 8**: ЮKassa (аккаунт/ключи) + Unisender (домен golosrisunka.ru).
-  Всё за абстракциями — подключение = один backend каждый. После Phase 8 — боевой M8/M9-гейт.
+- **✅ Unisender Go email — ЖИВ в проде (с 15.06)**: транзакционные письма (коды/доставка)
+  через `app/mailer.py` (backend `unisender`). **Доставляемость в Gmail починена 16.06**:
+  письма больше НЕ в «Промоакциях», доходят во «Входящие» с уведомлением. Решило:
+  `MAIL_SKIP_UNSUBSCRIBE=1` (убрал List-Unsubscribe) + Unisender выключил принудительный
+  трекинг открытий на аккаунте (пиксель пустой). Аккаунт ОБЩИЙ с shepotzvezd (`8096698`) —
+  заметка для них `projectSpec/unisender-deliverability-shepotzvezd.md`. Свой домен ссылок
+  `click.golosrisunka.ru` заведён (NS в Cloudflare). Детали — memory `unisender-go-email`.
+- **⏳ Ждём от заказчика для Phase 8**: ЮKassa (аккаунт/ключи). После Phase 8 — боевой M8/M9-гейт.
 - **devtest-img1** (Алиса, 4 года, июль 2024) — зарезервирован для Development report (продукт 2).
 - Кредензалы: Gemini ✅ · YANDEX_METRIKA_ID ✅ (109824945, в прод-.env) · TLS = Let's Encrypt
   (автопродление, ничего хранить не нужно; CF Origin-cert больше не используется) ·
-  Unisender — домен не добавлен · ЮKassa — открыт.
+  Unisender Go ✅ (транзакционные письма живут, общий аккаунт shepotzvezd) · ЮKassa — открыт.
 - Тестовый купон в локальной БД: TEST20 (20%, multi-use).
 
 ## Watch list

@@ -26,6 +26,11 @@
         <input type="hidden" name="days" value="{{ days }}">
         <button class="status-pill status-pill--wait" type="submit">выслать заново</button>
       </form>
+      <form method="post" action="/admin/orders/{{ o.id }}/regenerate" style="margin-top:6px"
+            onsubmit="return confirm('Заказ {{ o.id }}: перегенерировать отчёт заново (текущим промптом) на тех же изображениях и отправить? Текущий отчёт будет заменён.')">
+        <input type="hidden" name="days" value="{{ days }}">
+        <button class="status-pill status-pill--warn" type="submit">перегенерировать</button>
+      </form>
     {% endif %}</td>
   </tr>
   {% else %}

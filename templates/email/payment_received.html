@@ -1,0 +1,24 @@
+{% extends "_email_base.html" %}
+{# Оплата получена: подтверждение + ожидание отчёта + вход в кабинет. БЕЗ вложений
+   (лёгкое письмо-«ледокол» — приходит первым, до тяжёлого письма с PDF). #}
+{% block content %}
+<h2 style="font-size:22px; margin:0 0 14px">Оплата получена</h2>
+<p style="font-size:15px; line-height:1.6; margin:0 0 14px">
+  Спасибо! Оплата прошла успешно — мы уже готовим отчёт.
+  Он придёт на этот адрес отдельным письмом, обычно в течение 10–15 минут.
+</p>
+<p style="font-size:15px; line-height:1.6; margin:0 0 18px">
+  Отчёт всегда будет доступен в вашем личном кабинете. Чтобы открыть его в любой момент
+  и с любого устройства, войдите по этому же адресу электронной почты — код для входа
+  придёт на почту:
+</p>
+<p style="text-align:center; margin:0 0 18px">
+  <a href="{{ login_url }}" style="display:inline-block; background:#2b6cb0; color:#ffffff;
+     text-decoration:none; font-size:15px; font-weight:bold; padding:12px 28px; border-radius:10px">
+    Войти в кабинет
+  </a>
+</p>
+<p style="font-size:13px; color:#5a6b84; line-height:1.6; margin:0">
+  Личный кабинет: <a href="{{ base_url }}/cabinet" style="color:#2b6cb0">{{ base_url }}/cabinet</a>
+</p>
+{% endblock %}
