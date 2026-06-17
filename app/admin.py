@@ -19,7 +19,7 @@ import re
 from flask import (Blueprint, abort, redirect, render_template, request,
                    Response, url_for)
 
-from app import geoip
+from app import geoip, jobs
 from app.db import get_db
 from config import settings
 
@@ -466,7 +466,34 @@ def orders():
             "utm": _utm_label(o["utm_json"]) if o["utm_json"] else "",
         })
     return _render("admin.orders", "admin/orders.html",
-                   days=days, periods=PERIODS, orders=orders_view)
+                   days=days, periods=PERIODS, orders=orders_view,
+                   msg=request.args.get("msg"))
+
+
+@bp_admin.post("/orders/<int:order_id>/resend")
+def order_resend(order_id: int):
+    """Кнопка «выслать заново» для проблемных заказов.
+    Отчёт уже есть на диске → просто пересылаем письмо (без Gemini).
+    Отчёта нет → ставим обратно в 'paid', воркер перегенерирует и доставит."""
+    _guard()
+    days = request.form.get("days", "7")
+    conn = get_db()
+    order = conn.execute("SELECT id, status FROM orders WHERE id = ?",
+                         (order_id,)).fetchone()
+    if order is None:
+        abort(404)
+    if order["status"] == "created":
+        msg = f"Заказ {order_id}: не оплачен — нечего высылать"
+    elif order["status"] in ("paid", "generating"):
+        msg = f"Заказ {order_id}: уже в обработке"
+    elif jobs.report_pdf_path(conn, order_id):
+        jobs.resend_report_email(conn, order_id)
+        msg = f"Заказ {order_id}: письмо с отчётом отправлено повторно"
+    else:
+        conn.execute("UPDATE orders SET status = 'paid' WHERE id = ?", (order_id,))
+        conn.commit()
+        msg = f"Заказ {order_id}: поставлен в очередь на перегенерацию"
+    return redirect(url_for("admin.orders", days=days, msg=msg))
 
 
 @bp_admin.get("/clients")
