@@ -339,6 +339,7 @@ html.dk .btn { color: #241A12; }
 .hero p.lead, .hero__card .lead {
   font-size: var(--fs-lead); color: var(--muted); line-height: 1.5; margin: 0 0 22px; max-width: 42ch;
 }
+.lead strong { font-weight: 600; color: var(--ink); }   /* акцент в лиде: Inter 600 (НЕ синтетический bold) */
 .hero__card .chips { margin-top: 0; }
 .hero__card .chip { background: #fff; border: 1px solid var(--line); color: #5b4a38; }
 
