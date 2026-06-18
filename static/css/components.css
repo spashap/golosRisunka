@@ -334,7 +334,7 @@ html.dk .btn { color: #241A12; }
   padding: 34px 36px; box-shadow: 0 24px 54px rgba(40, 26, 14, .22);
 }
 .hero__eyebrow { display: block; font-family: var(--font-hand); font-weight: 700;
-  font-size: 24px; line-height: 1; color: var(--accent2); margin-bottom: 8px; }
+  font-size: clamp(28px, 3.4vw, 34px); line-height: 1; color: var(--accent2); margin-bottom: 10px; }
 .hero__card h1 { font-size: clamp(27px, 3.6vw, 40px); line-height: 1.12; margin-bottom: 16px; }
 .hero p.lead, .hero__card .lead {
   font-size: var(--fs-lead); color: var(--muted); line-height: 1.5; margin: 0 0 22px; max-width: 42ch;
