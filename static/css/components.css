@@ -173,7 +173,7 @@ html.dk .btn { color: #241A12; }
 .site-header__row { display: flex; align-items: center; gap: 28px; padding-top: 12px;
                     padding-bottom: 12px; }
 .site-header .logo { font-size: 30px; margin-right: auto; display: flex; align-items: center; }
-.logo__img { height: 42px; width: auto; display: block; }   /* лого-картинка: strip(десктоп)/icon(мобайл) через <picture> */
+.logo__img { height: 54px; width: auto; display: block; }   /* лого-картинка: strip(десктоп)/icon(мобайл) через <picture> */
 .site-nav { display: flex; gap: 22px; }
 .site-nav a { font-weight: 600; font-size: 15px; color: var(--muted); transition: .15s; }
 .site-nav a:hover { color: var(--accent); }
@@ -185,7 +185,7 @@ html.dk .btn { color: #241A12; }
   .site-nav { display: none; }           /* мобайл: лого + Войти + CTA, без JS-бургера */
   .site-header__row { gap: 10px; padding-left: 14px; padding-right: 14px; }
   .site-header .logo { font-size: 21px; white-space: nowrap; }
-  .logo__img { height: 38px; }
+  .logo__img { height: 44px; }
   .site-header__actions { gap: 10px; }
   .site-nav__login { font-size: 14px; }
   .site-header .btn { padding: 8px 13px; font-size: 13px; white-space: nowrap; }
@@ -323,14 +323,19 @@ html.dk .btn { color: #241A12; }
   background-repeat: no-repeat;
 }
 .hero::after { content: ""; position: absolute; inset: 0; z-index: 1; background: rgba(33, 21, 11, .10); }
-.hero__in { position: relative; z-index: 3; width: 100%; padding: 52px clamp(20px, 5vw, 72px); }
+/* .hero__in повторяет .wrap (max-width + центрирование), чтобы карточка стояла на одной
+   вертикали с логотипом и секциями ниже и НЕ сдвигалась при росте экрана. */
+.hero__in { position: relative; z-index: 3; width: 100%; max-width: var(--wrap-max);
+            margin: 0 auto; padding: 52px 24px; }
 .hero__card {
   max-width: 500px; background: rgba(255, 250, 240, .80);
   backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px);
   border: 1px solid rgba(255, 255, 255, .7); border-radius: var(--radius-card);
   padding: 34px 36px; box-shadow: 0 24px 54px rgba(40, 26, 14, .22);
 }
-.hero__card h1 { margin-bottom: 16px; }
+.hero__eyebrow { display: block; font-family: var(--font-hand); font-weight: 700;
+  font-size: 24px; line-height: 1; color: var(--accent2); margin-bottom: 8px; }
+.hero__card h1 { font-size: clamp(27px, 3.6vw, 40px); line-height: 1.12; margin-bottom: 16px; }
 .hero p.lead, .hero__card .lead {
   font-size: var(--fs-lead); color: var(--muted); line-height: 1.5; margin: 0 0 22px; max-width: 42ch;
 }
