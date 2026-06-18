@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голос рисунка — концепция C: цветовые варианты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&family=Inter:wght@400;500;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Концепция C (матовая карточка на фото) — ЗАФИКСИРОВАНА.
+   Шрифт/текст/структура не меняются. Меняем ТОЛЬКО цвет:
+   тон карточки, цвет текста, акцент «голос», цвет CTA, чипы,
+   и общий «вош» фото. 6 направлений — от тёплого до холодного,
+   светлого и «драгоценного».
+   ============================================================ */
+:root{
+  --fs-display:clamp(34px,5vw,54px); --fs-lead:20px; --fs-body:17px; --fs-micro:13px;
+  --font-head:"Rubik",system-ui,sans-serif; --font-body:"Inter",system-ui,sans-serif; --font-hand:"Caveat",cursive;
+  --r-pill:99px; --r-card:20px;
+  --img:url('../../data/Images/Hero.png');
+}
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:var(--font-body); background:#e7e4dd; color:#3A2A1C; }
+.mock-bar{ background:#1c160f; color:#fff; padding:18px 24px; font-family:var(--font-head); }
+.mock-bar h1{ margin:0 0 4px; font-size:18px; font-weight:700; }
+.mock-bar p{ margin:0; font-size:13px; color:#cdbfa6; font-family:var(--font-body); max-width:84ch; }
+.tag{ font-family:var(--font-head); font-weight:800; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+  padding:11px 24px; color:#fff; background:#000; display:flex; gap:10px; align-items:baseline; }
+.tag small{ font-weight:500; font-family:var(--font-body); text-transform:none; letter-spacing:0; opacity:.85; }
+
+/* ---- общая структура C ---- */
+.hero{ position:relative; min-height:540px; display:flex; align-items:center; overflow:hidden;
+  background:var(--img) center 32%/cover no-repeat; }
+.hero::after{ content:""; position:absolute; inset:0; z-index:1; background:var(--wash, rgba(33,21,11,.18)); }
+.in{ position:relative; z-index:3; max-width:1120px; margin:0 auto; width:100%; padding:0 40px; }
+.card{ max-width:560px; background:var(--card); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+  border:1px solid var(--card-bd); border-radius:var(--r-card); padding:34px 36px;
+  box-shadow:0 22px 50px rgba(0,0,0,.3); }
+.card h2{ font-family:var(--font-head); font-weight:900; font-size:var(--fs-display); line-height:1.07;
+  margin:0 0 16px; color:var(--head); }
+.voice{ font-family:var(--font-hand); font-weight:700; font-size:1.18em; line-height:.8; color:var(--accent); }
+.lead{ font-size:var(--fs-lead); line-height:1.5; margin:0 0 26px; color:var(--lead); max-width:42ch; }
+.cta{ display:inline-block; font-family:var(--font-head); font-weight:700; font-size:var(--fs-body);
+  text-decoration:none; padding:15px 28px; border-radius:var(--r-pill); background:var(--cta-bg); color:var(--cta-ink);
+  box-shadow:0 12px 28px rgba(0,0,0,.28); transition:transform .12s ease; }
+.cta:hover{ transform:translateY(-2px); }
+.chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+.chip{ font-size:var(--fs-micro); font-weight:600; padding:6px 12px; border-radius:var(--r-pill);
+  background:var(--chip-bg); color:var(--chip-ink); border:1px solid var(--chip-bd, transparent); }
+
+/* ===== 1 — Тёплый эспрессо (база) ===== */
+.c1{ --card:rgba(30,19,9,.56); --card-bd:rgba(255,240,210,.18); --head:#FFF6E6; --lead:#EEE1CA;
+  --accent:#E7A93C; --cta-bg:#E7A93C; --cta-ink:#3A2A1C; --chip-bg:rgba(255,255,255,.14); --chip-ink:#FFF6E6; }
+
+/* ===== 2 — Светлое стекло (молочное), тёмный текст, CTA джинса ===== */
+.c2{ --wash:rgba(33,21,11,.10); --card:rgba(255,250,240,.82); --card-bd:rgba(255,255,255,.7);
+  --head:#3A2A1C; --lead:#6E5942; --accent:#B9722A; --cta-bg:#3E4E78; --cta-ink:#fff;
+  --chip-bg:rgba(255,255,255,.7); --chip-ink:#5b4a38; --chip-bd:rgba(120,90,60,.18); }
+
+/* ===== 3 — Глубокий лес/тиал, кремовый текст, CTA янтарь (холодное к тёплому фото) ===== */
+.c3{ --wash:rgba(15,30,28,.28); --card:rgba(16,46,44,.62); --card-bd:rgba(180,230,220,.2);
+  --head:#F1F6EC; --lead:#D6E6DA; --accent:#F0B24A; --cta-bg:#F0B24A; --cta-ink:#13302C;
+  --chip-bg:rgba(255,255,255,.12); --chip-ink:#EAF4ED; }
+
+/* ===== 4 — Чернильный индиго, кремовый текст, CTA янтарь ===== */
+.c4{ --wash:rgba(20,24,46,.30); --card:rgba(26,32,64,.6); --card-bd:rgba(180,195,255,.22);
+  --head:#F4F2FF; --lead:#D7DBF0; --accent:#F2B24A; --cta-bg:#F2B24A; --cta-ink:#1A2040;
+  --chip-bg:rgba(255,255,255,.12); --chip-ink:#EEF0FF; }
+
+/* ===== 5 — Почти чёрное нейтральное стекло, белый текст, один янтарный акцент (премиум/модерн) ===== */
+.c5{ --wash:rgba(0,0,0,.26); --card:rgba(18,16,14,.62); --card-bd:rgba(255,255,255,.16);
+  --head:#FFFFFF; --lead:#E6E1DA; --accent:#E7A93C; --cta-bg:#FFFFFF; --cta-ink:#1B140C;
+  --chip-bg:rgba(255,255,255,.12); --chip-ink:#fff; }
+
+/* ===== 6 — Баклажан/слива, кремовый текст, CTA золото ===== */
+.c6{ --wash:rgba(40,18,40,.26); --card:rgba(58,28,58,.6); --card-bd:rgba(240,210,240,.2);
+  --head:#FBF1F7; --lead:#E9D6E6; --accent:#F0B24A; --cta-bg:#F0B24A; --cta-ink:#3A1C3A;
+  --chip-bg:rgba(255,255,255,.12); --chip-ink:#FBF1F7; }
+
+@media (max-width:820px){ .hero{ min-height:480px; } .card{ padding:28px 26px; } }
+</style>
+</head>
+<body>
+
+<div class="mock-bar">
+  <h1>Концепция C — цветовые направления (структура и текст не меняются)</h1>
+  <p>Одна и та же матовая карточка на фото; меняем только цвет: тон карточки, текст, акцент «голос», цвет кнопки, чипы и лёгкий «вош» фото. 1 — тёплый (база), 2 — светлое стекло, 3 — лесной тиал, 4 — чернильный индиго, 5 — премиум-нейтраль, 6 — слива. Скажи, какое настроение ближе — дальше доведём оттенки точно.</p>
+</div>
+
+<div class="tag">1 · Тёплый эспрессо <small>в тон фото · CTA янтарь</small></div>
+<section class="hero c1"><div class="in"><div class="card">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт — сильные стороны и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span></div>
+</div></div></section>
+
+<div class="tag">2 · Светлое стекло <small>молочная карточка, тёмный текст · CTA джинса</small></div>
+<section class="hero c2"><div class="in"><div class="card">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт — сильные стороны и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span></div>
+</div></div></section>
+
+<div class="tag">3 · Лесной тиал <small>холодная карточка на тёплом фото · CTA янтарь</small></div>
+<section class="hero c3"><div class="in"><div class="card">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт — сильные стороны и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span></div>
+</div></div></section>
+
+<div class="tag">4 · Чернильный индиго <small>глубокий сине-фиолетовый · CTA янтарь</small></div>
+<section class="hero c4"><div class="in"><div class="card">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт — сильные стороны и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span></div>
+</div></div></section>
+
+<div class="tag">5 · Премиум-нейтраль <small>почти чёрное стекло, белый текст, CTA белый · модерн</small></div>
+<section class="hero c5"><div class="in"><div class="card">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт — сильные стороны и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span></div>
+</div></div></section>
+
+<div class="tag">6 · Слива <small>баклажан/сливовый, кремовый текст · CTA золото</small></div>
+<section class="hero c6"><div class="in"><div class="card">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт — сильные стороны и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span></div>
+</div></div></section>
+
+</body>
+</html>

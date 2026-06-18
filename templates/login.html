@@ -11,7 +11,7 @@
       </p>
 
       {% if notice %}<div class="login-notice">{{ notice }}</div>{% endif %}
-      {% if dev_code %}<div class="login-notice" style="background: #FDF3D7">
+      {% if dev_code %}<div class="login-notice" style="background: color-mix(in srgb, var(--amber-soft) 20%, var(--paper))">
         🛠 dev (только localhost): код <b style="font-size: 18px; letter-spacing: 2px">{{ dev_code }}</b></div>{% endif %}
 
       {% if step == "email" %}

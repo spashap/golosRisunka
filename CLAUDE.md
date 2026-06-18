@@ -8,7 +8,8 @@
 - `projectSpec/development-plan.md` — план по фазам с милстоунами
 - `DevelopmentStatus.md` — **append-only журнал**: что сделано, текущее состояние, чего ждём
 - `UseCasesData.md` — база решённых проблем (проблема → причина → решение); пополнять при каждой новой
-- Мокап-дизайн: `projectSpec/golosrisunka-hybrid-2.html` (палитра «Синий» = дефолт)
+- **`projectSpec/brand-book.md` — ДИЗАЙН-СИСТЕМА (источник истины для всего визуала сайта, утв. 18.06.2026).**
+  Любой UI-элемент строится ТОЛЬКО по нему. Старый мокап `projectSpec/golosrisunka-hybrid-2.html` — архив.
 
 ## Модель продукта (коррекция заказчика, ОВЕРРАЙДИТ spec §1)
 1. **snapshot** — до 3 рисунков → ОДИН сводный отчёт; цена НЕ зависит от числа рисунков. 2999 ₽ (зачёркнуто 4900 ₽).
@@ -24,6 +25,7 @@ venv\Scripts\python.exe scripts\generate_report.py IMG [IMG2] --context C1.txt [
 venv\Scripts\python.exe scripts\render_sample.py                # отчёт из fake JSON (шаблон)
 venv\Scripts\python.exe scripts\render_gallery.py [dk|pu|cl]    # галерея компонентов
 venv\Scripts\python.exe scripts\build_fonts.py                  # пересборка шрифтов (subsets)
+venv\Scripts\python.exe scripts\build_hero_image.py             # оптимизир. hero из data/Images/Hero.png -> static/img/hero.{jpg,webp}
 venv\Scripts\python.exe scripts\build_geoip.py CSV.gz           # сборка гео-базы data/geoip.db из DB-IP City Lite (строить НА сервере)
 venv\Scripts\python.exe scripts\hello_pdf.py                    # smoke-тест WeasyPrint+кириллица
 venv\Scripts\python.exe scripts\bump_version.py                 # минор +1 (ПЕРЕД каждым git push)
@@ -55,6 +57,16 @@ venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 
 - `data/` — drawings/, reports/, test_reports/ (вне будущего git).
 
 ## Жёсткие правила проекта
+- **ДИЗАЙН САЙТА — ТОЛЬКО по бренд-буку (`projectSpec/brand-book.md`). ЖЁСТКО.** Один глобальный
+  CSS-источник: `static/css/tokens.css` (значения) + `static/css/components.css` (компоненты).
+  ЛЮБОЙ новый/изменённый элемент сайта обязан: (1) брать цвета ТОЛЬКО из токенов (никаких хардкод-hex
+  в шаблонах/инлайн-стилях), (2) брать размеры ТОЛЬКО из 7-ступенчатой шкалы (`--fs-*`), (3) быть
+  композицией существующих компонентов — не хватает компонента, добавляешь его в `components.css`,
+  а НЕ инлайнишь стиль в страницу, (4) рукописный Caveat — только «голос» (`.hand`) и логотип,
+  (5) Rubik — только веса 800/900. Палитра «Золотой час» (тёплая бумага + эспрессо-текст + джинсовый
+  синий = действие + медовый янтарь = голос). Меняешь токен → меняется весь сайт; «отдельных
+  контролов» под страницу быть НЕ должно. Hero — кино-фото `static/img/hero.jpg` + матовая карточка.
+  Исключение: PDF-отчёт (`report.html`/`report.css`) — отдельная система, бренд-бук на него НЕ распространяется.
 - **Промпт-философия (§7.4)**: БЕЗ Барнума, БЕЗ чтения эмоций/состояний по рисунку; каждое наблюдение
   привязано к видимой детали. Язык навыков, не черт («уверенно работает крупным масштабом», НЕ «не боится листа»).
   Старые сэмплы в `projectSpec/reportSamples/` — референс структуры/тона, НЕ философии (они нарушают правила).

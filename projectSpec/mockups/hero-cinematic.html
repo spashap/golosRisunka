@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голос рисунка — кино-герой: варианты читаемости и цвета</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&family=Inter:wght@400;500;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   КОНЦЕПЦИЯ 1 «Кино» — зафиксирована. Тут решаем ЧИТАЕМОСТЬ
+   (раньше текст сливался с фото) + варианты акцентного цвета.
+   Фон у всех — Hero.png. Палитра из фото.
+   ============================================================ */
+:root{
+  --cream:#FBF1DD; --cream-hi:#FFF8EA; --ink:#3A2A1C; --muted:#7A6149;
+  --gold:#E7A93C; --gold-deep:#B9722A; --denim:#5E78B4; --denim-deep:#3E4E78; --sage:#7E9B63;
+  --fs-display:clamp(34px,5vw,56px); --fs-lead:20px; --fs-body:17px; --fs-small:15px; --fs-micro:13px;
+  --font-head:"Rubik",system-ui,sans-serif; --font-body:"Inter",system-ui,sans-serif; --font-hand:"Caveat",cursive;
+  --r-pill:99px; --r-card:20px;
+  --img:url('../../data/Images/Hero.png');
+}
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:var(--font-body); color:var(--ink); background:#e7e4dd; }
+.mock-bar{ background:#1c160f; color:#fff; padding:18px 24px; font-family:var(--font-head); }
+.mock-bar h1{ margin:0 0 4px; font-size:18px; font-weight:700; }
+.mock-bar p{ margin:0; font-size:13px; color:#cdbfa6; font-family:var(--font-body); max-width:84ch; }
+.tag{ font-family:var(--font-head); font-weight:800; font-size:13px; letter-spacing:.05em;
+  text-transform:uppercase; padding:11px 24px; color:#fff; background:var(--ink);
+  display:flex; gap:10px; align-items:baseline; }
+.tag small{ font-weight:500; font-family:var(--font-body); text-transform:none; letter-spacing:0; opacity:.82; }
+
+.voice{ font-family:var(--font-hand); font-weight:700; font-size:1.18em; line-height:.8; }
+.cta{ display:inline-block; font-family:var(--font-head); font-weight:700; font-size:var(--fs-body);
+  text-decoration:none; padding:15px 28px; border-radius:var(--r-pill); transition:transform .12s ease; }
+.cta:hover{ transform:translateY(-2px); }
+.chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+.chip{ font-size:var(--fs-micro); font-weight:600; padding:6px 12px; border-radius:var(--r-pill); }
+.lead{ font-size:var(--fs-lead); line-height:1.5; margin:0 0 26px; }
+
+.hero{ position:relative; min-height:560px; display:flex; overflow:hidden; }
+.hero h2{ font-family:var(--font-head); font-weight:900; font-size:var(--fs-display); line-height:1.07; margin:0 0 16px; }
+.in{ position:relative; z-index:3; max-width:1120px; margin:0 auto; width:100%; padding:0 40px; display:flex; }
+
+/* ===== A — Сильное затемнение снизу, текст по низу, белый + янтарь, CTA джинса ===== */
+.A{ background:var(--img) center 30%/cover no-repeat; align-items:flex-end; }
+.A::after{ content:""; position:absolute; inset:0; z-index:1;
+  background:linear-gradient(to top, rgba(35,22,10,.9) 0%, rgba(35,22,10,.55) 30%, rgba(35,22,10,0) 58%); }
+.A .in{ padding-bottom:50px; }
+.A h2{ color:#FFF6E6; max-width:18ch; text-shadow:0 2px 22px rgba(15,8,2,.55); }
+.A .voice{ color:var(--gold); }
+.A .lead{ color:#F2E6CF; max-width:46ch; text-shadow:0 1px 12px rgba(15,8,2,.5); }
+.A .cta{ background:var(--denim); color:#fff; box-shadow:0 12px 30px rgba(0,0,0,.4); }
+.A .chip{ background:rgba(255,255,255,.18); color:#FFF6E6; }
+
+/* ===== B — Левая тёмная штора (градиент слева), текст в чистой зоне слева ===== */
+.B{ background:var(--img) right 30%/cover no-repeat; align-items:center; }
+.B::after{ content:""; position:absolute; inset:0; z-index:1;
+  background:linear-gradient(100deg, rgba(33,21,11,.94) 0%, rgba(33,21,11,.8) 30%, rgba(33,21,11,.25) 55%, rgba(33,21,11,0) 72%); }
+.B .in{ display:block; }
+.B__col{ max-width:50%; }
+.B h2{ color:#FFF6E6; }
+.B .voice{ color:var(--gold); }
+.B .lead{ color:#EFE2CB; max-width:40ch; }
+.B .cta{ background:var(--gold); color:#3A2A1C; box-shadow:0 12px 28px rgba(0,0,0,.35); }
+.B .chip{ background:rgba(255,255,255,.16); color:#FFF6E6; }
+
+/* ===== C — Матовая карточка (frosted) держит текст, фото читается вокруг ===== */
+.C{ background:var(--img) center 32%/cover no-repeat; align-items:center; }
+.C::after{ content:""; position:absolute; inset:0; z-index:1; background:rgba(33,21,11,.18); }
+.C .in{ display:block; }
+.C__card{ max-width:560px; background:rgba(30,19,9,.55); backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px); border:1px solid rgba(255,240,210,.18);
+  border-radius:var(--r-card); padding:34px 36px; box-shadow:0 22px 50px rgba(0,0,0,.32); }
+.C h2{ color:#FFF6E6; } .C .voice{ color:var(--gold); }
+.C .lead{ color:#EEE1CA; max-width:42ch; }
+.C .cta{ background:var(--gold); color:#3A2A1C; }
+.C .chip{ background:rgba(255,255,255,.14); color:#FFF6E6; }
+
+/* ===== D — Сплит-блид: сплошная кремовая панель слева (текст тёмный), фото справа ===== */
+.D{ background:var(--img) right 32%/cover no-repeat; align-items:stretch; min-height:540px; }
+.D__panel{ position:relative; z-index:2; width:46%; background:var(--cream);
+  display:flex; flex-direction:column; justify-content:center; padding:54px 52px; }
+.D__panel::after{ content:""; position:absolute; top:0; right:-46px; bottom:0; width:46px;
+  background:linear-gradient(to right, var(--cream), rgba(251,241,221,0)); }
+.D h2{ color:var(--ink); } .D .voice{ color:var(--gold-deep); }
+.D .lead{ color:var(--muted); max-width:34ch; }
+.D .cta{ background:var(--gold-deep); color:#fff; box-shadow:0 10px 24px rgba(185,114,42,.3); }
+.D .chip{ background:#fff; border:1px solid #ece0c8; color:#5b4a38; }
+
+/* ===== E — Тёплый постер: всё фото притемнено, текст по центру, киноплакат ===== */
+.E{ background:linear-gradient(rgba(38,24,12,.5),rgba(38,24,12,.62)), var(--img) center 30%/cover no-repeat;
+  align-items:center; text-align:center; }
+.E .in{ flex-direction:column; align-items:center; }
+.E h2{ color:#FFF6E6; max-width:20ch; text-shadow:0 2px 22px rgba(15,8,2,.5); }
+.E .voice{ color:var(--gold); }
+.E .lead{ color:#F1E4CD; max-width:50ch; text-shadow:0 1px 12px rgba(15,8,2,.45); }
+.E .cta{ background:var(--gold); color:#3A2A1C; box-shadow:0 12px 30px rgba(0,0,0,.35); }
+.E .chips{ justify-content:center; }
+.E .chip{ background:rgba(255,255,255,.16); color:#FFF6E6; }
+
+@media (max-width:820px){
+  .B__col{ max-width:100%; }
+  .D{ flex-direction:column; }
+  .D__panel{ width:100%; padding:40px 30px; }
+  .D__panel::after{ display:none; }
+  .hero{ min-height:500px; }
+}
+</style>
+</head>
+<body>
+
+<div class="mock-bar">
+  <h1>Кино-герой — решаем читаемость + цвет акцента</h1>
+  <p>Концепция «фото на весь экран» зафиксирована. Раньше текст сливался с золотым фото — тут 5 способов это починить и 2 варианта акцента (янтарь / джинсовый синий). A,B,C,E — текст светлый поверх притемнённого фото; D — сплошная кремовая панель с тёмным текстом (максимальная читаемость). Открой на телефоне тоже.</p>
+</div>
+
+<!-- A -->
+<div class="tag">A · Низ + затемнение <small>текст по низу, белый + янтарь, CTA джинсовый — сильный контраст</small></div>
+<section class="hero A"><div class="in"><div>
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Тёплый персональный отчёт по рисункам ребёнка: сильные стороны, работа с цветом, формой и деталями, и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span><span class="chip">Рисунки видите только вы</span></div>
+</div></div></section>
+
+<!-- B -->
+<div class="tag">B · Левая штора <small>тёмный градиент слева, текст в чистой зоне, рисунки видны справа · CTA янтарь</small></div>
+<section class="hero B"><div class="in"><div class="B__col">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.<br>Услышьте, что рисунки расскажут о ребёнке.</h2>
+  <p class="lead">Тёплый персональный отчёт: сильные стороны, работа с цветом, формой и деталями, и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">около 8 страниц</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span></div>
+</div></div></section>
+
+<!-- C -->
+<div class="tag">C · Матовая карточка <small>текст в полупрозрачной карточке с размытием · фото читается вокруг</small></div>
+<section class="hero C"><div class="in"><div class="C__card">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт — сильные стороны и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span></div>
+</div></div></section>
+
+<!-- D -->
+<div class="tag">D · Сплит-панель <small>кремовая панель слева (тёмный текст), фото справа · максимальная читаемость</small></div>
+<section class="hero D">
+  <div class="D__panel">
+    <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+    <p class="lead">Тёплый персональный отчёт по рисункам ребёнка: сильные стороны, работа с цветом, формой и деталями, и что поддержать дома.</p>
+    <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+    <div class="chips"><span class="chip">около 8 страниц</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span><span class="chip">Возврат 7 дней</span></div>
+  </div>
+</section>
+
+<!-- E -->
+<div class="tag">E · Тёплый постер <small>всё фото притемнено, текст по центру · киноплакат</small></div>
+<section class="hero E"><div class="in">
+  <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+  <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт: сильные стороны, работа с цветом и деталями, и что поддержать дома.</p>
+  <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+  <div class="chips"><span class="chip">PDF за час</span><span class="chip">7 направлений</span><span class="chip">Без диагнозов</span><span class="chip">Рисунки видите только вы</span></div>
+</div></section>
+
+</body>
+</html>

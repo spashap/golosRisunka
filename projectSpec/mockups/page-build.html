@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голос рисунка — сборка главной (зафиксированный стиль)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&family=Inter:wght@400;500;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ЗАФИКСИРОВАННАЯ СИСТЕМА (бренд-фундамент)
+   Концепция: кино-герой + матовая карточка (C), палитра «светлое стекло» (2).
+   Палитра выведена из Hero.png. Это черновик токенов бренд-бука.
+   ============================================================ */
+:root{
+  /* — поверхности — */
+  --bg:#FBF1DD;          /* тёплая бумага — страница */
+  --bg-soft:#FFF8EA;     /* чуть светлее — для секции-«передышки» */
+  --paper:#FFFCF4;       /* карточки */
+  --paper-bd:#EEE2CA;    /* контур карточек */
+  /* — текст — */
+  --ink:#3A2A1C;         /* тёплый эспрессо (НЕ холодный синий) */
+  --muted:#6E5942;       /* вторичный */
+  --soft:#A38B6E;        /* третичный */
+  /* — акценты — */
+  --amber:#B9722A;       /* бренд-акцент: «голос», подчёркивания, метки */
+  --amber-soft:#E7A93C;
+  --denim:#3E4E78;       /* главное действие (CTA), активные состояния */
+  --denim-soft:#5E78B4;
+  --sage:#7E9B63;        /* редкий третий акцент (из рисунков) */
+  /* — шкала шрифта (7 ступеней) — */
+  --fs-display:clamp(34px,5vw,54px); --fs-h2:clamp(27px,3.3vw,38px); --fs-h3:21px;
+  --fs-lead:20px; --fs-body:17px; --fs-small:15px; --fs-micro:13px;
+  --font-head:"Rubik",system-ui,sans-serif; --font-body:"Inter",system-ui,sans-serif; --font-hand:"Caveat",cursive;
+  /* — геометрия — */
+  --r-card:20px; --r-pill:99px; --r-sm:10px;
+  --shadow-card:0 14px 34px rgba(58,42,28,.12);
+  --wrap:1120px;
+  --img:url('../../data/Images/Hero.png');
+}
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:var(--font-body); color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased; }
+.wrap{ max-width:var(--wrap); margin:0 auto; padding:0 40px; }
+
+.mock-bar{ background:#1c160f; color:#fff; padding:16px 24px; font-family:var(--font-head); }
+.mock-bar h1{ margin:0 0 4px; font-size:17px; font-weight:700; }
+.mock-bar p{ margin:0; font-size:13px; color:#cdbfa6; font-family:var(--font-body); max-width:84ch; }
+
+/* атомы */
+.voice{ font-family:var(--font-hand); font-weight:700; font-size:1.18em; line-height:.8; color:var(--amber); }
+.cta{ display:inline-block; font-family:var(--font-head); font-weight:700; font-size:var(--fs-body);
+  text-decoration:none; padding:15px 28px; border-radius:var(--r-pill); transition:transform .12s ease; }
+.cta--primary{ background:var(--denim); color:#fff; box-shadow:0 12px 28px rgba(62,78,120,.30); }
+.cta:hover{ transform:translateY(-2px); }
+.chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.chip{ font-size:var(--fs-micro); font-weight:600; padding:6px 12px; border-radius:var(--r-pill); }
+
+/* заголовки секций — единая связка H2 → sub → контент */
+.section{ padding:64px 0; }
+.section--soft{ background:var(--bg-soft); }
+.section h2{ font-family:var(--font-head); font-weight:900; font-size:var(--fs-h2); line-height:1.12; margin:0 0 12px; }
+.section .sub{ font-size:var(--fs-lead); line-height:1.5; color:var(--muted); max-width:60ch; margin:0 0 34px; }
+
+/* ============ HERO (option 2 — финал) ============ */
+.hero{ position:relative; z-index:2; min-height:640px; display:flex; align-items:center;
+  background:var(--img) center 32%/cover no-repeat; }
+.hero::after{ content:""; position:absolute; inset:0; z-index:1; background:rgba(33,21,11,.10); }
+/* контейнер задаёт Y-паддинг и сдвиг карточки влево (поверх силуэта) */
+.hero__in{ position:relative; z-index:3; width:100%; padding:56px clamp(24px,6vw,96px); }
+.hero__card{ max-width:480px; background:rgba(255,250,240,.80); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px);
+  border:1px solid rgba(255,255,255,.7); border-radius:var(--r-card); padding:34px 36px; box-shadow:0 24px 54px rgba(40,26,14,.22); }
+.hero__card h1{ font-family:var(--font-head); font-weight:900; font-size:var(--fs-display); line-height:1.07; margin:0 0 16px; color:var(--ink); }
+.hero__card .lead{ font-size:var(--fs-lead); line-height:1.5; color:var(--muted); margin:0 0 22px; max-width:42ch; }
+
+/* CTA — главный элемент; детали = ПЛАВАЮЩИЙ попап (как тултип), НЕ меняет размер карточки */
+.cta-zone{ position:relative; display:inline-block; }
+.cta-info{ display:inline-flex; align-items:center; gap:5px; margin-left:14px; vertical-align:middle;
+  font-family:var(--font-body); font-size:13px; font-weight:600; color:var(--denim); cursor:pointer; user-select:none; }
+.cta-info svg{ transition:transform .2s ease; }
+.cta-zone.is-open .cta-info svg{ transform:rotate(180deg); }
+.cta-pop{ position:absolute; top:calc(100% + 13px); left:0; z-index:60; width:min(360px,82vw);
+  background:var(--paper); border:1px solid var(--paper-bd); border-radius:14px;
+  box-shadow:0 20px 44px rgba(40,26,14,.28); padding:15px 18px;
+  opacity:0; visibility:hidden; transform:translateY(-6px); pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease, visibility .2s; }
+.cta-pop::before{ content:""; position:absolute; top:-7px; left:38px; width:13px; height:13px;
+  background:var(--paper); border-left:1px solid var(--paper-bd); border-top:1px solid var(--paper-bd); transform:rotate(45deg); }
+.cta-zone.is-open .cta-pop{
+  opacity:1; visibility:visible; transform:translateY(0); pointer-events:auto; }
+.cta-pop .note{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); margin:0 0 11px; }
+.cta-pop .note svg{ color:var(--amber); flex:none; }
+.cta-pop .chips{ margin-top:0; }
+.cta-pop .chip{ background:#FBF1DD; border:1px solid var(--paper-bd); color:#5b4a38; font-size:12px; padding:5px 11px; }
+
+/* ============ Секция «Что вы узнаете» — карточка-чеклист ============ */
+.checks{ background:var(--paper); border:1px solid var(--paper-bd); border-radius:var(--r-card);
+  box-shadow:var(--shadow-card); padding:30px 34px; max-width:760px; }
+.checks ul{ list-style:none; margin:0; padding:0; display:grid; gap:16px; }
+.checks li{ display:grid; grid-template-columns:28px 1fr; gap:14px; align-items:start; font-size:var(--fs-body); line-height:1.45; }
+.checks li svg{ margin-top:2px; color:var(--denim); }
+.scores-note{ font-size:var(--fs-small); color:var(--muted); margin:20px 0 0; max-width:62ch; }
+.scores-note b{ color:var(--amber); font-weight:600; }
+
+/* ============ Секция «Как строится вывод» — 3 шага с мягким коннектором ============ */
+.flow{ display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:stretch; gap:0; }
+.flow__card{ background:var(--paper); border:1px solid var(--paper-bd); border-radius:var(--r-card);
+  box-shadow:var(--shadow-card); padding:24px 24px; }
+.flow__label{ display:inline-block; font-family:var(--font-head); font-weight:700; font-size:var(--fs-micro);
+  letter-spacing:.06em; text-transform:uppercase; color:var(--amber); margin-bottom:10px; }
+.flow__card p{ margin:0; font-size:var(--fs-body); line-height:1.45; color:var(--ink); }
+.flow__link{ display:flex; align-items:center; justify-content:center; width:48px; color:var(--denim-soft); }
+.flow__link svg{ width:26px; height:26px; }
+.flow__closing{ text-align:center; font-size:var(--fs-body); color:var(--muted); margin:28px auto 0; max-width:64ch; }
+.flow__closing b{ color:var(--ink); font-weight:600; }
+
+/* ============ Появление блоков при скролле (дёшево: только transform+opacity) ============ */
+.reveal{ opacity:0; transform:translateY(22px); transition:opacity .6s ease, transform .6s ease; will-change:opacity,transform; }
+.reveal.is-in{ opacity:1; transform:none; }
+.reveal--d1{ transition-delay:.08s; } .reveal--d2{ transition-delay:.16s; } .reveal--d3{ transition-delay:.24s; }
+
+/* ============ Карусель (примеры) ============ */
+.carousel-wrap{ position:relative; }
+.carousel{ display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory;
+  padding:6px 2px 14px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.carousel::-webkit-scrollbar{ display:none; }
+.car-btn{ position:absolute; top:42%; z-index:4; width:44px; height:44px; border-radius:50%;
+  border:1px solid var(--paper-bd); background:var(--paper); color:var(--ink); font-size:22px; line-height:1;
+  cursor:pointer; box-shadow:var(--shadow-card); display:flex; align-items:center; justify-content:center; }
+.car-btn:hover{ background:#fff; } .car-btn--prev{ left:-10px; } .car-btn--next{ right:-10px; }
+.r-card{ scroll-snap-align:start; flex:0 0 300px; background:var(--paper); border:1px solid var(--paper-bd);
+  border-radius:var(--r-card); box-shadow:var(--shadow-card); padding:18px 18px 20px; display:flex; flex-direction:column; }
+.r-card__badge{ align-self:flex-start; font-size:var(--fs-micro); font-weight:600; color:var(--amber);
+  background:#FBEFD9; border-radius:var(--r-pill); padding:4px 11px; margin-bottom:14px; }
+.r-card__top{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.r-card__draw{ width:64px; height:64px; border-radius:10px; overflow:hidden; flex:none; border:1px solid var(--paper-bd); }
+.r-card__draw img{ width:100%; height:100%; object-fit:cover; display:block; }
+.r-card__name{ font-family:var(--font-head); font-weight:700; font-size:var(--fs-h3); line-height:1; }
+.r-card__age{ font-size:var(--fs-small); color:var(--muted); margin-top:3px; }
+.bar{ display:grid; grid-template-columns:1fr auto; gap:3px 10px; align-items:center; margin-bottom:11px; }
+.bar span{ font-size:var(--fs-small); } .bar b{ font-family:var(--font-head); font-weight:700; font-size:var(--fs-small); color:var(--denim); }
+.bar .track{ grid-column:1/-1; height:7px; background:#ECE0C8; border-radius:99px; overflow:hidden; }
+.bar .fill{ display:block; height:100%; background:var(--denim); border-radius:99px; }
+.r-card__quote{ font-size:var(--fs-small); color:var(--ink); line-height:1.45; margin:6px 0 14px; }
+.r-card__link{ margin-top:auto; font-family:var(--font-head); font-weight:700; font-size:var(--fs-small);
+  color:var(--denim); text-decoration:none; }
+.r-card__link:hover{ text-decoration:underline; }
+.car-dots{ display:flex; justify-content:center; gap:8px; margin-top:14px; }
+.car-dot{ width:8px; height:8px; padding:0; border:none; border-radius:99px; background:#D9CBB0;
+  cursor:pointer; transition:width .25s ease, background .25s ease; }
+.car-dot.is-active{ width:22px; background:var(--denim); }
+.scores-foot{ font-size:var(--fs-small); color:var(--muted); margin:18px 0 0; max-width:64ch; }
+
+/* ============ Без мифов (две колонки, без красного) ============ */
+.compare{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.compare__col{ background:var(--paper); border:1px solid var(--paper-bd); border-radius:var(--r-card);
+  box-shadow:var(--shadow-card); padding:26px 28px; }
+.compare__col h3{ font-family:var(--font-head); font-weight:800; font-size:var(--fs-h3); margin:0 0 16px; }
+.compare__col ul{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+.compare__col li{ display:grid; grid-template-columns:24px 1fr; gap:11px; align-items:start; font-size:var(--fs-body); line-height:1.4; }
+.compare__col li svg{ margin-top:2px; flex:none; }
+.compare--no h3{ color:var(--muted); } .compare--no li svg{ color:var(--soft); }
+.compare--yes h3{ color:var(--denim); } .compare--yes li svg{ color:var(--sage); }
+
+/* ============ Как это работает (шаги) ============ */
+.steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+.step{ text-align:left; }
+.step__n{ width:46px; height:46px; border-radius:50%; background:var(--denim); color:#fff;
+  font-family:var(--font-head); font-weight:800; font-size:21px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+.step h3{ font-family:var(--font-head); font-weight:700; font-size:var(--fs-h3); margin:0 0 8px; }
+.step p{ margin:0; font-size:var(--fs-body); line-height:1.45; color:var(--muted); }
+.step__n--ok{ background:var(--sage); }
+
+/* кнопка-призрак */
+.cta--ghost{ background:transparent; color:var(--denim); border:2px solid var(--denim); box-shadow:none; padding:13px 26px; }
+.cta--ghost:hover{ background:var(--denim); color:#fff; }
+
+/* ============ Отзывы — узкая лента-ротатор ============ */
+.tstrip{ text-align:center; }
+.tstrip__title{ font-family:var(--font-head); font-weight:800; font-size:var(--fs-h3); margin:0 0 4px; }
+.tstrip__note{ font-size:var(--fs-small); color:var(--soft); margin:0 0 24px; }
+.tstrip__stage{ position:relative; max-width:680px; margin:0 auto; min-height:148px; }
+.tquote{ position:absolute; inset:0; opacity:0; transition:opacity .5s ease; }
+.tquote.is-active{ opacity:1; }
+.tquote blockquote{ font-family:var(--font-body); font-size:var(--fs-lead); line-height:1.5; color:var(--ink); margin:0 0 12px; }
+.tquote figcaption{ font-size:var(--fs-small); color:var(--muted); }
+.tdots{ display:flex; justify-content:center; gap:8px; margin-top:14px; }
+.tdot{ width:8px; height:8px; padding:0; border:none; border-radius:99px; background:#D9CBB0; cursor:pointer; transition:width .25s, background .25s; }
+.tdot.is-active{ width:22px; background:var(--denim); }
+
+/* ============ Цены ============ */
+.price-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:22px; max-width:780px; }
+.price-card{ position:relative; background:var(--paper); border:1px solid var(--paper-bd); border-radius:var(--r-card);
+  box-shadow:var(--shadow-card); padding:28px 28px; display:flex; flex-direction:column; }
+.price-card--soon{ opacity:.9; }
+.price-card--feat{ border-color:var(--denim); box-shadow:0 16px 38px rgba(62,78,120,.16); }
+.badge-soon{ position:absolute; top:18px; right:18px; font-size:var(--fs-micro); font-weight:700; color:var(--amber); background:#FBEFD9; border-radius:99px; padding:4px 11px; }
+.p-title{ font-family:var(--font-head); font-weight:800; font-size:var(--fs-h3); }
+.p-sub{ font-size:var(--fs-small); color:var(--muted); margin:4px 0 16px; }
+.p-launch{ font-size:var(--fs-micro); color:var(--soft); }
+.p-price{ font-family:var(--font-head); font-weight:900; font-size:34px; color:var(--ink); display:block; margin-top:2px; }
+.p-features{ list-style:none; padding:0; margin:16px 0 22px; display:grid; gap:10px; }
+.p-features li{ display:grid; grid-template-columns:20px 1fr; gap:9px; font-size:var(--fs-small); line-height:1.4; }
+.p-features li svg{ color:var(--sage); margin-top:2px; }
+.price-card .cta{ margin-top:auto; text-align:center; }
+.p-soon-note{ margin-top:auto; font-size:var(--fs-small); color:var(--soft); }
+
+/* ============ FAQ ============ */
+.faq-wrap{ max-width:800px; }
+.faq{ border-bottom:1px solid var(--paper-bd); }
+.faq summary{ cursor:pointer; list-style:none; padding:17px 0; font-family:var(--font-head); font-weight:700;
+  font-size:var(--fs-body); color:var(--ink); display:flex; justify-content:space-between; gap:16px; align-items:center; }
+.faq summary::-webkit-details-marker{ display:none; }
+.faq summary::after{ content:"+"; color:var(--denim); font-size:24px; font-weight:700; line-height:1; }
+.faq[open] summary::after{ content:"–"; }
+.faq p{ margin:0 0 18px; font-size:var(--fs-body); line-height:1.5; color:var(--muted); max-width:72ch; }
+
+/* ============ Блог ============ */
+.blog-card{ scroll-snap-align:start; flex:0 0 284px; background:var(--paper); border:1px solid var(--paper-bd);
+  border-radius:var(--r-card); box-shadow:var(--shadow-card); overflow:hidden; text-decoration:none; color:var(--ink); display:flex; flex-direction:column; }
+.blog-card__thumb{ height:120px; display:flex; align-items:center; justify-content:center; }
+.blog-card__body{ padding:16px 18px 18px; }
+.blog-card__title{ font-family:var(--font-head); font-weight:700; font-size:var(--fs-body); margin:0 0 6px; line-height:1.25; }
+.blog-card__descr{ font-size:var(--fs-small); color:var(--muted); margin:0; line-height:1.4; }
+
+/* ============ Футер ============ */
+.foot{ background:#2A1F15; color:#E7D8C0; padding:42px 0 48px; font-size:var(--fs-small); line-height:1.7; }
+.foot__in{ text-align:center; }
+.foot a{ color:#EBC889; text-decoration:none; }
+.foot a:hover{ text-decoration:underline; }
+.foot__brand{ font-family:var(--font-hand); font-weight:700; font-size:26px; color:#FBF1DD; display:block; margin-bottom:8px; }
+.foot__ver{ display:block; margin-top:14px; font-size:12px; color:#9C8A70; }
+
+@media (max-width:860px){
+  .wrap{ padding:0 22px; }
+  .hero{ min-height:500px; }
+  .hero__card{ padding:28px 26px; }
+  .flow{ grid-template-columns:1fr; gap:14px; }
+  .flow__link{ width:100%; height:30px; transform:rotate(90deg); }
+  .compare{ grid-template-columns:1fr; }
+  .steps{ grid-template-columns:1fr; gap:26px; }
+  .price-grid{ grid-template-columns:1fr; }
+  .car-btn{ display:none; }   /* на тач — свайп + точки вместо стрелок */
+  .r-card{ flex-basis:80vw; }
+  .blog-card{ flex-basis:78vw; }
+}
+
+/* ── Телефон: карточка не должна закрывать фото целиком ── */
+@media (max-width:560px){
+  .hero{ min-height:74vh; align-items:center; }     /* карточка выше — по центру, не у нижнего края */
+  .hero__in{ padding:0 16px; }
+  .hero__card{
+    background:rgba(255,250,240,.55);               /* ещё прозрачнее на телефоне — фото просвечивает */
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    padding:22px 20px 24px; max-width:100%;
+  }
+  .hero__card h1{ font-size:27px; line-height:1.12; margin-bottom:12px; }
+  .hero__card .lead{ font-size:15.5px; line-height:1.45; margin-bottom:18px; max-width:none; }
+  /* ховера нет — попап по тапу на «что входит» */
+  .cta-zone{ display:block; }
+  .hero__card .cta{ display:block; text-align:center; padding:14px 22px; font-size:16px; }
+  .cta-info{ display:inline-flex; margin:14px 0 0; }
+  .cta-pop{ left:0; right:0; width:auto; }
+  .section{ padding:48px 0; }
+  .section .sub{ font-size:17px; }
+}
+</style>
+</head>
+<body>
+
+<div class="mock-bar">
+  <h1>Главная — сборка в зафиксированном стиле (герой + 2 секции)</h1>
+  <p>Зафиксировано: кино-герой + матовая карточка, палитра «светлое стекло». Эспрессо-текст, янтарь — бренд-акцент («голос», метки), джинсовый синий — кнопка действия. Рукописный шрифт только на «голос». Смотри, как герой перетекает в секции — единый ритм, тени, типографика. Это и есть фундамент бренд-бука.</p>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero__in">
+    <div class="hero__card">
+      <h1>У каждого рисунка есть <span class="voice">голос</span>.</h1>
+      <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт: сильные стороны, как он работает с цветом, формой и деталями, и что можно поддержать дома.</p>
+      <div class="cta-zone">
+        <a class="cta cta--primary" href="#">Получить отчёт — 2999 ₽</a><span class="cta-info" tabindex="0" role="button" aria-label="Что входит в отчёт">что входит <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <div class="cta-pop">
+          <div class="note">
+            <svg width="34" height="22" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            PDF на почту в течение часа · 1–3 рисунка · личный кабинет
+          </div>
+          <div class="chips">
+            <span class="chip">около 8 страниц</span><span class="chip">7 направлений</span>
+            <span class="chip">Без диагнозов</span><span class="chip">Рисунки видите только вы</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ЧТО ВЫ УЗНАЕТЕ -->
+<section class="section">
+  <div class="wrap">
+    <h2 class="reveal">Что вы узнаете из отчёта</h2>
+    <p class="sub reveal reveal--d1">Иногда родители смотрят на рисунок и видят просто дом, кота или человечка. Мы помогаем увидеть больше — в рисунках вашего ребёнка.</p>
+    <div class="checks reveal reveal--d1">
+      <ul>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EAF0F8"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Какие сильные стороны уже ярко видны в рисунках именно вашего ребёнка</li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EAF0F8"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Что он делает по-своему — в чём проявляется его авторский почерк</li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EAF0F8"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Как он работает с цветом, формой, деталями и сюжетом</li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EAF0F8"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Какие детали вы могли не заметить сами — и что они говорят о навыках</li>
+        <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EAF0F8"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Что можно мягко предложить дома, чтобы поддержать это развитие</li>
+      </ul>
+    </div>
+    <p class="scores-note">Также отчёт содержит <b>оценки по 7 направлениям</b> развития — с тёплыми, понятными объяснениями по каждому.</p>
+  </div>
+</section>
+
+<!-- КАК СТРОИТСЯ ВЫВОД -->
+<section class="section section--soft">
+  <div class="wrap">
+    <h2 class="reveal">Как строится вывод в отчёте</h2>
+    <p class="sub reveal reveal--d1">Мы смотрим на детали рисунка и объясняем, что они могут говорить о привычках, интересах и текущем этапе развития ребёнка.</p>
+    <div class="flow reveal reveal--d1">
+      <div class="flow__card">
+        <span class="flow__label">Видимая деталь</span>
+        <p>Персонаж нарисован крупно, линии уверенные, исправлений почти нет.</p>
+      </div>
+      <div class="flow__link"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12h15M14 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow__card">
+        <span class="flow__label">Что это показывает</span>
+        <p>В этом рисунке хорошо проявлены уверенность исполнения и работа с масштабом.</p>
+      </div>
+      <div class="flow__link"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12h15M14 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flow__card">
+        <span class="flow__label">Что попробовать дома</span>
+        <p>Дать большой лист и предложить нарисовать героя непрерывной линией — 10 минут без оценки результата.</p>
+      </div>
+    </div>
+    <p class="flow__closing">Так устроен отчёт: не общие фразы, а <b>наблюдение → объяснение → простое действие</b>.</p>
+  </div>
+</section>
+
+<!-- ПРИМЕРЫ ОТЧЁТОВ (proof) -->
+<section class="section">
+  <div class="wrap">
+    <h2 class="reveal">Посмотрите, какие наблюдения получают родители</h2>
+    <p class="sub reveal reveal--d1">Откройте реальные примеры: внутри — рисунок, контекст, сильные стороны, наблюдения и задания для родителей.</p>
+    <div class="carousel-wrap reveal reveal--d1">
+      <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1">‹</button>
+      <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1">›</button>
+      <div class="carousel">
+        <article class="r-card">
+          <span class="r-card__badge">пример отчёта</span>
+          <div class="r-card__top">
+            <div class="r-card__draw"><img loading="lazy" alt="рисунок" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'&gt;&lt;rect width='64' height='64' fill='%23f3ead9'/&gt;&lt;circle cx='32' cy='26' r='13' fill='%23E0A93C'/&gt;&lt;rect x='22' y='40' width='20' height='18' rx='3' fill='%234E86C4'/&gt;&lt;/svg&gt;"></div>
+            <div><div class="r-card__name">Соня</div><div class="r-card__age">5 лет</div></div>
+          </div>
+          <div class="bar"><span>Креативность</span><b>9</b><div class="track"><i class="fill" style="width:90%"></i></div></div>
+          <div class="bar"><span>Цвет и свет</span><b>8</b><div class="track"><i class="fill" style="width:80%"></i></div></div>
+          <div class="bar"><span>Композиция</span><b>7</b><div class="track"><i class="fill" style="width:70%"></i></div></div>
+          <p class="r-card__quote">«Героиня нарисована крупно и уверенно — Соня свободно работает с масштабом.»</p>
+          <a class="r-card__link" href="#">Смотреть пример →</a>
+        </article>
+        <article class="r-card">
+          <span class="r-card__badge">пример · 2 рисунка</span>
+          <div class="r-card__top">
+            <div class="r-card__draw"><img loading="lazy" alt="рисунок" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'&gt;&lt;rect width='64' height='64' fill='%23eef4fa'/&gt;&lt;ellipse cx='32' cy='34' rx='17' ry='13' fill='%23D98A33'/&gt;&lt;circle cx='27' cy='30' r='2' fill='%23333'/&gt;&lt;circle cx='37' cy='30' r='2' fill='%23333'/&gt;&lt;/svg&gt;"></div>
+            <div><div class="r-card__name">Артём</div><div class="r-card__age">7 лет</div></div>
+          </div>
+          <div class="bar"><span>Техника</span><b>8</b><div class="track"><i class="fill" style="width:80%"></i></div></div>
+          <div class="bar"><span>Детализация</span><b>9</b><div class="track"><i class="fill" style="width:90%"></i></div></div>
+          <div class="bar"><span>Форма</span><b>7</b><div class="track"><i class="fill" style="width:70%"></i></div></div>
+          <p class="r-card__quote">«На двух рисунках повторяется тонкая проработка деталей — это устойчивая сильная сторона.»</p>
+          <a class="r-card__link" href="#">Смотреть пример →</a>
+        </article>
+        <article class="r-card">
+          <span class="r-card__badge">пример отчёта</span>
+          <div class="r-card__top">
+            <div class="r-card__draw"><img loading="lazy" alt="рисунок" src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'&gt;&lt;rect width='64' height='64' fill='%23f1ecf4'/&gt;&lt;path d='M10 50 Q32 18 54 50' stroke='%23D77FB0' stroke-width='5' fill='none'/&gt;&lt;circle cx='32' cy='30' r='7' fill='%23E0A93C'/&gt;&lt;/svg&gt;"></div>
+            <div><div class="r-card__name">Мира</div><div class="r-card__age">4 года</div></div>
+          </div>
+          <div class="bar"><span>Креативность</span><b>7</b><div class="track"><i class="fill" style="width:70%"></i></div></div>
+          <div class="bar"><span>Цвет и свет</span><b>6</b><div class="track"><i class="fill" style="width:60%"></i></div></div>
+          <div class="bar"><span>Сюжет</span><b>6</b><div class="track"><i class="fill" style="width:60%"></i></div></div>
+          <p class="r-card__quote">«Для своих 4 лет Мира уже выстраивает простой сюжет — фигуры связаны общим действием.»</p>
+          <a class="r-card__link" href="#">Смотреть пример →</a>
+        </article>
+      </div>
+      <div class="car-dots" role="tablist" aria-label="Прокрутка примеров"></div>
+    </div>
+    <p class="scores-foot reveal">Оценки относятся к конкретному рисунку, а не к ребёнку в целом. Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете.</p>
+  </div>
+</section>
+
+<!-- БЕЗ МИФОВ (trust) -->
+<section class="section section--soft">
+  <div class="wrap">
+    <h2 class="reveal">Без мифов и страшных трактовок</h2>
+    <p class="sub reveal reveal--d1">Мы не ищем скрытые диагнозы по цветам и символам. Мы смотрим на видимые навыки и возрастной этап рисунка.</p>
+    <div class="compare">
+      <div class="compare__col compare--no reveal reveal--d1">
+        <h3>Мы не делаем</h3>
+        <ul>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EFE7DA"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>не ставим диагнозы по рисунку</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EFE7DA"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>не говорим, что чёрный цвет означает депрессию</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EFE7DA"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>не ищем «скрытые травмы» по одному рисунку</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#EFE7DA"/><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>не оцениваем личность ребёнка</li>
+        </ul>
+      </div>
+      <div class="compare__col compare--yes reveal reveal--d2">
+        <h3>Мы делаем</h3>
+        <ul>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#E7F0E0"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>смотрим на видимое: линию, форму, детали, композицию, сюжет</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#E7F0E0"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>учитываем возраст и контекст</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#E7F0E0"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>показываем сильные стороны и зоны роста</li>
+          <li><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#E7F0E0"/><path d="M7 12.5l3 3 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>даём простые занятия для дома</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- КАК ЭТО РАБОТАЕТ -->
+<section class="section">
+  <div class="wrap">
+    <h2 class="reveal">Как это работает</h2>
+    <p class="sub reveal reveal--d1">Три шага — и персональный отчёт у вас на почте.</p>
+    <div class="steps">
+      <div class="step reveal reveal--d1"><div class="step__n">1</div><h3>Загрузите рисунки</h3><p>Подойдёт 1–3 рисунка, которые ребёнок уже нарисовал. Ничего специально рисовать не нужно.</p></div>
+      <div class="step reveal reveal--d2"><div class="step__n">2</div><h3>Добавьте короткий контекст</h3><p>Возраст, материалы, тема и что было задано — форма занимает 2–3 минуты.</p></div>
+      <div class="step reveal reveal--d3"><div class="step__n">3</div><h3>Получите PDF-отчёт</h3><p>Обычно в течение часа. Отчёт придёт на почту и будет доступен в личном кабинете.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ОТЗЫВЫ -->
+<section class="section section--soft">
+  <div class="wrap tstrip reveal" data-rotator data-interval="7000">
+    <div class="tstrip__title">Что родители неожиданно заметили о своих детях</div>
+    <div class="tstrip__note">Отзывы из закрытого тестирования</div>
+    <div class="tstrip__stage">
+      <figure class="tquote is-active"><blockquote>«Я всегда думала, что он просто рисует чёрной ручкой из вредности. В отчёте объяснили, что это про контроль линии — и теперь я смотрю на его рисунки совсем иначе.»</blockquote><figcaption>Мама Артёма, 6 лет</figcaption></figure>
+      <figure class="tquote"><blockquote>«Не ожидала такой бережной подачи. Никаких диагнозов — только то, что реально видно на листе, и понятные идеи, чем заняться дома.»</blockquote><figcaption>Мама Сони, 5 лет</figcaption></figure>
+      <figure class="tquote"><blockquote>«Отчёт прислали в тот же вечер. Дочка попросила прочитать ей вслух про её рисунок — и потом сама села рисовать ещё.»</blockquote><figcaption>Мама Миры, 4 года</figcaption></figure>
+    </div>
+    <div class="tdots" role="tablist" aria-label="Отзывы"></div>
+  </div>
+</section>
+
+<!-- ДОВЕРИЕ -->
+<section class="section">
+  <div class="wrap">
+    <h2 class="reveal">Почему нам можно доверять</h2>
+    <div class="steps">
+      <div class="step reveal reveal--d1"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Возврат денег</h3><p>Если отчёт не понравился, напишите в течение 7 дней — вернём оплату без лишних вопросов.</p></div>
+      <div class="step reveal reveal--d2"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Рисунки видите только вы</h3><p>Работы ребёнка не публикуются, не используются в рекламе и не передаются третьим лицам.</p></div>
+      <div class="step reveal reveal--d3"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Наблюдения по видимым деталям</h3><p>Мы не придумываем скрытые смыслы — каждое наблюдение связано с тем, что действительно видно в рисунке.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ЦЕНЫ -->
+<section class="section section--soft" id="ceny">
+  <div class="wrap">
+    <h2 class="reveal">Выберите отчёт</h2>
+    <p class="sub reveal reveal--d1">Для старта доступен отчёт по 1–3 рисункам одного периода. Отчёт о развитии во времени появится позже.</p>
+    <div class="price-grid">
+      <div class="price-card price-card--feat reveal reveal--d1">
+        <div class="p-title">Снимок развития</div>
+        <div class="p-sub">по 1–3 рисункам одного периода</div>
+        <div><span class="p-launch">Цена на запуске</span><span class="p-price">2999 ₽</span></div>
+        <ul class="p-features">
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>около 8 страниц, 7 направлений</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>наблюдения по видимым деталям</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>занятия для дома · PDF за час</li>
+        </ul>
+        <a class="cta cta--primary" href="#">Заказать отчёт — 2999 ₽</a>
+      </div>
+      <div class="price-card price-card--soon reveal reveal--d2">
+        <span class="badge-soon">скоро</span>
+        <div class="p-title">Развитие во времени</div>
+        <div class="p-sub">сравнение двух наборов с интервалом от 6 месяцев</div>
+        <div><span class="p-price">4999 ₽</span></div>
+        <ul class="p-features">
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>что изменилось между периодами</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>динамика по направлениям</li>
+        </ul>
+        <span class="p-soon-note">Появится после запуска</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <h2 class="reveal">Частые вопросы</h2>
+    <div class="faq-wrap reveal reveal--d1">
+      <details class="faq"><summary>Это психологическая диагностика?</summary><p>Нет. Это образовательное наблюдение по видимым деталям рисунка — без диагнозов и трактовок личности. Мы описываем навыки и возрастной этап, а не ставим оценки ребёнку.</p></details>
+      <details class="faq"><summary>Сколько рисунков нужно?</summary><p>От одного до трёх рисунков одного периода. Несколько работ помогают увидеть устойчивые сильные стороны, а не случайность одного рисунка.</p></details>
+      <details class="faq"><summary>Как быстро придёт отчёт?</summary><p>Обычно в течение часа после оплаты. Отчёт приходит на почту в виде PDF и сохраняется в личном кабинете.</p></details>
+      <details class="faq"><summary>Кто видит рисунки моего ребёнка?</summary><p>Только вы. Работы не публикуются, не используются в рекламе и не передаются третьим лицам.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- БЛОГ -->
+<section class="section section--soft" id="blog">
+  <div class="wrap">
+    <h2 class="reveal">Разбираемся в детских рисунках без мифов</h2>
+    <p class="sub reveal reveal--d1">Спокойные ответы на вопросы, которые возникают почти у каждого родителя.</p>
+    <div class="carousel-wrap reveal reveal--d1">
+      <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1">‹</button>
+      <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1">›</button>
+      <div class="carousel">
+        <a class="blog-card" href="#"><div class="blog-card__thumb" style="background:linear-gradient(135deg,#F3E8D2,#E7D2A8)"><svg width="56" height="56" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#B9722A" stroke-width="1.6"/><path d="M8 13c1 1.5 3 1.5 4 0" stroke="#B9722A" stroke-width="1.6" stroke-linecap="round"/></svg></div><div class="blog-card__body"><h3 class="blog-card__title">Что значит, если ребёнок рисует чёрным?</h3><p class="blog-card__descr">Спойлер: чаще всего — ничего тревожного. Разбираем спокойно.</p></div></a>
+        <a class="blog-card" href="#"><div class="blog-card__thumb" style="background:linear-gradient(135deg,#E6EEF6,#CBDDEF)"><svg width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M4 16l5-6 4 4 7-8" stroke="#3E4E78" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="blog-card__body"><h3 class="blog-card__title">Этапы детского рисунка по возрастам</h3><p class="blog-card__descr">От каракулей к сюжету — чего ждать в 3, 5 и 7 лет.</p></div></a>
+        <a class="blog-card" href="#"><div class="blog-card__thumb" style="background:linear-gradient(135deg,#EDE7F3,#D8C8E8)"><svg width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M12 4l2.4 5 5.6.5-4.2 3.7 1.3 5.3L12 20.8 6.9 23.5 8.2 18.2 4 14.5 9.6 14z" stroke="#7E5BA8" stroke-width="1.4" stroke-linejoin="round"/></svg></div><div class="blog-card__body"><h3 class="blog-card__title">Нужно ли учить ребёнка «рисовать правильно»?</h3><p class="blog-card__descr">Когда помощь поддерживает, а когда мешает находить своё.</p></div></a>
+      </div>
+      <div class="car-dots" role="tablist" aria-label="Прокрутка статей"></div>
+    </div>
+    <p style="text-align:center; margin-top:24px" class="reveal"><a class="cta cta--ghost" href="#">Все статьи →</a></p>
+  </div>
+</section>
+
+<!-- ФУТЕР -->
+<footer class="foot">
+  <div class="wrap foot__in">
+    <span class="foot__brand">Голос рисунка</span>
+    Образовательное наблюдение, не медицинская и не психологическая диагностика<br>
+    <a href="#">Политика конфиденциальности</a> · <a href="#">Оферта</a> · <a href="#">Контакты</a> · <a href="#">Блог</a><br>
+    golosrisunka.ru
+    <span class="foot__ver">V1.019 · макет</span>
+  </div>
+</footer>
+
+<script>
+// Попап «что входит»: каждый клик переключает (открыть/закрыть). Клик вне — закрывает.
+document.querySelectorAll(".cta-info").forEach(function (t) {
+  function toggle(e) { e.preventDefault(); e.stopPropagation(); t.closest(".cta-zone").classList.toggle("is-open"); }
+  t.addEventListener("click", toggle);
+  t.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") toggle(e); });
+});
+// клик внутри самого попапа не закрывает его
+document.querySelectorAll(".cta-pop").forEach(function (p) {
+  p.addEventListener("click", function (e) { e.stopPropagation(); });
+});
+document.addEventListener("click", function () {
+  document.querySelectorAll(".cta-zone.is-open").forEach(function (z) { z.classList.remove("is-open"); });
+});
+
+// Горизонтальные карусели (стрелки)
+document.querySelectorAll(".car-btn[data-car]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var c = b.closest(".carousel-wrap").querySelector(".carousel");
+    if (!c) return;
+    var card = c.firstElementChild;
+    var step = (card ? card.offsetWidth : 320) + 16;
+    c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
+  });
+});
+
+// Точки-индикатор «можно листать» (особенно для мобильных)
+document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
+  var c = wrap.querySelector(".carousel");
+  var dotsBox = wrap.querySelector(".car-dots");
+  if (!c || !dotsBox) return;
+  var cards = c.children, dots = [];
+  for (var i = 0; i < cards.length; i++) {
+    var d = document.createElement("button");
+    d.className = "car-dot" + (i === 0 ? " is-active" : "");
+    d.type = "button";
+    d.setAttribute("aria-label", "Пример " + (i + 1));
+    (function (idx) { d.addEventListener("click", function () {
+      c.scrollTo({ left: cards[idx].offsetLeft - c.offsetLeft, behavior: "smooth" });
+    }); })(i);
+    dotsBox.appendChild(d); dots.push(d);
+  }
+  var raf;
+  c.addEventListener("scroll", function () {
+    if (raf) return;
+    raf = requestAnimationFrame(function () {
+      raf = null;
+      var step = cards[0] ? cards[0].offsetWidth + 16 : 1;
+      var active = Math.round(c.scrollLeft / step);
+      active = Math.max(0, Math.min(dots.length - 1, active));
+      dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+    });
+  }, { passive: true });
+});
+
+// Ротатор отзывов: автосмена + точки, пауза при наведении
+document.querySelectorAll("[data-rotator]").forEach(function (r) {
+  var qs = r.querySelectorAll(".tquote");
+  var dotsBox = r.querySelector(".tdots");
+  if (qs.length < 2 || !dotsBox) return;
+  var i = 0, timer, dots = [];
+  qs.forEach(function (_, k) {
+    var d = document.createElement("button");
+    d.className = "tdot" + (k === 0 ? " is-active" : ""); d.type = "button";
+    d.setAttribute("aria-label", "Отзыв " + (k + 1));
+    d.addEventListener("click", function () { jump(k); });
+    dotsBox.appendChild(d); dots.push(d);
+  });
+  function show(n) {
+    qs[i].classList.remove("is-active"); dots[i].classList.remove("is-active");
+    i = (n + qs.length) % qs.length;
+    qs[i].classList.add("is-active"); dots[i].classList.add("is-active");
+  }
+  function play() { timer = setInterval(function () { show(i + 1); }, +r.dataset.interval || 7000); }
+  function stop() { clearInterval(timer); }
+  function jump(n) { stop(); show(n); play(); }
+  r.addEventListener("mouseenter", stop); r.addEventListener("mouseleave", play);
+  play();
+});
+
+// Лёгкое появление блоков при скролле (IntersectionObserver, без библиотек).
+// Уважает prefers-reduced-motion и работает только если поддерживается.
+(function () {
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var els = document.querySelectorAll(".reveal");
+  if (reduce || !("IntersectionObserver" in window)) {
+    els.forEach(function (el) { el.classList.add("is-in"); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>

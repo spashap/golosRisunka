@@ -38,11 +38,14 @@
 <body>
 {% include "_header.html" %}
 {% block body %}{% endblock %}
-<footer class="foot wrap">
-  {% block footer %}
-  Голос рисунка · Образовательное наблюдение, не медицинская диагностика · golosrisunka.ru
-  {% endblock %}
-  <span class="foot-ver">V{{ version }}</span>
+<footer class="foot">
+  <div class="wrap">
+    {% block footer %}
+    <span class="foot__brand">Голос рисунка</span>
+    Образовательное наблюдение, не медицинская диагностика · golosrisunka.ru
+    {% endblock %}
+    <span class="foot-ver">V{{ version }}</span>
+  </div>
 </footer>
 </body>
 </html>

@@ -20,52 +20,52 @@ body {
 /* --- Layout --- */
 .wrap { max-width: var(--wrap-max); margin: 0 auto; padding: 0 24px; }
 
-.section { padding: 52px 0; position: relative; }
+.section { padding: 60px 0; position: relative; }
 .section--alt { background: var(--alt); }
+.section--soft { background: var(--bg-soft); }
 
-/* --- Типографика --- */
+/* --- Типографика (шкала из tokens: только 7 ступеней) --- */
 h1, .h1 {
   font-family: var(--font-head); font-weight: 900;
-  font-size: clamp(38px, 5.4vw, 62px); line-height: 1.06; letter-spacing: -1.2px;
+  font-size: var(--fs-display); line-height: 1.07; letter-spacing: -.5px;
 }
 h2, .h2 {
   font-family: var(--font-head); font-weight: 900;
-  font-size: clamp(28px, 3.6vw, 42px); letter-spacing: -.5px; margin-bottom: 10px;
+  font-size: var(--fs-h2); line-height: 1.12; letter-spacing: -.3px; margin-bottom: 12px;
 }
-h3, .h3 { font-family: var(--font-head); font-weight: 800; font-size: 19px; }
-.sub { color: var(--muted); font-size: 17px; margin-bottom: 36px; }
+h3, .h3 { font-family: var(--font-head); font-weight: 800; font-size: var(--fs-h3); }
+.sub { color: var(--muted); font-size: var(--fs-lead); line-height: 1.5; margin-bottom: 34px; max-width: 62ch; }
+/* Рукописный Caveat — ТОЛЬКО «голос» (.hand) и лого. Больше нигде. */
 .hand { font-family: var(--font-hand); font-weight: 700; }
-h1 .hand, .h1 .hand { color: var(--accent); font-size: 1.16em; letter-spacing: 0; }
-.note {  /* рукописная заметка со стрелкой/иконкой */
-  display: flex; align-items: center; gap: 10px; margin-top: 22px;
-  font-family: var(--font-hand); font-size: 22px; color: var(--muted); font-weight: 600;
+h1 .hand, .h1 .hand { color: var(--accent2); font-size: 1.18em; letter-spacing: 0; }
+.note {  /* мелкая заметка со стрелкой — спокойный Inter, НЕ рукопись */
+  display: flex; align-items: center; gap: 9px; margin-top: 18px;
+  font-family: var(--font-body); font-size: var(--fs-small); color: var(--muted); font-weight: 500;
 }
+.note svg { color: var(--accent2); flex: none; }
 
 /* --- Кнопки --- */
-.btn {
-  display: inline-block; padding: 13px 28px; border-radius: var(--radius-pill);
-  font-weight: 700; transition: .2s; text-align: center;
-  background: var(--ink); color: var(--bg);
+.btn {  /* действие = джинсовый синий, мягкая тень, подъём на hover */
+  display: inline-block; padding: 13px 26px; border-radius: var(--radius-pill);
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-small);
+  transition: transform .12s ease, background .15s, box-shadow .15s; text-align: center;
+  background: var(--accent); color: #fff;
 }
-.btn:hover { background: var(--accent); color: #fff; }
-html.dk .btn { background: var(--accent); color: #fff; }
-html.dk .btn:hover { background: var(--paper); color: #221B12; }
+.btn:hover { background: var(--accent-2); color: #fff; transform: translateY(-2px); }
+html.dk .btn { color: #241A12; }
 
-.btn--primary {  /* главный CTA: жёсткая тень + сдвиг на hover */
-  background: var(--accent); color: #fff;
-  padding: 18px 42px; font-weight: 900; font-size: 18px;
-  box-shadow: var(--shadow-hard); transition: .15s;
+.btn--primary {  /* главный CTA — крупнее + мягкая «приподнятая» тень */
+  padding: 16px 32px; font-size: var(--fs-body);
+  box-shadow: var(--shadow-hard);
 }
-.btn--primary:hover {
-  background: var(--accent); color: #fff;
-  transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink);
-}
+.btn--primary:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(62, 78, 120, .34); }
 
 /* --- Карточка --- */
 .card {
   background: var(--paper); border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card); color: #2A2118;
+  box-shadow: var(--shadow-card); color: var(--ink);
 }
+.card { border: 1px solid var(--line); }
 .card--pad { padding: 30px; }
 
 /* --- Полароид (фото на «скотче») --- */
@@ -83,33 +83,32 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .polaroid--tilt-sl { transform: rotate(-2deg); }
 .polaroid__img { background: var(--polbg); display: block; }
 .polaroid__cap {
-  font-family: var(--font-hand); font-weight: 600; font-size: 20px;
+  font-family: var(--font-body); font-weight: 600; font-size: var(--fs-small);
   color: var(--cap); text-align: center; margin-top: 8px;
 }
 
-/* --- Бейдж-наклейка (рукописная оценка) --- */
+/* --- Бейдж/метка (плоский янтарный чип, без рукописи и наклона) --- */
 .badge {
-  display: inline-block; background: var(--accent); color: #fff;
-  font-family: var(--font-hand); font-weight: 600; font-size: 19px;
-  padding: 6px 14px; border-radius: var(--radius-pill);
-  transform: rotate(8deg); box-shadow: var(--shadow-hard-sm);
+  display: inline-block; background: #FBEFD9; color: var(--accent2);
+  font-family: var(--font-head); font-weight: 700; font-size: var(--fs-micro);
+  padding: 5px 12px; border-radius: var(--radius-pill);
 }
-.badge--corner { position: absolute; top: -15px; right: -16px; z-index: 2; }
-.badge--flat { transform: rotate(4deg); box-shadow: none; font-size: 17px; padding: 4px 12px; }
+.badge--corner { position: absolute; top: 14px; right: 14px; z-index: 2; }
+.badge--flat { font-size: var(--fs-micro); }
 
 /* --- Строка оценки (название / бар / число) --- */
 .score-bar {
   display: grid; grid-template-columns: 140px 1fr 28px; gap: 10px;
-  align-items: center; font-size: 14px; color: #666; margin-bottom: 12px;
+  align-items: center; font-size: var(--fs-small); color: var(--muted); margin-bottom: 12px;
 }
-.score-bar b { color: #2A2118; text-align: right; }
+.score-bar b { color: var(--accent); text-align: right; font-family: var(--font-head); font-weight: 700; }
 .score-bar__track {
-  height: 10px; border-radius: var(--radius-pill);
-  background: rgba(0, 0, 0, .08); overflow: hidden;
+  height: 8px; border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--ink) 10%, var(--paper)); overflow: hidden;
 }
 .score-bar__fill {
   display: block; height: 100%; border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, var(--badge), var(--accent));
+  background: var(--accent);
   /* ширина = оценка × 10%: style="width:80%" из шаблона */
 }
 
@@ -142,24 +141,29 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 /* --- Цитата (отзыв) --- */
 .quote { max-width: 760px; margin: 0 auto; text-align: center; }
 .quote__text {
-  font-family: var(--font-hand); font-weight: 600;
-  font-size: clamp(26px, 3.2vw, 34px); line-height: 1.35;
+  font-family: var(--font-body); font-weight: 500;
+  font-size: var(--fs-lead); line-height: 1.5;
 }
 .quote__who { margin-top: 16px; color: var(--soft); font-size: 15px; }
 
-/* --- Шаг («Как это работает») --- */
-.step { background: var(--paper); border-radius: var(--radius-card); padding: 30px;
-        box-shadow: 0 6px 18px var(--shadow); color: #2A2118; }
-.step__n { font-family: var(--font-hand); font-weight: 700; font-size: 46px; color: var(--accent); }
-.step h3 { margin: 10px 0; }
-.step p { color: #666; font-size: 15px; line-height: 1.55; }
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+/* --- Шаг («Как это работает» / «Доверие») --- */
+.step { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-card);
+        padding: 28px; box-shadow: var(--shadow-card); color: var(--ink); }
+.step__n {  /* номер/галочка в джинсовом круге (НЕ рукопись) */
+  width: 46px; height: 46px; border-radius: 50%; background: var(--accent); color: #fff;
+  font-family: var(--font-head); font-weight: 800; font-size: 21px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+}
+.step__n--ok { background: var(--sage); }
+.step h3 { margin: 0 0 8px; }
+.step p { color: var(--muted); font-size: var(--fs-body); line-height: 1.5; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 
 /* --- Навигация и лого --- */
 .nav { display: flex; justify-content: space-between; align-items: center;
        padding: 18px 0; position: relative; z-index: 2; }
-.logo { font-family: var(--font-hand); font-weight: 700; font-size: 36px; line-height: 1; }
-.logo b { color: var(--accent); font-weight: 700; }
+.logo { font-family: var(--font-hand); font-weight: 700; font-size: 34px; line-height: 1; }
+.logo b { color: var(--ink); font-weight: 700; }
 .logo i { color: var(--accent2); font-style: normal; }
 
 /* --- Шапка-полоса сайта (sticky, единая для всех страниц) --- */
@@ -186,12 +190,14 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 }
 
 /* --- FAQ (details/summary, без JS) --- */
-.faq { border-bottom: 2px dashed rgba(0, 0, 0, .1); padding: 18px 0; }
-.faq summary { font-family: var(--font-head); font-weight: 800; font-size: 17px;
-               cursor: pointer; list-style: none; }
-.faq summary::after { content: " +"; color: var(--accent); }
-.faq[open] summary::after { content: " –"; }
-.faq p { color: var(--muted); margin-top: 10px; font-size: 15px; line-height: 1.5; }
+.faq { border-bottom: 1px solid var(--line); }
+.faq summary { font-family: var(--font-head); font-weight: 800; font-size: var(--fs-body);
+               cursor: pointer; list-style: none; padding: 17px 0;
+               display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--accent); font-size: 24px; line-height: 1; }
+.faq[open] summary::after { content: "–"; }
+.faq p { color: var(--muted); margin: 0 0 18px; font-size: var(--fs-body); line-height: 1.55; max-width: 72ch; }
 
 /* --- Форма (заказ, вход) --- */
 .field { margin-bottom: 18px; }
@@ -279,8 +285,8 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .file-drop img.preview { max-height: 160px; margin: 0 auto 8px; border-radius: 8px;
                          box-shadow: 0 3px 10px var(--shadow); }
 .drawing-block { position: relative; }
-.drawing-block .db-num { font-family: var(--font-hand); font-weight: 700;
-                         font-size: 28px; color: var(--accent); }
+.drawing-block .db-num { font-family: var(--font-head); font-weight: 800;
+                         font-size: var(--fs-h3); color: var(--accent); }
 .db-remove { position: absolute; top: 20px; right: 22px; color: var(--soft);
              font-size: 14px; font-weight: 600; }
 .db-remove:hover { color: #C0392B; }
@@ -293,24 +299,101 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
            border: 2px solid color-mix(in srgb, #C0392B 30%, var(--paper));
            color: #8E2B20; font-weight: 600; }
 
-/* --- Футер --- */
-.foot { padding: 40px 0; color: var(--soft); font-size: 14px; text-align: center; }
-.foot-ver { display: block; margin-top: 8px; font-size: 12px; opacity: .55; }
+/* --- Футер (тёплый тёмный, на всю ширину) --- */
+.foot { background: #2A1F15; color: #E7D8C0; padding: 42px 0 48px;
+        font-size: var(--fs-small); line-height: 1.7; text-align: center; }
+.foot a { color: #EBC889; }
+.foot a:hover { text-decoration: underline; }
+.foot__brand { font-family: var(--font-hand); font-weight: 700; font-size: 26px;
+               color: #FBF1DD; display: block; margin-bottom: 6px; }
+.foot-ver { display: block; margin-top: 12px; font-size: 12px; color: #9C8A70; }
 
-/* --- Hero (двухколоночный первый экран) --- */
-.hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 48px;
-        align-items: center; padding: 36px 0 10px; }
-.hero p.lead { font-size: 19px; color: var(--muted); margin: 24px 0 32px; max-width: 47ch; }
+/* --- HERO: кино-полноэкранное фото + матовая карточка (бренд-первый экран).
+   .hero ставится ВНЕ .wrap (на всю ширину); .hero__in задаёт внутренний отступ. --- */
+.hero {
+  position: relative; z-index: 2; min-height: 600px; display: flex; align-items: center;
+  /* абсолютный /static-путь: CSS на лендинге инлайнится, относительный путь сломался бы.
+     Плоский url() (без image-set) — максимальная совместимость браузеров. */
+  background-color: var(--bg);
+  background-image: url(/static/img/hero.jpg);
+  background-position: center 32%;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.hero::after { content: ""; position: absolute; inset: 0; z-index: 1; background: rgba(33, 21, 11, .10); }
+.hero__in { position: relative; z-index: 3; width: 100%; padding: 52px clamp(20px, 5vw, 72px); }
+.hero__card {
+  max-width: 500px; background: rgba(255, 250, 240, .80);
+  backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px);
+  border: 1px solid rgba(255, 255, 255, .7); border-radius: var(--radius-card);
+  padding: 34px 36px; box-shadow: 0 24px 54px rgba(40, 26, 14, .22);
+}
+.hero__card h1 { margin-bottom: 16px; }
+.hero p.lead, .hero__card .lead {
+  font-size: var(--fs-lead); color: var(--muted); line-height: 1.5; margin: 0 0 22px; max-width: 42ch;
+}
+.hero__card .chips { margin-top: 0; }
+.hero__card .chip { background: #fff; border: 1px solid var(--line); color: #5b4a38; }
 
-/* --- «Стол» с разбросанными полароидами --- */
-.pol-table { position: relative; min-height: 440px; }
-.pol-table .polaroid { position: absolute; }
+/* CTA + плавающий попап «что входит» (тултип, НЕ меняет размер карточки) */
+.cta-zone { position: relative; display: inline-block; }
+.cta-info {
+  display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; vertical-align: middle;
+  font-family: var(--font-body); font-size: var(--fs-micro); font-weight: 600; color: var(--accent);
+  cursor: pointer; user-select: none;
+}
+.cta-info svg { transition: transform .2s ease; }
+.cta-zone.is-open .cta-info svg { transform: rotate(180deg); }
+.cta-pop {
+  position: absolute; top: calc(100% + 13px); left: 0; z-index: 60; width: min(360px, 82vw);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 20px 44px rgba(40, 26, 14, .28); padding: 15px 18px;
+  opacity: 0; visibility: hidden; transform: translateY(-6px); pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease, visibility .2s;
+}
+.cta-pop::before {
+  content: ""; position: absolute; top: -7px; left: 38px; width: 13px; height: 13px;
+  background: var(--paper); border-left: 1px solid var(--line); border-top: 1px solid var(--line);
+  transform: rotate(45deg);
+}
+.cta-zone.is-open .cta-pop { opacity: 1; visibility: visible; transform: translateY(0); pointer-events: auto; }
+.cta-pop .chips { margin-top: 0; }
+.cta-pop .chip { background: var(--alt); border: 1px solid var(--line); color: #5b4a38; }
+
+/* Появление блоков при скролле (дёшево: transform+opacity; учитывает reduce-motion) */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
+.reveal.is-in { opacity: 1; transform: none; }
+.reveal--d1 { transition-delay: .08s; }
+.reveal--d2 { transition-delay: .16s; }
+.reveal--d3 { transition-delay: .24s; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+/* Точки-индикатор «можно листать» под каруселью (особенно для мобильных) */
+.car-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+.car-dot { width: 8px; height: 8px; padding: 0; border: none; border-radius: 99px;
+           background: color-mix(in srgb, var(--soft) 55%, transparent); cursor: pointer;
+           transition: width .25s ease, background .25s ease; }
+.car-dot.is-active { width: 22px; background: var(--accent); }
+
+/* HERO мобайл: карточка прозрачнее, фото дышит */
+@media (max-width: 600px) {
+  .hero { min-height: 74vh; align-items: center; }
+  .hero__in { padding: 0 16px; }
+  .hero__card { max-width: 100%; background: rgba(255, 250, 240, .58);
+                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 22px 20px 24px; }
+  .hero__card h1 { font-size: 27px; line-height: 1.12; }
+  .hero p.lead, .hero__card .lead { font-size: 15.5px; }
+  .hero .btn--primary { display: block; text-align: center; }
+  .cta-zone { display: block; }
+  .cta-info { margin: 14px 0 0; }
+  .cta-pop { left: 0; right: 0; width: auto; }
+}
 
 /* --- Карточка-превью отчёта (лендинг: блок «Примеры отчётов») --- */
 .report-card { width: 340px; overflow: hidden; position: relative;
                display: flex; flex-direction: column;   /* кнопка всегда у низа */
                background: var(--paper); border-radius: var(--radius-card);
-               box-shadow: var(--shadow-card); color: #2A2118; }
+               box-shadow: var(--shadow-card); color: var(--ink); }
 .report-card__badge { position: absolute; top: 12px; right: 12px; z-index: 2; }
 .report-card__top { padding: 18px; border-bottom: 2px dashed rgba(0, 0, 0, .08); }
 .report-card__draw { float: left; width: 84px; height: 84px; border-radius: 12px;
@@ -323,8 +406,8 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 .report-card__age { color: var(--soft); font-size: 14px; }
 .report-card__top::after { content: ""; display: block; clear: both; }
 .report-card__body { padding: 18px; }
-.report-card__quote { font-family: var(--font-hand); font-weight: 600; font-size: 19px;
-                      color: var(--accent2); padding: 4px 18px 20px; }
+.report-card__quote { font-family: var(--font-body); font-weight: 500; font-size: var(--fs-small);
+                      line-height: 1.45; color: var(--ink); padding: 4px 18px 20px; }
 .report-card__link { display: block; text-align: center; padding: 14px;
                      margin-top: auto;                  /* прижат к низу карточки */
                      background: var(--ink); color: var(--bg); font-weight: 700; }
@@ -349,8 +432,8 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
                                      color: var(--accent2); font-weight: 700; }
 .price-card .btn { margin-top: auto; }       /* кнопка прижата к низу карточки */
 .price-card--soon { opacity: .82; }
-.price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: 14px;
-                           font-family: var(--font-hand); font-size: 19px; }
+.price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: var(--fs-small);
+                           font-family: var(--font-body); }
 
 /* --- Чипы доверия (hero badges) --- */
 .chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
@@ -359,41 +442,7 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
         background: color-mix(in srgb, var(--badge) 14%, var(--paper)); color: var(--ink); }
 .chip::before { content: "✓"; color: var(--accent2); font-weight: 700; }
 
-/* --- Hero H1: вторая строка — мельче, слово «рисунки» в оранжевом тоне лого --- */
-.h1-lead { display: block; margin-top: 12px;
-           font-family: var(--font-head); font-weight: 700;
-           font-size: clamp(18px, 2.3vw, 27px); line-height: 1.25; letter-spacing: -0.2px; }
-.h1-accent { color: var(--accent2); }
-
-/* --- Hero: рукописная бренд-строка над H1 + вторичный текст под лидом --- */
-.hero-brand { font-family: var(--font-hand); font-weight: 700; font-size: 24px;
-              color: var(--accent2); margin-bottom: 6px; }
-.hero-secondary { color: var(--soft); font-size: 15px; line-height: 1.55; margin: -16px 0 0; max-width: 47ch; }
-
-/* --- Hero: визуальный «выход» — карточка-превью отчёта + полароиды детских рисунков за ней --- */
-.hero-output { position: relative; min-height: 360px;
-               display: flex; align-items: center; justify-content: center; }
-.report-preview { position: relative; width: 330px; max-width: 100%; z-index: 3;
-                  padding: 22px 22px 20px; }
-.report-preview__logo { font-family: var(--font-hand); font-weight: 700; font-size: 20px; }
-.report-preview__logo b { color: var(--accent); }
-.report-preview__logo i { color: var(--accent2); font-style: normal; }
-.report-preview__title { font-family: var(--font-head); font-weight: 900; font-size: 18px;
-                         line-height: 1.15; margin: 8px 0 2px; }
-.report-preview__child { color: var(--accent); font-weight: 700; font-size: 14px; }
-.report-preview__body { margin: 16px 0 12px; padding-top: 14px;
-                        border-top: 2px dashed rgba(0, 0, 0, .08); }
-.report-preview__body .score-bar { grid-template-columns: 110px 1fr 22px; font-size: 12.5px; margin-bottom: 10px; }
-.report-preview__foot { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
-
-/* полароиды детских рисунков — веером ЗА карточкой, выглядывают по бокам */
-.hero-polaroids { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.hero-pol { position: absolute; background: var(--paper); padding: 9px 9px 22px;
-            border-radius: 3px; box-shadow: var(--shadow-pol); }
-.hero-pol .polaroid__cap { font-size: 12px; margin-top: 4px; }
-.hero-pol--1 { width: 152px; left: -50px; top: 4px; transform: rotate(-12deg); }
-.hero-pol--2 { width: 146px; right: -22px; top: -10px; transform: rotate(10deg); z-index: 2; }
-.hero-pol--3 { width: 138px; right: -24px; bottom: -36px; transform: rotate(7deg); }
+/* (Старый двухколоночный hero-визуал удалён — заменён кино-героем выше.) */
 
 /* --- «Что внутри отчёта»: чек-лист в карточке (2 колонки на десктопе) --- */
 .check-list ul { list-style: none; columns: 2; column-gap: 36px; }
@@ -406,13 +455,15 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 /* --- Mini-logic: 3 связанные карточки со стрелками --- */
 .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 16px; align-items: stretch; }
 .flow-card { display: flex; flex-direction: column; }
-.flow-card__label { font-family: var(--font-hand); font-weight: 700; font-size: 22px;
-                    color: var(--accent2); margin-bottom: 8px; }
-.flow-card p { color: var(--muted); font-size: 15px; line-height: 1.55; }
+.flow-card__label { display: inline-block; font-family: var(--font-head); font-weight: 800;
+                    font-size: var(--fs-micro); letter-spacing: .06em; text-transform: uppercase;
+                    color: var(--accent2); margin-bottom: 10px; }
+.flow-card p { color: var(--ink); font-size: var(--fs-body); line-height: 1.45; }
 .flow-arrow { display: flex; align-items: center; justify-content: center;
-              font-size: 30px; font-weight: 700; color: var(--accent); }
+              font-size: 26px; font-weight: 700; color: var(--accent-2); }
 .flow-closing { text-align: center; margin-top: 26px;
-                font-family: var(--font-hand); font-weight: 600; font-size: 21px; color: var(--ink); }
+                font-family: var(--font-body); font-size: var(--fs-body); color: var(--muted); }
+.flow-closing b { color: var(--ink); font-weight: 600; }
 @media (max-width: 880px) {
   .flow { grid-template-columns: 1fr; gap: 8px; }
   .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
@@ -447,7 +498,6 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 @media (max-width: 880px) {
   .steps { grid-template-columns: 1fr; }
   .price-grid { grid-template-columns: 1fr; }
-  .hero { grid-template-columns: 1fr; padding: 22px 0 18px; gap: 14px; }
 
   /* мобайл: компактнее вертикальный ритм — меньше пустот между блоками */
   .section { padding: 40px 0; }
@@ -458,11 +508,6 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
   /* мобайл: списки используют всю ширину карточки — без большого отступа слева */
   .check-list li, .compare-col li { padding-top: 7px; padding-bottom: 7px; padding-left: 22px; }
   .compare-col li::before, .check-list li::before { top: 7px; }
-
-  /* hero-визуал на мобайле: только карточка отчёта по центру, полароиды-веер скрыты */
-  .hero-output { min-height: 0; padding: 2px 0 0; }
-  .hero-polaroids { display: none; }
-  .report-preview { width: 100%; max-width: 330px; margin: 0 auto; }
 
   /* карусель примеров: full-bleed, карточка почти на весь экран, снап по центру */
   .carousel {
@@ -571,17 +616,17 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
   text-transform: uppercase; color: var(--soft);
 }
 .quote-rotator { position: relative; max-width: 720px; padding: 0 56px; }
-.quote-rotator__stage { display: grid; align-items: center; min-height: 96px; }
+.quote-rotator__stage { display: grid; align-items: center; min-height: 132px; }
 .quote-slim {
   grid-area: 1 / 1; margin: 0; text-align: center;
   opacity: 0; transition: opacity .45s ease; pointer-events: none;
 }
 .quote-slim.is-active { opacity: 1; pointer-events: auto; }
 .quote-slim__text {
-  margin: 0; font-family: var(--font-hand); font-weight: 600;
-  font-size: clamp(18px, 2.2vw, 23px); line-height: 1.35; color: var(--ink);
+  margin: 0; font-family: var(--font-body); font-weight: 400;
+  font-size: var(--fs-lead); line-height: 1.5; color: var(--ink);
 }
-.quote-slim__who { margin-top: 8px; color: var(--soft); font-size: 13.5px; }
+.quote-slim__who { margin-top: 10px; color: var(--muted); font-size: var(--fs-small); }
 .quote-rotator .car-btn {
   top: 50%; transform: translateY(-50%);
   width: 36px; height: 36px; font-size: 19px;
@@ -737,8 +782,8 @@ html.dk .btn:hover { background: var(--paper); color: #221B12; }
 }
 .cab-child { margin-top: 34px; }
 .cab-child__name {
-  font-family: var(--font-hand); font-weight: 700; font-size: 30px;
-  color: var(--accent); margin-bottom: 2px;
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-h3);
+  color: var(--ink); margin-bottom: 2px;
 }
 .btn--soon { opacity: .55; cursor: help; }
 .btn--soon:hover { background: var(--paper); color: var(--ink); }

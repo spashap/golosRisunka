@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Голос рисунка — концепции героя (с Hero.png)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&family=Inter:wght@400;500;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   4 РАЗНЫХ КОНЦЕПЦИИ героя (не цвет, а компоновка).
+   Палитра выведена из Hero.png: тёплый крем + медовый янтарь +
+   эспрессо (тёплый тёмный) + джинсовый синий из детских рисунков.
+   ============================================================ */
+:root{
+  /* — палитра из Hero.png — */
+  --cream:#FBF1DD; --cream-hi:#FFF8EA; --paper:#FFFCF4; --paper-bd:#EFE3CB;
+  --ink:#3A2A1C; --muted:#7A6149; --soft:#A38B6E;
+  --gold:#E2A33F; --gold-deep:#B9722A; --denim:#51618F; --denim-deep:#3E4E78; --sage:#7E9B63;
+
+  /* — шкала шрифта (единая) — */
+  --fs-display: clamp(36px, 5.2vw, 58px);
+  --fs-h3:22px; --fs-lead:20px; --fs-body:17px; --fs-small:15px; --fs-micro:13px;
+  --font-head:"Rubik",system-ui,sans-serif; --font-body:"Inter",system-ui,sans-serif; --font-hand:"Caveat",cursive;
+  --r-card:20px; --r-pill:99px; --r-sm:10px;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:var(--font-body); color:var(--ink); background:#e7e4dd; }
+
+.mock-bar{ background:#1c160f; color:#fff; padding:18px 24px; font-family:var(--font-head); }
+.mock-bar h1{ margin:0 0 4px; font-size:18px; font-weight:700; }
+.mock-bar p{ margin:0; font-size:13px; color:#cdbfa6; font-family:var(--font-body); max-width:80ch; }
+
+.tag{ font-family:var(--font-head); font-weight:800; font-size:13px; letter-spacing:.05em;
+  text-transform:uppercase; padding:11px 24px; color:#fff; background:var(--ink);
+  display:flex; gap:10px; align-items:baseline; }
+.tag small{ font-weight:500; font-family:var(--font-body); text-transform:none; letter-spacing:0; opacity:.82; }
+
+/* общие атомы */
+.voice{ font-family:var(--font-hand); font-weight:700; font-size:1.18em; line-height:.8; }
+.cta{ display:inline-block; font-family:var(--font-head); font-weight:700; font-size:var(--fs-body);
+  text-decoration:none; padding:15px 28px; border-radius:var(--r-pill); transition:transform .12s ease; }
+.cta:hover{ transform:translateY(-2px); }
+.chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.chip{ font-size:var(--fs-micro); font-weight:600; padding:6px 12px; border-radius:var(--r-pill); }
+.lead{ font-size:var(--fs-lead); line-height:1.5; margin:0 0 26px; }
+.note{ display:flex; align-items:center; gap:9px; font-size:var(--fs-small); margin:16px 0 22px; }
+
+/* ====================================================================
+   CONCEPT 1 — «Кино»: Hero.png на весь экран, текст внизу на тёплом скриме
+   ==================================================================== */
+.c1{ position:relative; min-height:560px; display:flex; align-items:flex-end;
+  background:url('../../data/Images/Hero.png') center/cover no-repeat; }
+.c1::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(40,26,14,.82) 0%, rgba(40,26,14,.45) 32%, rgba(40,26,14,0) 60%); }
+.c1__inner{ position:relative; z-index:2; max-width:1120px; margin:0 auto; width:100%;
+  padding:0 36px 52px; color:#FFF6E6; }
+.c1 h2{ font-family:var(--font-head); font-weight:900; font-size:var(--fs-display); line-height:1.07;
+  margin:0 0 16px; max-width:18ch; text-shadow:0 2px 18px rgba(20,12,4,.5); }
+.c1 .voice{ color:var(--gold); }
+.c1 .lead{ color:#F3E6CE; max-width:46ch; text-shadow:0 1px 10px rgba(20,12,4,.5); }
+.c1 .cta{ background:var(--gold); color:#3A2A1C; box-shadow:0 12px 30px rgba(0,0,0,.35); }
+.c1 .chips{ margin-top:20px; }
+.c1 .chip{ background:rgba(255,255,255,.16); color:#FFF6E6; backdrop-filter:blur(3px); }
+
+/* ====================================================================
+   CONCEPT 2 — «Сплит»: текст слева на креме, Hero.png в рамке справа,
+   маленькая карточка-отчёт наплывает на угол. Акцент — джинсовый синий.
+   ==================================================================== */
+.c2{ background:var(--cream); padding:60px 36px; }
+.c2__wrap{ max-width:1120px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:52px; align-items:center; }
+.c2 h2{ font-family:var(--font-head); font-weight:900; font-size:var(--fs-display); line-height:1.08; margin:0 0 20px; }
+.c2 .voice{ color:var(--gold-deep); }
+.c2 .h1u{ color:var(--denim); box-shadow:inset 0 -.32em 0 rgba(81,97,143,.16); }
+.c2 .lead{ color:var(--muted); max-width:34ch; }
+.c2 .cta{ background:var(--denim); color:#fff; box-shadow:0 10px 24px rgba(62,78,120,.32); }
+.c2 .note{ color:var(--muted); } .c2 .note svg{ color:var(--gold-deep); }
+.c2 .chip{ background:#fff; border:1px solid var(--paper-bd); color:#5b4a38; }
+.c2__art{ position:relative; }
+.c2__frame{ border-radius:var(--r-card); overflow:hidden; box-shadow:0 20px 48px rgba(58,42,28,.22);
+  border:6px solid #fff; }
+.c2__frame img{ width:100%; height:auto; display:block; }
+.c2__chip{ position:absolute; right:-14px; bottom:-18px; background:var(--paper);
+  border:1px solid var(--paper-bd); border-radius:var(--r-sm); box-shadow:0 14px 30px rgba(58,42,28,.18);
+  padding:14px 16px; width:210px; }
+.c2__chip .l{ font-family:var(--font-hand); font-weight:700; color:var(--gold-deep); font-size:19px; line-height:1; }
+.c2__chip .b{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:var(--fs-small); }
+.c2__chip .b b{ font-family:var(--font-head); color:var(--denim); }
+.c2__chip .track{ height:7px; background:#EADCc6; border-radius:99px; margin-top:5px; overflow:hidden; }
+.c2__chip .track i{ display:block; height:100%; width:88%; background:var(--gold); border-radius:99px; }
+
+/* ====================================================================
+   CONCEPT 3 — «Издание»: без большого фото. Крупная типографика по центру,
+   под ней — ряд маленьких рамок-рисунков как пруф. Спокойно/премиально.
+   ==================================================================== */
+.c3{ background:var(--cream-hi); padding:64px 36px 56px; text-align:center; }
+.c3__inner{ max-width:760px; margin:0 auto; }
+.c3 .eyebrow{ font-family:var(--font-head); font-weight:700; font-size:var(--fs-micro);
+  letter-spacing:.14em; text-transform:uppercase; color:var(--gold-deep); margin-bottom:18px; }
+.c3 h2{ font-family:var(--font-head); font-weight:900; font-size:var(--fs-display); line-height:1.1; margin:0 0 20px; }
+.c3 .voice{ color:var(--gold-deep); }
+.c3 .lead{ color:var(--muted); margin:0 auto 28px; max-width:52ch; }
+.c3 .cta{ background:var(--gold-deep); color:#fff; box-shadow:0 10px 24px rgba(185,114,42,.3); }
+.c3 .note{ justify-content:center; color:var(--muted); } .c3 .note svg{ color:var(--gold-deep); }
+.c3__strip{ display:flex; justify-content:center; gap:14px; margin-top:14px; flex-wrap:wrap; }
+.c3__strip figure{ margin:0; width:128px; background:#fff; padding:8px 8px 22px; border-radius:5px;
+  box-shadow:0 10px 24px rgba(58,42,28,.14); }
+.c3__strip figure:nth-child(odd){ transform:rotate(-3deg); }
+.c3__strip figure:nth-child(even){ transform:rotate(2.5deg); }
+.c3__strip img{ width:100%; height:96px; object-fit:cover; border-radius:3px; display:block; }
+.c3__strip figcaption{ font-size:12px; color:var(--soft); text-align:center; margin-top:6px; }
+
+/* ====================================================================
+   CONCEPT 4 — «Полоса + карточка»: Hero.png широкой полосой сверху,
+   заголовок наложен снизу-слева, белая карточка-отчёт наплывает на край.
+   ==================================================================== */
+.c4{ background:var(--cream); padding-bottom:60px; }
+.c4__band{ position:relative; height:430px;
+  background:url('../../data/Images/Hero.png') center 38%/cover no-repeat; }
+.c4__band::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(105deg, rgba(40,26,14,.66) 0%, rgba(40,26,14,.2) 46%, rgba(40,26,14,0) 70%); }
+.c4__head{ position:absolute; z-index:2; left:0; right:0; bottom:30px; }
+.c4__head .in{ max-width:1120px; margin:0 auto; padding:0 36px; color:#FFF6E6; }
+.c4__head h2{ font-family:var(--font-head); font-weight:900; font-size:var(--fs-display); line-height:1.07;
+  margin:0; max-width:17ch; text-shadow:0 2px 16px rgba(20,12,4,.5); }
+.c4__head .voice{ color:var(--gold); }
+.c4__body{ max-width:1120px; margin:-46px auto 0; padding:0 36px; position:relative; z-index:3;
+  display:grid; grid-template-columns:1.3fr .9fr; gap:30px; align-items:end; }
+.c4__card{ background:var(--paper); border:1px solid var(--paper-bd); border-radius:var(--r-card);
+  box-shadow:0 22px 50px rgba(58,42,28,.2); padding:26px 28px; }
+.c4__card .lead{ color:var(--muted); margin-bottom:20px; max-width:42ch; font-size:var(--fs-body); }
+.c4__card .cta{ background:var(--gold-deep); color:#fff; }
+.c4__side{ padding-bottom:8px; }
+.c4__side .note{ color:var(--muted); margin-top:0; } .c4__side .note svg{ color:var(--gold-deep); }
+.c4 .chip{ background:#fff; border:1px solid var(--paper-bd); color:#5b4a38; }
+
+@media (max-width:860px){
+  .c2__wrap{ grid-template-columns:1fr; gap:64px; }
+  .c2__chip{ right:10px; }
+  .c4__body{ grid-template-columns:1fr; gap:22px; }
+  .c4__band{ height:340px; }
+  .c1{ min-height:520px; }
+}
+</style>
+</head>
+<body>
+
+<div class="mock-bar">
+  <h1>Голос рисунка — 4 концепции героя (компоновка, не только цвет)</h1>
+  <p>Палитра выведена из твоего Hero.png: тёплый крем + медовый янтарь + тёплый эспрессо вместо холодного синего текста + джинсовый синий из детских рисунков. Концепции 1, 2 и 4 используют фото; концепция 3 — типографика без большого фото (на случай, если фото перетягивает внимание с сообщения). Выбери компоновку — потом доведём цвет/детали и зафиксируем как основу бренд-бука.</p>
+</div>
+
+<!-- ========== CONCEPT 1 ========== -->
+<div class="tag">1 · Кино <small>фото на весь экран, текст на тёплом затемнении — максимально эмоционально</small></div>
+<section class="c1">
+  <div class="c1__inner">
+    <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+    <p class="lead">Тёплый персональный отчёт по рисункам ребёнка: что в них видно — сильные стороны, как он работает с цветом, формой и деталями, и что можно поддержать дома.</p>
+    <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+    <div class="chips">
+      <span class="chip">PDF за час</span><span class="chip">7 направлений</span>
+      <span class="chip">Без диагнозов</span><span class="chip">Рисунки видите только вы</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CONCEPT 2 ========== -->
+<div class="tag">2 · Сплит <small>текст слева, фото в рамке справа, карточка-отчёт на углу · акцент джинсовый синий</small></div>
+<section class="c2">
+  <div class="c2__wrap">
+    <div>
+      <h2>У каждого рисунка есть <span class="voice">голос</span>.<br>Услышьте, что <span class="h1u">рисунки</span> вашего ребёнка расскажут о нём.</h2>
+      <p class="lead">Тёплый персональный отчёт: сильные стороны, как ребёнок работает с цветом, формой и деталями, и что поддержать дома.</p>
+      <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+      <div class="note">
+        <svg width="38" height="24" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        PDF на почту в течение часа · 1–3 рисунка · личный кабинет
+      </div>
+      <div class="chips">
+        <span class="chip">около 8 страниц</span><span class="chip">7 направлений</span>
+        <span class="chip">Занятия для дома</span><span class="chip">Возврат 7 дней</span>
+      </div>
+    </div>
+    <div class="c2__art">
+      <div class="c2__frame"><img src="../../data/Images/Hero.png" alt="родитель с ребёнком и детские рисунки"></div>
+      <div class="c2__chip">
+        <div class="l">Соня, 5 лет</div>
+        <div class="b"><span>Креативность</span><b>9</b></div>
+        <div class="track"><i></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CONCEPT 3 ========== -->
+<div class="tag">3 · Издание <small>без большого фото: типографика + ряд рамок-рисунков · спокойно, премиально</small></div>
+<section class="c3">
+  <div class="c3__inner">
+    <div class="eyebrow">Образовательный отчёт по рисункам · без диагнозов</div>
+    <h2>У каждого рисунка есть <span class="voice">голос</span>. Услышьте, что рисунки вашего ребёнка расскажут о нём.</h2>
+    <p class="lead">Тёплый персональный отчёт: сильные стороны, как ребёнок работает с цветом, формой и деталями, и что можно мягко поддержать дома.</p>
+    <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+    <div class="note">
+      <svg width="38" height="24" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      PDF на почту в течение часа · 1–3 рисунка · личный кабинет
+    </div>
+  </div>
+  <div class="c3__strip">
+    <figure><img src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='120' height='96'&gt;&lt;rect width='120' height='96' fill='%23f3ead9'/&gt;&lt;rect x='40' y='44' width='40' height='34' rx='4' fill='%234E86C4'/&gt;&lt;polygon points='40,44 60,28 80,44' fill='%23C0533A'/&gt;&lt;circle cx='96' cy='24' r='12' fill='%23E0A93C'/&gt;&lt;/svg&gt;" alt=""><figcaption>дом, 6 лет</figcaption></figure>
+    <figure><img src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='120' height='96'&gt;&lt;rect width='120' height='96' fill='%23f1ecf4'/&gt;&lt;path d='M20 78 Q60 30 100 78' stroke='%23D77FB0' stroke-width='7' fill='none'/&gt;&lt;circle cx='60' cy='52' r='10' fill='%23E0A93C'/&gt;&lt;/svg&gt;" alt=""><figcaption>радуга, 5 лет</figcaption></figure>
+    <figure><img src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='120' height='96'&gt;&lt;rect width='120' height='96' fill='%23eef4fa'/&gt;&lt;ellipse cx='60' cy='56' rx='26' ry='20' fill='%23D98A33'/&gt;&lt;circle cx='52' cy='50' r='3' fill='%23333'/&gt;&lt;circle cx='68' cy='50' r='3' fill='%23333'/&gt;&lt;/svg&gt;" alt=""><figcaption>кот, 7 лет</figcaption></figure>
+    <figure><img src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' width='120' height='96'&gt;&lt;rect width='120' height='96' fill='%23232a4a'/&gt;&lt;polygon points='60,18 72,60 48,60' fill='%23D9534F'/&gt;&lt;circle cx='90' cy='28' r='2' fill='%23fff'/&gt;&lt;circle cx='30' cy='40' r='2' fill='%23fff'/&gt;&lt;/svg&gt;" alt=""><figcaption>ракета, 6 лет</figcaption></figure>
+  </div>
+</section>
+
+<!-- ========== CONCEPT 4 ========== -->
+<div class="tag">4 · Полоса + карточка <small>фото полосой сверху, заголовок наложен, карточка наплывает на край · слоисто, дизайнерски</small></div>
+<section class="c4">
+  <div class="c4__band">
+    <div class="c4__head"><div class="in">
+      <h2>У каждого рисунка есть <span class="voice">голос</span>.</h2>
+    </div></div>
+  </div>
+  <div class="c4__body">
+    <div class="c4__card">
+      <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный отчёт: сильные стороны, работа с цветом, формой и деталями, и что поддержать дома.</p>
+      <a class="cta" href="#">Получить отчёт — 2999 ₽</a>
+    </div>
+    <div class="c4__side">
+      <div class="note">
+        <svg width="38" height="24" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        PDF на почту в течение часа
+      </div>
+      <div class="chips">
+        <span class="chip">около 8 страниц</span><span class="chip">7 направлений</span>
+        <span class="chip">Без диагнозов</span><span class="chip">Возврат 7 дней</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

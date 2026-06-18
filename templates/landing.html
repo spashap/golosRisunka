@@ -28,9 +28,10 @@
 <link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="{{ static }}/img/hero.jpg" type="image/jpeg" fetchpriority="high">
 <link rel="stylesheet" href="{{ static }}/css/fonts.css">
 {# Критический CSS инлайном: токены + компоненты (перфоманс, spec §4.2) #}
-<style>{{ inline_css }}</style>
+<style>{{ inline_css | safe }}</style>
 <script type="application/ld+json">{{ schema_jsonld | safe }}</script>
 {% include "_metrika.html" %}
 </head>
@@ -38,68 +39,37 @@
 
 {% include "_header.html" %}
 
-<!-- 2. Hero: ведущее сообщение — спокойный персональный отчёт, без диагнозов -->
-{% set hero_samples = samples | selectattr('hero') | list %}
-{% set s0 = hero_samples[0] if hero_samples else (samples[0] if samples else none) %}
-<div class="wrap">
-  <header class="hero">
-    <div>
-      <h1>У каждого рисунка есть <span class="hand">голос</span>.<span class="h1-lead">Услышьте, что <span class="h1-accent">рисунки</span> вашего ребёнка могут рассказать о нём.</span></h1>
-      <p class="lead">Тёплый персональный отчёт по рисункам ребёнка: что в них видно — сильные
-        стороны, как он работает с цветом, формой и деталями, и что можно поддержать дома.
-        Вы узнаёте своего ребёнка и открываете в его рисунках то, чего сами не замечали.</p>
-      <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order" style="margin-top:24px">Получить отчёт — {{ min_price }} ₽</a>
-      <div class="note">
-        <svg width="42" height="28" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-        PDF на почту в течение часа · 1–3 рисунка · личный кабинет
-      </div>
-      <div class="chips">
-        <span class="chip">около 8 страниц</span>
-        <span class="chip">7 направлений</span>
-        <span class="chip">Занятия для дома</span>
-        <span class="chip">Без диагнозов</span>
-        <span class="chip">Рисунки видите только вы</span>
-        <span class="chip">Возврат 7 дней</span>
-      </div>
-    </div>
-    <div class="hero-output" aria-hidden="true">
-      {% if hero_samples %}
-      <div class="hero-polaroids">
-        {% for s in hero_samples[:3] %}
-        <div class="hero-pol hero-pol--{{ loop.index }}">
-          <img class="polaroid__img" src="{{ s.thumb_url }}" alt="" width="{{ s.thumb_w }}" height="{{ s.thumb_h }}" style="width:100%;height:auto">
-          <div class="polaroid__cap">{{ s.caption }}</div>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-      <div class="card report-preview">
-        <span class="badge badge--corner">около 8 страниц</span>
-        <div class="report-preview__logo"><b>Голос</b> <i>рисунка</i></div>
-        <div class="report-preview__title">Отчёт о развитии<br>по детскому рисунку</div>
-        {% if s0 %}<div class="report-preview__child">{{ s0.name }}, {{ s0.age_display }}</div>{% endif %}
-        <div class="report-preview__body">
-          {% if s0 %}{% for t in s0.top_scores %}
-          <div class="score-bar">
-            <span>{{ t.title }}</span>
-            <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ t.score * 10 }}%"></i></div>
-            <b>{{ t.score }}</b>
+<!-- 1. HERO: кино-фото на весь экран + матовая карточка. Cold traffic: чистый хук, CTA-бонус. -->
+<section class="hero">
+  <div class="hero__in">
+    <div class="hero__card">
+      <h1>У каждого рисунка есть <span class="hand">голос</span>.</h1>
+      <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный
+        отчёт: сильные стороны, как он работает с цветом, формой и деталями, и что можно поддержать дома.</p>
+      <div class="cta-zone">
+        <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order">Получить отчёт — {{ min_price }} ₽</a><span class="cta-info" tabindex="0" role="button" aria-label="Что входит в отчёт">что входит <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <div class="cta-pop">
+          <div class="note">
+            <svg width="34" height="22" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            PDF на почту в течение часа · 1–3 рисунка · личный кабинет
           </div>
-          {% endfor %}{% endif %}
+          <div class="chips">
+            <span class="chip">около 8 страниц</span><span class="chip">7 направлений</span>
+            <span class="chip">Без диагнозов</span><span class="chip">Рисунки видите только вы</span>
+          </div>
         </div>
-        <div class="report-preview__foot">7 направлений · объяснения по деталям рисунка · занятия для дома</div>
       </div>
     </div>
-  </header>
-</div>
+  </div>
+</section>
 
-<!-- 3. Что внутри персонального отчёта (оправдываем цену до прайса) -->
+<!-- 2. Что внутри персонального отчёта -->
 <section class="section" id="vnutri">
   <div class="wrap">
-    <h2>Что вы узнаете из отчёта</h2>
-    <div class="sub">Иногда родители смотрят на рисунок и видят просто дом, кота или человечка.
+    <h2 class="reveal">Что вы узнаете из отчёта</h2>
+    <div class="sub reveal reveal--d1">Иногда родители смотрят на рисунок и видят просто дом, кота или человечка.
       Мы помогаем увидеть больше — в рисунках вашего ребёнка.</div>
-    <div class="card card--pad check-list">
+    <div class="card card--pad check-list reveal reveal--d1">
       <ul>
         <li>Какие сильные стороны уже ярко видны в рисунках именно вашего ребёнка</li>
         <li>Что он делает по-своему — в чём проявляется его авторский почерк</li>
@@ -108,18 +78,18 @@
         <li>Что можно мягко предложить дома, чтобы поддержать это развитие</li>
       </ul>
     </div>
-    <p class="scores-note" style="margin-top: 18px">Также отчёт содержит оценки по 7 направлениям
+    <p class="scores-note reveal" style="text-align:left; margin-top:18px">Также отчёт содержит оценки по 7 направлениям
       развития — с тёплыми, понятными объяснениями по каждому.</p>
   </div>
 </section>
 
-<!-- 4. Как строится вывод: видимая деталь -> объяснение -> занятие -->
-<section class="section section--alt" id="logika">
+<!-- 3. Как строится вывод -->
+<section class="section section--soft" id="logika">
   <div class="wrap">
-    <h2>Как строится вывод в отчёте</h2>
-    <div class="sub">Мы смотрим на детали рисунка и объясняем, что они могут говорить о привычках,
+    <h2 class="reveal">Как строится вывод в отчёте</h2>
+    <div class="sub reveal reveal--d1">Мы смотрим на детали рисунка и объясняем, что они могут говорить о привычках,
       интересах и текущем этапе развития ребёнка.</div>
-    <div class="flow">
+    <div class="flow reveal reveal--d1">
       <div class="card card--pad flow-card">
         <div class="flow-card__label">Видимая деталь</div>
         <p>Персонаж нарисован крупно, линии уверенные, исправлений почти нет.</p>
@@ -139,12 +109,12 @@
   </div>
 </section>
 
-<!-- 5. Примеры отчётов (proof-блок) -->
+<!-- 4. Примеры отчётов -->
 <section class="section" id="primery">
   <div class="wrap">
-    <h2>Посмотрите, какие наблюдения родители получают в отчёте</h2>
-    <div class="sub">Откройте реальные примеры: внутри — рисунок, контекст, сильные стороны, наблюдения и задания для родителей.</div>
-    <div class="carousel-wrap">
+    <h2 class="reveal">Посмотрите, какие наблюдения родители получают в отчёте</h2>
+    <div class="sub reveal reveal--d1">Откройте реальные примеры: внутри — рисунок, контекст, сильные стороны, наблюдения и задания для родителей.</div>
+    <div class="carousel-wrap reveal reveal--d1">
     <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1" data-ym-goal="landing_samples_prev">‹</button>
     <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1" data-ym-goal="landing_samples_next">›</button>
     <div class="carousel">
@@ -170,20 +140,21 @@
       </article>
       {% endfor %}
     </div>
+    <div class="car-dots" role="tablist" aria-label="Прокрутка примеров"></div>
     </div>
-    <p class="scores-note">Оценки относятся к конкретному рисунку, а не к ребёнку в целом.
+    <p class="scores-note reveal">Оценки относятся к конкретному рисунку, а не к ребёнку в целом.
       Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете.</p>
   </div>
 </section>
 
-<!-- 6. Без мифов и страшных трактовок (главный trust-блок) -->
-<section class="section section--alt" id="bez-mifov">
+<!-- 5. Без мифов -->
+<section class="section section--soft" id="bez-mifov">
   <div class="wrap">
-    <h2>Без мифов и страшных трактовок</h2>
-    <div class="sub">Мы не ищем скрытые диагнозы по цветам и символам. Мы смотрим на видимые
+    <h2 class="reveal">Без мифов и страшных трактовок</h2>
+    <div class="sub reveal reveal--d1">Мы не ищем скрытые диагнозы по цветам и символам. Мы смотрим на видимые
       навыки и возрастной этап рисунка.</div>
     <div class="compare">
-      <div class="card card--pad compare-col compare-col--no">
+      <div class="card card--pad compare-col compare-col--no reveal reveal--d1">
         <h3>Мы не делаем</h3>
         <ul>
           <li>не ставим диагнозы по рисунку</li>
@@ -192,7 +163,7 @@
           <li>не оцениваем личность ребёнка</li>
         </ul>
       </div>
-      <div class="card card--pad compare-col compare-col--yes">
+      <div class="card card--pad compare-col compare-col--yes reveal reveal--d2">
         <h3>Мы делаем</h3>
         <ul>
           <li>смотрим на видимые элементы рисунка: линию, форму, детали, композицию, сюжет и движение руки</li>
@@ -205,23 +176,22 @@
   </div>
 </section>
 
-<!-- 7. Как это работает -->
+<!-- 6. Как это работает -->
 <section class="section" id="kak">
   <div class="wrap">
-    <h2>Как это работает</h2>
-    <div class="sub">Три шага — и персональный отчёт у вас на почте.</div>
+    <h2 class="reveal">Как это работает</h2>
+    <div class="sub reveal reveal--d1">Три шага — и персональный отчёт у вас на почте.</div>
     <div class="steps">
-      <div class="step"><div class="step__n">1</div><h3>Загрузите рисунки</h3><p>Подойдёт 1–3 рисунка, которые ребёнок уже нарисовал. Ничего специально рисовать не нужно.</p></div>
-      <div class="step"><div class="step__n">2</div><h3>Добавьте короткий контекст</h3><p>Возраст, материалы, тема и что было задано — форма занимает 2–3 минуты.</p></div>
-      <div class="step"><div class="step__n">3</div><h3>Получите PDF-отчёт</h3><p>Обычно в течение часа. Отчёт придёт на почту и будет доступен в личном кабинете.</p></div>
+      <div class="step reveal reveal--d1"><div class="step__n">1</div><h3>Загрузите рисунки</h3><p>Подойдёт 1–3 рисунка, которые ребёнок уже нарисовал. Ничего специально рисовать не нужно.</p></div>
+      <div class="step reveal reveal--d2"><div class="step__n">2</div><h3>Добавьте короткий контекст</h3><p>Возраст, материалы, тема и что было задано — форма занимает 2–3 минуты.</p></div>
+      <div class="step reveal reveal--d3"><div class="step__n">3</div><h3>Получите PDF-отчёт</h3><p>Обычно в течение часа. Отчёт придёт на почту и будет доступен в личном кабинете.</p></div>
     </div>
   </div>
 </section>
 
-<!-- 8. Отзывы — узкая лента-ротатор. ПЛЕЙСХОЛДЕРЫ закрытого тестирования: помечены явно,
-     не выдаём за отзывы платящих клиентов до подтверждения заказчиком (spec B10). -->
-<section class="section section--alt section--strip">
-  <div class="wrap quote-rotator" data-interval="7000">
+<!-- 7. Отзывы -->
+<section class="section section--soft section--strip">
+  <div class="wrap quote-rotator reveal" data-interval="7000">
     <div class="strip-title">Что родители неожиданно заметили о своих детях</div>
     <div class="strip-note">Отзывы из закрытого тестирования</div>
     <button class="car-btn car-btn--prev" type="button" aria-label="Предыдущий отзыв" data-rot="-1" data-ym-goal="landing_reviews_prev">‹</button>
@@ -243,26 +213,26 @@
   </div>
 </section>
 
-<!-- 9. Гарантия / доверие -->
+<!-- 8. Доверие -->
 <section class="section">
   <div class="wrap">
-    <h2>Почему нам можно доверять</h2>
+    <h2 class="reveal">Почему нам можно доверять</h2>
     <div class="steps">
-      <div class="step"><div class="step__n">✓</div><h3>Возврат денег</h3><p>Если отчёт не понравился, напишите в течение 7 дней — вернём оплату без лишних вопросов.</p></div>
-      <div class="step"><div class="step__n">✓</div><h3>Рисунки видите только вы</h3><p>Работы ребёнка не публикуются, не используются в рекламе и не передаются третьим лицам.</p></div>
-      <div class="step"><div class="step__n">✓</div><h3>Наблюдения по видимым деталям</h3><p>Мы не придумываем скрытые смыслы — каждое наблюдение связано с тем, что действительно видно в рисунке.</p></div>
+      <div class="step reveal reveal--d1"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Возврат денег</h3><p>Если отчёт не понравился, напишите в течение 7 дней — вернём оплату без лишних вопросов.</p></div>
+      <div class="step reveal reveal--d2"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Рисунки видите только вы</h3><p>Работы ребёнка не публикуются, не используются в рекламе и не передаются третьим лицам.</p></div>
+      <div class="step reveal reveal--d3"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Наблюдения по видимым деталям</h3><p>Мы не придумываем скрытые смыслы — каждое наблюдение связано с тем, что действительно видно в рисунке.</p></div>
     </div>
   </div>
 </section>
 
-<!-- 10. Выбор продукта (2 продукта, цены из config/products.json; без выдуманной старой цены) -->
-<section class="section section--alt" id="ceny">
+<!-- 9. Цены -->
+<section class="section section--soft" id="ceny">
   <div class="wrap">
-    <h2>Выберите отчёт</h2>
-    <div class="sub">Для старта доступен отчёт по 1–3 рисункам одного периода. Отчёт о развитии во времени появится позже.</div>
+    <h2 class="reveal">Выберите отчёт</h2>
+    <div class="sub reveal reveal--d1">Для старта доступен отчёт по 1–3 рисункам одного периода. Отчёт о развитии во времени появится позже.</div>
     <div class="price-grid">
       {% for code, p in products.items() %}
-      <div class="card price-card{% if not p.enabled %} price-card--soon{% endif %}">
+      <div class="card price-card{% if not p.enabled %} price-card--soon{% endif %} reveal reveal--d1">
         {% if not p.enabled %}<span class="badge badge--corner">скоро</span>{% endif %}
         <div class="p-title">{{ p.title }}</div>
         <div class="p-sub">{{ p.subtitle }}</div>
@@ -285,23 +255,25 @@
   </div>
 </section>
 
-<!-- 11. FAQ — снятие возражений сразу после цен -->
+<!-- 10. FAQ -->
 <section class="section" id="faq">
   <div class="wrap">
-    <h2>Частые вопросы</h2>
+    <h2 class="reveal">Частые вопросы</h2>
+    <div class="reveal reveal--d1">
     {% for q, a in faq %}
     <details class="faq"><summary data-ym-goal="landing_faq_open">{{ q }}</summary><p>{{ a }}</p></details>
     {% endfor %}
+    </div>
   </div>
 </section>
 
 {% if blog_posts %}
-<!-- 12. Блог: прогрев недокупивших + внутренняя перелинковка (SEO) -->
-<section class="section section--alt" id="blog">
+<!-- 11. Блог -->
+<section class="section section--soft" id="blog">
   <div class="wrap">
-    <h2>Разбираемся в детских рисунках без мифов и страшных трактовок</h2>
-    <div class="sub">Спокойные ответы на вопросы, которые возникают почти у каждого родителя.</div>
-    <div class="carousel-wrap">
+    <h2 class="reveal">Разбираемся в детских рисунках без мифов и страшных трактовок</h2>
+    <div class="sub reveal reveal--d1">Спокойные ответы на вопросы, которые возникают почти у каждого родителя.</div>
+    <div class="carousel-wrap reveal reveal--d1">
       <button class="car-btn car-btn--prev" type="button" aria-label="Назад" data-car="-1" data-ym-goal="landing_blog_prev">‹</button>
       <button class="car-btn car-btn--next" type="button" aria-label="Вперёд" data-car="1" data-ym-goal="landing_blog_next">›</button>
       <div class="carousel">
@@ -315,33 +287,77 @@
         </a>
         {% endfor %}
       </div>
+      <div class="car-dots" role="tablist" aria-label="Прокрутка статей"></div>
     </div>
     <p style="text-align: center; margin-top: 22px"><a class="btn btn--ghost" href="/blog" data-ym-goal="landing_blog_all">Все статьи →</a></p>
   </div>
 </section>
 {% endif %}
 
-<footer class="foot wrap">
-  Голос рисунка · Образовательное наблюдение, не медицинская и не психологическая диагностика<br>
-  <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
-  <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
-  golosrisunka.ru
-  <span class="foot-ver">V{{ version }}</span>
+<footer class="foot">
+  <div class="wrap">
+    <span class="foot__brand">Голос рисунка</span>
+    Образовательное наблюдение, не медицинская и не психологическая диагностика<br>
+    <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
+    <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
+    golosrisunka.ru
+    <span class="foot-ver">V{{ version }}</span>
+  </div>
 </footer>
 
 <script>
-// стрелки горизонтальных каруселей (примеры отчётов, блог)
+// Попап «что входит» в герое: каждый клик переключает; клик вне — закрывает (мобайл — без ховера)
+document.querySelectorAll(".cta-info").forEach(function (t) {
+  function toggle(e) { e.preventDefault(); e.stopPropagation(); t.closest(".cta-zone").classList.toggle("is-open"); }
+  t.addEventListener("click", toggle);
+  t.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") toggle(e); });
+});
+document.querySelectorAll(".cta-pop").forEach(function (p) {
+  p.addEventListener("click", function (e) { e.stopPropagation(); });
+});
+document.addEventListener("click", function () {
+  document.querySelectorAll(".cta-zone.is-open").forEach(function (z) { z.classList.remove("is-open"); });
+});
+
+// Стрелки горизонтальных каруселей (примеры, блог)
 document.querySelectorAll(".car-btn[data-car]").forEach(function (b) {
   b.addEventListener("click", function () {
     var c = b.closest(".carousel-wrap").querySelector(".carousel");
     if (!c) return;
     var card = c.firstElementChild;
-    var step = (card ? card.offsetWidth : 320) + 14;
+    var step = (card ? card.offsetWidth : 320) + 16;
     c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
   });
 });
 
-// ротатор отзывов: одна цитата, автосмена + стрелки + точки, пауза при наведении
+// Точки-индикатор «можно листать» под каруселями
+document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
+  var c = wrap.querySelector(".carousel");
+  var dotsBox = wrap.querySelector(".car-dots");
+  if (!c || !dotsBox) return;
+  var cards = c.children, dots = [];
+  for (var i = 0; i < cards.length; i++) {
+    var d = document.createElement("button");
+    d.className = "car-dot" + (i === 0 ? " is-active" : "");
+    d.type = "button"; d.setAttribute("aria-label", "Карточка " + (i + 1));
+    (function (idx) { d.addEventListener("click", function () {
+      c.scrollTo({ left: cards[idx].offsetLeft - c.offsetLeft, behavior: "smooth" });
+    }); })(i);
+    dotsBox.appendChild(d); dots.push(d);
+  }
+  var raf;
+  c.addEventListener("scroll", function () {
+    if (raf) return;
+    raf = requestAnimationFrame(function () {
+      raf = null;
+      var step = cards[0] ? cards[0].offsetWidth + 16 : 1;
+      var active = Math.max(0, Math.min(dots.length - 1, Math.round(c.scrollLeft / step)));
+      dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+    });
+  }, { passive: true });
+});
+
+// Ротатор отзывов: одна цитата, автосмена + стрелки + точки, пауза при наведении
 document.querySelectorAll(".quote-rotator").forEach(function (r) {
   var qs = r.querySelectorAll(".quote-slim");
   var dots = r.querySelectorAll(".rot-dot");
@@ -360,13 +376,27 @@ document.querySelectorAll(".quote-rotator").forEach(function (r) {
   r.querySelectorAll(".car-btn[data-rot]").forEach(function (b) {
     b.addEventListener("click", function () { jump(i + (+b.dataset.rot)); });
   });
-  dots.forEach(function (d) {
-    d.addEventListener("click", function () { jump(+d.dataset.dot); });
-  });
+  dots.forEach(function (d) { d.addEventListener("click", function () { jump(+d.dataset.dot); }); });
   r.addEventListener("mouseenter", stop);
   r.addEventListener("mouseleave", play);
   play();
 });
+
+// Появление блоков при скролле (IntersectionObserver, без библиотек; уважает reduce-motion)
+(function () {
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var els = document.querySelectorAll(".reveal");
+  if (reduce || !("IntersectionObserver" in window)) {
+    els.forEach(function (el) { el.classList.add("is-in"); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+  els.forEach(function (el) { io.observe(el); });
+})();
 </script>
 </body>
 </html>
