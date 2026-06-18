@@ -118,7 +118,15 @@
 
 <header class="site-header">
   <div class="wrap site-header__row">
-    <a class="logo" href="/" data-ym-goal="header_logo"><b>Голос</b> <i>рисунка</i></a>
+    <a class="logo" href="/" data-ym-goal="header_logo">
+      <picture>
+        <source media="(max-width:560px)" type="image/webp" srcset="/static/img/logo-icon.webp">
+        <source media="(max-width:560px)" srcset="/static/img/logo-icon.png">
+        <source type="image/webp" srcset="/static/img/logo-strip.webp">
+        <img class="logo__img" src="/static/img/logo-strip.png"
+             alt="Голос рисунка — анализ детского рисунка по фото">
+      </picture>
+    </a>
     <nav class="site-nav">
       <a href="/#primery" data-ym-goal="header_nav_examples">Примеры</a>
       <a href="/#kak" data-ym-goal="header_nav_how">Как это работает</a>
@@ -874,7 +882,7 @@
     <span class="foot__brand">Голос рисунка</span>
     Образовательное наблюдение, не медицинская диагностика · golosrisunka.ru
     
-    <span class="foot-ver">V1.020</span>
+    <span class="foot-ver">V1.021</span>
   </div>
 </footer>
 </body>

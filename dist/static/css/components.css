@@ -172,7 +172,8 @@ html.dk .btn { color: #241A12; }
                box-shadow: 0 2px 12px rgba(0, 0, 0, .04); }
 .site-header__row { display: flex; align-items: center; gap: 28px; padding-top: 12px;
                     padding-bottom: 12px; }
-.site-header .logo { font-size: 30px; margin-right: auto; }
+.site-header .logo { font-size: 30px; margin-right: auto; display: flex; align-items: center; }
+.logo__img { height: 42px; width: auto; display: block; }   /* лого-картинка: strip(десктоп)/icon(мобайл) через <picture> */
 .site-nav { display: flex; gap: 22px; }
 .site-nav a { font-weight: 600; font-size: 15px; color: var(--muted); transition: .15s; }
 .site-nav a:hover { color: var(--accent); }
@@ -184,6 +185,7 @@ html.dk .btn { color: #241A12; }
   .site-nav { display: none; }           /* мобайл: лого + Войти + CTA, без JS-бургера */
   .site-header__row { gap: 10px; padding-left: 14px; padding-right: 14px; }
   .site-header .logo { font-size: 21px; white-space: nowrap; }
+  .logo__img { height: 38px; }
   .site-header__actions { gap: 10px; }
   .site-nav__login { font-size: 14px; }
   .site-header .btn { padding: 8px 13px; font-size: 13px; white-space: nowrap; }
@@ -305,7 +307,7 @@ html.dk .btn { color: #241A12; }
 .foot a { color: #EBC889; }
 .foot a:hover { text-decoration: underline; }
 .foot__brand { font-family: var(--font-hand); font-weight: 700; font-size: 26px;
-               color: #FBF1DD; display: block; margin-bottom: 6px; }
+               color: #FCEFDF; display: block; margin-bottom: 6px; }
 .foot-ver { display: block; margin-top: 12px; font-size: 12px; color: #9C8A70; }
 
 /* --- HERO: кино-полноэкранное фото + матовая карточка (бренд-первый экран).

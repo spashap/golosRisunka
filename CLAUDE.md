@@ -26,6 +26,7 @@ venv\Scripts\python.exe scripts\render_sample.py                # отчёт и�
 venv\Scripts\python.exe scripts\render_gallery.py [dk|pu|cl]    # галерея компонентов
 venv\Scripts\python.exe scripts\build_fonts.py                  # пересборка шрифтов (subsets)
 venv\Scripts\python.exe scripts\build_hero_image.py             # оптимизир. hero из data/Images/Hero.png -> static/img/hero.{jpg,webp}
+venv\Scripts\python.exe scripts\build_logos.py                  # оптимизир. лого из data/Images/{StripLogo,logo}.png -> static/img/logo-{strip,icon}.{png,webp}
 venv\Scripts\python.exe scripts\build_geoip.py CSV.gz           # сборка гео-базы data/geoip.db из DB-IP City Lite (строить НА сервере)
 venv\Scripts\python.exe scripts\hello_pdf.py                    # smoke-тест WeasyPrint+кириллица
 venv\Scripts\python.exe scripts\bump_version.py                 # минор +1 (ПЕРЕД каждым git push)

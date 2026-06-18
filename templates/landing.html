@@ -43,7 +43,7 @@
 <section class="hero">
   <div class="hero__in">
     <div class="hero__card">
-      <h1>У каждого рисунка есть <span class="hand">голос</span>.</h1>
+      <h1>У каждого рисунка есть <span class="hand">голос.</span></h1>
       <p class="lead">Услышьте, что рисунки вашего ребёнка расскажут о нём. Тёплый персональный
         отчёт: сильные стороны, как он работает с цветом, формой и деталями, и что можно поддержать дома.</p>
       <div class="cta-zone">
@@ -319,42 +319,72 @@ document.addEventListener("click", function () {
   document.querySelectorAll(".cta-zone.is-open").forEach(function (z) { z.classList.remove("is-open"); });
 });
 
-// Стрелки горизонтальных каруселей (примеры, блог)
-document.querySelectorAll(".car-btn[data-car]").forEach(function (b) {
-  b.addEventListener("click", function () {
-    var c = b.closest(".carousel-wrap").querySelector(".carousel");
-    if (!c) return;
-    var card = c.firstElementChild;
-    var step = (card ? card.offsetWidth : 320) + 16;
-    c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
-  });
-});
-
-// Точки-индикатор «можно листать» под каруселями
+// Бесконечные карусели (примеры, блог): набор клонируется ×3, старт в средней
+// копии, при скролле позиция бесшовно возвращается в середину — 1,2,3,4,1,2,3,4...
+// без конца в обе стороны. Стрелки листают, точки соответствуют реальным карточкам.
 document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
   var c = wrap.querySelector(".carousel");
-  var dotsBox = wrap.querySelector(".car-dots");
-  if (!c || !dotsBox) return;
-  var cards = c.children, dots = [];
-  for (var i = 0; i < cards.length; i++) {
-    var d = document.createElement("button");
-    d.className = "car-dot" + (i === 0 ? " is-active" : "");
-    d.type = "button"; d.setAttribute("aria-label", "Карточка " + (i + 1));
-    (function (idx) { d.addEventListener("click", function () {
-      c.scrollTo({ left: cards[idx].offsetLeft - c.offsetLeft, behavior: "smooth" });
-    }); })(i);
-    dotsBox.appendChild(d); dots.push(d);
+  if (!c || !c.children.length) return;
+  var originals = Array.prototype.slice.call(c.children);
+  var n = originals.length;
+
+  function gapPx() {
+    var s = getComputedStyle(c);
+    return parseFloat(s.columnGap || s.gap) || 16;
   }
-  var raf;
+  var gap = gapPx();
+  function setWidth() {            // ширина одной копии (n карточек + n промежутков)
+    var w = 0;
+    for (var i = 0; i < n; i++) w += originals[i].offsetWidth + gap;
+    return w;
+  }
+
+  // 2 дополнительные копии -> всего 3
+  for (var k = 0; k < 2; k++) {
+    originals.forEach(function (el) { c.appendChild(el.cloneNode(true)); });
+  }
+  c.style.scrollSnapType = "none";          // снап мешает бесшовному сбросу
+  var setW = setWidth();
+  var step = originals[0].offsetWidth + gap;
+  c.scrollLeft = setW;                        // старт в средней копии
+
+  var ticking = false;
   c.addEventListener("scroll", function () {
-    if (raf) return;
-    raf = requestAnimationFrame(function () {
-      raf = null;
-      var step = cards[0] ? cards[0].offsetWidth + 16 : 1;
-      var active = Math.max(0, Math.min(dots.length - 1, Math.round(c.scrollLeft / step)));
-      dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      if (c.scrollLeft >= setW * 2) c.scrollLeft -= setW;       // ушли вперёд -> назад на копию
+      else if (c.scrollLeft < setW) c.scrollLeft += setW;       // ушли назад -> вперёд на копию
+      updateDots();
     });
   }, { passive: true });
+
+  // стрелки: листаем на одну карточку (сброс позиции делает скролл-хендлер)
+  wrap.querySelectorAll(".car-btn[data-car]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
+    });
+  });
+
+  // точки: по числу реальных карточек
+  var dotsBox = wrap.querySelector(".car-dots"), dots = [];
+  if (dotsBox) {
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement("button");
+      d.className = "car-dot" + (i === 0 ? " is-active" : "");
+      d.type = "button"; d.setAttribute("aria-label", "Карточка " + (i + 1));
+      (function (idx) { d.addEventListener("click", function () {
+        c.scrollTo({ left: setW + idx * step, behavior: "smooth" });
+      }); })(i);
+      dotsBox.appendChild(d); dots.push(d);
+    }
+  }
+  function updateDots() {
+    if (!dots.length) return;
+    var rel = ((c.scrollLeft % setW) + setW) % setW;
+    var active = Math.round(rel / step) % n;
+    dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+  }
 });
 
 // Ротатор отзывов: одна цитата, автосмена + стрелки + точки, пауза при наведении
