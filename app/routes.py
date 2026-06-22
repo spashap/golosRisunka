@@ -453,10 +453,14 @@ def _settle_payment(payment_id: str):
 def yookassa_webhook():
     """Уведомление ЮKassa. Подпись не шлётся → проверяем перезапросом платежа.
     Оплату фиксируем ТОЛЬКО при succeeded; canceled/прочее — no-op (заказ остаётся
-    'created', ложных оплат нет). Всегда 200, иначе ЮKassa будет ретраить."""
+    'created', ложных оплат нет). Всегда 200, иначе ЮKassa будет ретраить.
+
+    В ЛК могут быть включены и неплатёжные события (refund.*, payment_method.*),
+    у которых object — НЕ платёж: их пропускаем, не дёргая API зря."""
     body = request.get_json(force=True, silent=True) or {}
+    event = body.get("event") or ""
     payment_id = (body.get("object") or {}).get("id")
-    if payment_id:
+    if payment_id and (event.startswith("payment.") or not event):
         try:
             _settle_payment(payment_id)
         except Exception:
