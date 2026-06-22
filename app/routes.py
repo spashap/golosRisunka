@@ -3,23 +3,27 @@ from __future__ import annotations
 
 import datetime
 import json
+import logging
 from functools import lru_cache
 
-from flask import (Blueprint, Response, abort, g, redirect, render_template,
-                   request, send_from_directory, url_for)
+from flask import (Blueprint, Response, abort, g, jsonify, redirect,
+                   render_template, request, send_from_directory, url_for)
 
+from app import yookassa
 from app.auth import (SESSION_COOKIE, AuthError, current_customer,
                       destroy_session, request_code, verify_code)
 from app.blog import get_post, get_posts
 from app.db import get_db
 from app.orders import EMAIL_RE, FormError, validate_and_create_order
 from app.payments import create_payment, mark_paid
+from app.yookassa import YuKassaError
 from app.samples import get_sample_by_token, get_samples
 from app.track import track_event
 from config import settings
 from config.form_fields import CHILD_FIELDS, COUPON_FIELD, DRAWING_FIELDS, EMAIL_FIELD
 
 bp = Blueprint("main", __name__)
+log = logging.getLogger("routes")
 
 
 _css_cache: tuple[tuple[float, float], str] | None = None
@@ -366,30 +370,120 @@ def track_form_started():
     return "", 204
 
 
-@bp.get("/pay/stub/<int:order_id>")
-def stub_checkout(order_id: int):
+@bp.get("/pay/<int:order_id>")
+def checkout(order_id: int):
+    """Страница оплаты: встроенный виджет ЮKassa в модалке. Платёж создаётся
+    отдельным AJAX-вызовом /pay/yookassa/create при открытии модалки."""
     order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     if order is None:
         abort(404)
+    if order["status"] != "created":          # уже оплачен — на страницу «принято»
+        return redirect(url_for("main.order_success", order_id=order_id))
     track_event("checkout_view", {"order_id": order_id})
     product = settings.get_products()[order["product_code"]]
-    return render_template("checkout_stub.html", order=order, product=product)
+    return render_template("checkout.html", order=order, product=product,
+                           yukassa_enabled=settings.yukassa_enabled())
 
 
-@bp.post("/pay/stub/<int:order_id>/confirm")
-def stub_confirm(order_id: int):
-    """Stub-аналог webhook ЮKassa: единая точка mark_paid (идемпотентно)."""
-    result = mark_paid(order_id)
-    if result is None:
+@bp.post("/pay/yookassa/create/<int:order_id>")
+def yookassa_create(order_id: int):
+    """Создаёт встроенный платёж ЮKassa и возвращает confirmation_token для виджета."""
+    db = get_db()
+    order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if order is None:
         abort(404)
-    if not result["already_paid"]:   # дубль webhook не шумит в аналитике
+    if order["status"] != "created":
+        return jsonify({"already_paid": True})
+    if not settings.yukassa_enabled():
+        return jsonify({"error": "unavailable"}), 503
+    # Переиспользуем ещё «висящий» платёж, чтобы не плодить дубли (note #8 shepotZvezd).
+    if order["yookassa_payment_id"]:
+        existing = yookassa.get_payment(order["yookassa_payment_id"])
+        if existing and existing.get("status") == "pending":
+            tok = (existing.get("confirmation") or {}).get("confirmation_token")
+            if tok:
+                return jsonify({"confirmation_token": tok})
+    product = settings.get_products()[order["product_code"]]
+    try:
+        pay = yookassa.create_payment(
+            order_id=order_id,
+            amount_kopecks=order["price_kopecks"],
+            email=order["email"],
+            description=f"{product['title']} — {settings.SITE_NAME}",
+            product_title=product["title"],
+        )
+    except YuKassaError as e:
+        log.error("yookassa create_payment failed for order %s: %s", order_id, e)
+        return jsonify({"error": "create_failed"}), 502
+    db.execute("UPDATE orders SET yookassa_payment_id = ? WHERE id = ?",
+               (pay["payment_id"], order_id))
+    db.commit()
+    if not pay.get("confirmation_token"):
+        return jsonify({"error": "no_token"}), 502
+    return jsonify({"confirmation_token": pay["confirmation_token"]})
+
+
+def _settle_payment(payment_id: str):
+    """Перезапрашивает платёж в API ЮKassa (подлинность) и при succeeded + совпадении
+    суммы проводит mark_paid. Возвращает результат mark_paid или None. Идемпотентно:
+    mark_paid сам отсекает повторы (status != 'created')."""
+    pay = yookassa.get_payment(payment_id)
+    if not pay or pay.get("status") != "succeeded":
+        return None
+    raw_id = (pay.get("metadata") or {}).get("order_id")
+    try:
+        order_id = int(raw_id)
+    except (TypeError, ValueError):
+        return None
+    order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if order is None:
+        return None
+    paid_rub = float((pay.get("amount") or {}).get("value") or 0)
+    if round(paid_rub * 100) != order["price_kopecks"]:    # защита от подмены суммы
+        log.warning("yookassa amount mismatch order %s: paid %.2f vs %s kop",
+                    order_id, paid_rub, order["price_kopecks"])
+        return None
+    result = mark_paid(order_id)
+    if result and not result["already_paid"]:
         track_event("order_paid", {"order_id": order_id}, customer_id=result["customer_id"])
-    resp = redirect(url_for("main.order_success", order_id=order_id))
-    if result["session_token"]:
-        resp.set_cookie("gr_s", result["session_token"],
-                        max_age=settings.SESSION_DAYS * 24 * 3600,
-                        httponly=True, samesite="Lax")
-    return resp
+    return result
+
+
+@bp.post("/pay/yookassa/webhook")
+def yookassa_webhook():
+    """Уведомление ЮKassa. Подпись не шлётся → проверяем перезапросом платежа.
+    Оплату фиксируем ТОЛЬКО при succeeded; canceled/прочее — no-op (заказ остаётся
+    'created', ложных оплат нет). Всегда 200, иначе ЮKassa будет ретраить."""
+    body = request.get_json(force=True, silent=True) or {}
+    payment_id = (body.get("object") or {}).get("id")
+    if payment_id:
+        try:
+            _settle_payment(payment_id)
+        except Exception:
+            log.exception("yookassa webhook failed for payment %s", payment_id)
+    return "", 200
+
+
+@bp.get("/pay/yookassa/status/<int:order_id>")
+def yookassa_status(order_id: int):
+    """Поллинг с фронта: оплачен ли заказ. Если webhook опоздал — проверяем сами
+    и проводим оплату здесь же, выставляя сессионную куку (вход в кабинет)."""
+    order = get_db().execute(
+        "SELECT status, yookassa_payment_id FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if order is None:
+        abort(404)
+    if order["status"] != "created":          # любое не-created = оплата уже прошла
+        return jsonify({"payment_status": "paid"})
+    if order["yookassa_payment_id"]:
+        result = _settle_payment(order["yookassa_payment_id"])
+        if result:
+            resp = jsonify({"payment_status": "paid"})
+            if result["session_token"]:
+                resp.set_cookie(SESSION_COOKIE, result["session_token"],
+                                max_age=settings.SESSION_DAYS * 24 * 3600,
+                                httponly=True, samesite="Lax")
+            return resp
+    return jsonify({"payment_status": "pending"})
 
 
 @bp.get("/order/success/<int:order_id>")

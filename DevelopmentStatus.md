@@ -914,3 +914,50 @@ img — lazy.
 **НЕ сделано намеренно:** version bump + пересборка `dist/` + push — по правилу делаются ПЕРЕД
 git push; заказчик просил не пушить. Мобайл и финальный вид проверяет заказчик (открыть сайт
 локально `venv\Scripts\python.exe run.py` :5000). Мокапы-итерации лежат в `projectSpec/mockups/`.
+
+## 22.06.2026 — PHASE 8 (оплата): ЮKassa встроенный платёж (модалка) вместо stub
+
+**Что:** заменили stub-оплату на боевую ЮKassa (YooKassa API v3, `confirmation=embedded` — виджет
+в модалке на нашей странице, без редиректа). Портировано с проверенной реализации соседнего проекта
+`C:\projects\shepotZvezd` (тот же владелец/стиль), но адаптировано под Flask + одиночный заказ
+(у нас НЕТ батчей/`group_id`; цена уже лежит в `orders.price_kopecks` со скидкой купона). Заказчик
+положил боевые ключи в `.env` (`YUKASSA_MODE=live`, `YUKASSA_SHOP_ID_LIVE`, `YUKASSA_SECRET_KEY_LIVE`).
+
+**Ключевое преимущество:** идемпотентная точка подтверждения `mark_paid(order_id)` в `app/payments.py`
+уже была (создаёт customer/child, сессия 30 дней, `status='paid'`, инкремент купона, письмо «оплата
+получена»). Воркер уже забирает `status='paid'`. Поэтому ЮKassa встала **перед** `mark_paid`, сам
+`mark_paid` НЕ менялся.
+
+**Файлы:**
+- `config/settings.py` — слоты `YOOKASSA_*` (одиночные) заменены на режимный сплит test/live:
+  `YUKASSA_MODE` + `YUKASSA_SHOP_ID_{TEST,LIVE}`/`YUKASSA_SECRET_KEY_{TEST,LIVE}`, `YUKASSA_API_URL`,
+  хелпер `yukassa_enabled()` (оба ключа заданы → True).
+- `app/yookassa.py` (НОВЫЙ) — клиент API v3 на stdlib `urllib` (в проекте нет `requests`; mailer.py
+  уже так ходит). `create_payment(...)` → embedded + `Idempotence-Key` + Basic-Auth + `metadata={order_id}`
+  + точная сумма из копеек (см. UseCase #26) + чек 54-ФЗ в live (`vat_code=1`, `service`, `full_payment`,
+  как в shepotZvezd). `get_payment(id)` для проверки. Короткий ретрай на 429/5xx/таймаут.
+- `app/payments.py` — `create_payment()` теперь ведёт на `main.checkout` (страница виджета). `mark_paid` без изменений.
+- `app/routes.py` — удалены `/pay/stub/*`; добавлены: `GET /pay/<id>` (страница оплаты; если уже
+  оплачен → редирект на success), `POST /pay/yookassa/create/<id>` (создаёт платёж → `confirmation_token`;
+  переиспользует ещё «висящий» pending-платёж), `POST /pay/yookassa/webhook` (перезапрос платежа через
+  API = подлинность; `mark_paid` ТОЛЬКО при `succeeded` И точном совпадении суммы; `canceled`/прочее —
+  no-op, заказ остаётся `created` → ложных оплат нет; всегда 200), `GET /pay/yookassa/status/<id>`
+  (поллинг с фронта; если webhook опоздал — проводит оплату здесь же + ставит сессионную куку).
+  Общий хелпер `_settle_payment(payment_id)` для webhook и поллинга.
+- `templates/checkout.html` (НОВЫЙ) + `templates/checkout_stub.html` (УДАЛЁН) — сводка заказа + кнопка
+  «Оплатить» (`data-ym-goal="checkout_pay"`) открывает модалку с виджетом; чистый JS:
+  загрузка `checkout-widget.js` → create → render → поллинг status каждые 2с (≤90 попыток) →
+  редирект на success. Акцент виджета берётся из CSS-токена `--accent` (без хардкод-hex).
+- `static/css/components.css` — добавлен переиспользуемый компонент `.modal/.modal__card/.modal__close`
+  (цвета/размеры из токенов — по закону дизайн-системы, а не инлайн-стиль на странице).
+- `scripts/deploy/provision.sh` — комментарий-шаблон `.env` обновлён на `YUKASSA_*`.
+
+**Проверено локально (Windows, venv):** `create_app()` импортируется чисто; 4 роута `/pay/*`
+зарегистрированы; `checkout.html` рендерится в enabled И disabled состояниях; `yukassa_enabled()=True`;
+формат суммы из копеек верный (239920 → `2399.20`, 299900 → `2999.00`).
+
+**НЕ сделано (ждём заказчика):** (1) регистрация webhook-URL `https://golosrisunka.ru/pay/yookassa/webhook`
+в кабинете ЮKassa (события `payment.succeeded` + `payment.canceled`); (2) для локального теста —
+`YUKASSA_SHOP_ID_TEST`/`_TEST` + `YUKASSA_MODE=test` (виджету нужен реальный домен/HTTPS; в live
+создаются НАСТОЯЩИЕ платежи); (3) version bump + commit + deploy — ТОЛЬКО по явной команде заказчика
+(правило: не пушить/деплоить автоматически). После деплоя — боевой M8/M9-гейт.

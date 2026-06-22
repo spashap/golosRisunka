@@ -59,7 +59,8 @@ PUBLIC_BASE_URL=https://golosrisunka.ru
 MAIL_BACKEND=outbox
 ADMIN_ALERT_EMAIL=spashap@gmail.com
 YANDEX_METRIKA_ID=
-# Phase 8 (later): YOOKASSA_SHOP_ID= / YOOKASSA_SECRET_KEY= / UNISENDER_API_KEY=
+# ЮKassa: YUKASSA_MODE=live / YUKASSA_SHOP_ID_LIVE= / YUKASSA_SECRET_KEY_LIVE= (+_TEST для теста)
+# Прочее (later): UNISENDER_API_KEY=
 ENVEOF
   echo ".env TEMPLATE written -> you must edit it (see next steps)"
 fi

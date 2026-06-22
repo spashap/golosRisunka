@@ -19,9 +19,19 @@ ADMIN_PASS = os.getenv("ADMIN_PASS", "")
 YANDEX_METRIKA_ID = os.getenv("YANDEX_METRIKA_ID", "")
 # Dev-чит: этому email на localhost код входа показывается прямо на странице
 DEV_LOGIN_CODE_EMAIL = "spashap@gmail.com"
-# ЮKassa / Unisender keys land here later (Phase 8):
-YOOKASSA_SHOP_ID = os.getenv("YOOKASSA_SHOP_ID", "")
-YOOKASSA_SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY", "")
+# ЮKassa: режим test/live + раздельные ключи (как в shepotZvezd, проверено в бою).
+# .env: YUKASSA_MODE=test|live, YUKASSA_SHOP_ID_{TEST,LIVE}, YUKASSA_SECRET_KEY_{TEST,LIVE}.
+YUKASSA_MODE = os.getenv("YUKASSA_MODE", "test").strip().lower()
+_YK = "LIVE" if YUKASSA_MODE == "live" else "TEST"
+YUKASSA_SHOP_ID = os.getenv(f"YUKASSA_SHOP_ID_{_YK}", "").strip()
+YUKASSA_SECRET_KEY = os.getenv(f"YUKASSA_SECRET_KEY_{_YK}", "").strip()
+YUKASSA_API_URL = "https://api.yookassa.ru/v3"
+
+
+def yukassa_enabled() -> bool:
+    """True, если оба ключа заданы для текущего режима — иначе оплата недоступна."""
+    return bool(YUKASSA_SHOP_ID and YUKASSA_SECRET_KEY)
+
 UNISENDER_API_KEY = os.getenv("UNISENDER_API_KEY", "")          # legacy (маркетинговый API, не используется)
 UNISENDER_GO_API_KEY = os.getenv("UNISENDER_GO_API_KEY", "")    # Unisender Go (транзакционные письма, Phase 8)
 

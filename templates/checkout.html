@@ -1,0 +1,126 @@
+{% extends "_base.html" %}
+{% block title %}Оплата — Голос рисунка{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 480px; text-align: center">
+    <div class="form-card">
+      <h3>Оплата заказа</h3>
+      <p style="color: var(--muted); margin: 14px 0">
+        Заказ №{{ order.id }} · {{ product.title }}<br>
+        <b style="font-size: 26px; color: var(--accent)">{{ order.price_kopecks // 100 }} ₽</b>
+      </p>
+
+      {% if yukassa_enabled %}
+      <p class="hint" style="margin-bottom: 18px">
+        Оплата картой в защищённом окне ЮKassa — вы останетесь на этой странице.
+      </p>
+      <button id="pay-btn" class="btn btn--primary" style="width: 100%"
+              data-ym-goal="checkout_pay">Оплатить — {{ order.price_kopecks // 100 }} ₽</button>
+      {% else %}
+      <p class="hint" style="margin-bottom: 4px; color: var(--accent)">
+        Оплата временно недоступна. Пожалуйста, попробуйте позже или напишите нам — контакты в подвале.
+      </p>
+      {% endif %}
+
+      <p style="margin-top: 14px"><a href="/order" style="color: var(--soft)">← Вернуться к форме</a></p>
+    </div>
+  </div>
+</div>
+
+{% if yukassa_enabled %}
+<div class="modal" id="pay-modal" aria-hidden="true">
+  <div class="modal__card">
+    <button type="button" class="modal__close" id="pay-close" aria-label="Закрыть">×</button>
+    <h3 style="text-align: center; margin-bottom: 16px">Оплата {{ order.price_kopecks // 100 }} ₽</h3>
+    <div id="pay-error" style="display: none; color: var(--accent); text-align: center; margin-bottom: 14px"></div>
+    <div id="yookassa-widget-container" style="min-height: 320px"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var orderId = {{ order.id }};
+  var modal = document.getElementById('pay-modal');
+  var payBtn = document.getElementById('pay-btn');
+  var errBox = document.getElementById('pay-error');
+  var widget = null, polling = false, created = false;
+
+  function showError(msg) { errBox.textContent = msg; errBox.style.display = 'block'; }
+  function clearError() { errBox.style.display = 'none'; errBox.textContent = ''; }
+
+  function loadScript() {
+    return new Promise(function (resolve, reject) {
+      if (window.YooMoneyCheckoutWidget) return resolve();
+      var s = document.createElement('script');
+      s.src = 'https://yookassa.ru/checkout-widget/v1/checkout-widget.js';
+      s.async = true;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error('script')); };
+      document.body.appendChild(s);
+    });
+  }
+
+  function accent() {
+    var c = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    return c || '#3E4E78';
+  }
+
+  function poll() {
+    if (polling) return;
+    polling = true;
+    var tries = 0;
+    var iv = setInterval(function () {
+      tries++;
+      fetch('/pay/yookassa/status/' + orderId)
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.payment_status === 'paid') {
+            clearInterval(iv);
+            window.location.href = '/order/success/' + orderId;
+          } else if (tries >= 90) {            // ~3 минуты
+            clearInterval(iv);
+            polling = false;
+            showError('Время ожидания истекло. Обновите страницу и попробуйте снова.');
+          }
+        })
+        .catch(function () { /* сеть моргнула — продолжаем поллинг */ });
+    }, 2000);
+  }
+
+  function openModal() {
+    clearError();
+    modal.classList.add('is-open');
+    if (created) return;                       // не создаём платёж дважды
+    created = true;
+    loadScript()
+      .then(function () {
+        return fetch('/pay/yookassa/create/' + orderId, { method: 'POST' })
+          .then(function (r) { return r.json(); });
+      })
+      .then(function (d) {
+        if (d.already_paid) { window.location.href = '/order/success/' + orderId; return; }
+        if (!d.confirmation_token) { throw new Error(d.error || 'no_token'); }
+        widget = new window.YooMoneyCheckoutWidget({
+          confirmation_token: d.confirmation_token,
+          customization: { colors: { control_primary: accent() } },
+          error_callback: function () { showError('Ошибка оплаты. Попробуйте ещё раз.'); }
+        });
+        return widget.render('yookassa-widget-container');
+      })
+      .then(function () { poll(); })
+      .catch(function () {
+        created = false;
+        showError('Не удалось открыть оплату. Попробуйте ещё раз чуть позже.');
+      });
+  }
+
+  function closeModal() { modal.classList.remove('is-open'); }
+
+  payBtn.addEventListener('click', openModal);
+  document.getElementById('pay-close').addEventListener('click', closeModal);
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+})();
+</script>
+{% endif %}
+{% endblock %}

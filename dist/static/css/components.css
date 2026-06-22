@@ -397,6 +397,25 @@ html.dk .btn { color: #241A12; }
   .cta-pop { left: 0; right: 0; width: auto; }
 }
 
+/* Модалка (оплата ЮKassa и пр.): затемнение + матовая карточка по бренду.
+   Открытие — классом .is-open (JS). Карточка повторяет язык .hero__card/.form-card. */
+.modal { position: fixed; inset: 0; z-index: 200; display: none;
+         align-items: center; justify-content: center; padding: 20px;
+         background: rgba(33, 21, 11, .46);
+         backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.modal.is-open { display: flex; }
+.modal__card { position: relative; width: 100%; max-width: 460px;
+               background: var(--paper); border: 1px solid var(--line);
+               border-radius: var(--radius-card); padding: 26px 26px 28px;
+               box-shadow: 0 24px 54px rgba(40, 26, 14, .28);
+               max-height: 92vh; overflow-y: auto; }
+.modal__close { position: absolute; top: 12px; right: 14px; width: 34px; height: 34px;
+                display: inline-flex; align-items: center; justify-content: center;
+                padding: 0; border: none; border-radius: 99px; cursor: pointer;
+                background: var(--alt); color: var(--soft);
+                font-size: var(--fs-lead); line-height: 1; }
+.modal__close:hover { background: var(--line); color: var(--ink); }
+
 /* --- Карточка-превью отчёта (лендинг: блок «Примеры отчётов») --- */
 .report-card { width: 340px; overflow: hidden; position: relative;
                display: flex; flex-direction: column;   /* кнопка всегда у низа */

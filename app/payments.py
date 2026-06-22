@@ -19,9 +19,9 @@ log = logging.getLogger("payments")
 
 
 def create_payment(order_id: int, price_kopecks: int) -> str:
-    """Stub-провайдер: «чекаут» — своя страница с кнопкой. ЮKassa вернёт
-    hosted-URL из своего API тем же контрактом."""
-    return url_for("main.stub_checkout", order_id=order_id)
+    """URL страницы оплаты. Сама страница (checkout) поднимает встроенный виджет
+    ЮKassa в модалке; платёж создаётся отдельным AJAX-вызовом /pay/yookassa/create."""
+    return url_for("main.checkout", order_id=order_id)
 
 
 def mark_paid(order_id: int) -> dict | None:
