@@ -327,6 +327,17 @@ html.dk .btn { color: #241A12; }
 .field label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 6px; }
 .field .hint { color: var(--soft); font-size: 13px; margin-top: 4px; }
 .field .err { color: #C0392B; font-size: 13px; margin-top: 4px; font-weight: 600; }
+
+/* --- Свой комбобокс (тема/материалы): надёжный выбор подсказки на мобильных --- */
+.combo-list {
+  position: absolute; left: 0; right: 0; top: 100%; z-index: 40;
+  margin-top: 4px; max-height: 240px; overflow-y: auto; list-style: none; padding: 4px 0;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-radius: 10px; box-shadow: var(--shadow-card);
+}
+.combo-list__item { padding: 10px 14px; font-size: 16px; cursor: pointer; }
+.combo-list__item:hover, .combo-list__item.is-active { background: var(--alt); }
 .input {
   /* обязательные поля: лёгкая голубая заливка в тон палитры (--badge) */
   width: 100%; padding: 12px 14px; font: inherit; font-size: 16px;
@@ -1220,7 +1231,7 @@ html.dk .btn { color: #241A12; }
           </div>
           
         </div>
-        <div class="report-card__quote">«Этот рисунок создаёт впечатление, что Алексей — ребёнок с богатым внутренним миром и склонностью к масштабному мышлению.»</div>
+        <div class="report-card__quote">«Похоже, Алексей — смелый и любознательный конструктор, которого влекут большие, масштабные идеи.»</div>
         <a class="report-card__link" href="/r/primer-3-goda" data-ym-goal="landing_sample_open_primer-3-goda">Смотреть пример отчёта →</a>
       </article>
       
@@ -1258,7 +1269,7 @@ html.dk .btn { color: #241A12; }
           </div>
           
         </div>
-        <div class="report-card__quote">«Рисунки Алисы можно прочитать как портрет девочки с богатым и очень тёплым внутренним миром, который населён любимыми друзьями.»</div>
+        <div class="report-card__quote">«Рисунки Алисы, наполненные историями и эмоциями её героев, дают возможность предположить, что у неё богатый внутренний мир и глубокая эмоциональная связь со своими историями и героями.»</div>
         <a class="report-card__link" href="/r/primer-2-risunka" data-ym-goal="landing_sample_open_primer-2-risunka">Смотреть пример отчёта →</a>
       </article>
       
@@ -1294,7 +1305,7 @@ html.dk .btn { color: #241A12; }
           </div>
           
         </div>
-        <div class="report-card__quote">«Судя по этому рисунку, Никита — ребёнок, для которого мир строится вокруг идей связи, тепла и общности.»</div>
+        <div class="report-card__quote">«Похоже, для Никиты мир — это прежде всего надёжное и безопасное место, где все связаны друг с другом.»</div>
         <a class="report-card__link" href="/r/primer-6-let" data-ym-goal="landing_sample_open_primer-6-let">Смотреть пример отчёта →</a>
       </article>
       
@@ -1325,12 +1336,12 @@ html.dk .btn { color: #241A12; }
           
           <div class="score-bar score-bar--mini">
             <span>Настроение и выразительность</span>
-            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
-            <b>8</b>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
+            <b>9</b>
           </div>
           
         </div>
-        <div class="report-card__quote">«Этот рисунок можно прочитать как портрет Алины — личности, похоже, с богатым внутренним миром и выразительным, сильным характером.»</div>
+        <div class="report-card__quote">«В рисунке Алины можно прочитать портрет личности смелой, уверенной и, похоже, обладающей богатым внутренним миром.»</div>
         <a class="report-card__link" href="/r/primer-8-let" data-ym-goal="landing_sample_open_primer-8-let">Смотреть пример отчёта →</a>
       </article>
       
@@ -1811,7 +1822,7 @@ html.dk .btn { color: #241A12; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.036</span>
+    <span class="foot-ver">V1.037</span>
   </div>
 </footer>
 

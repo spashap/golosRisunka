@@ -14,9 +14,11 @@
               placeholder="{{ f.placeholder or '' }}" {% if f.hint %}title="{{ f.hint }}"{% endif %}>{{ values.get(name, '') }}</textarea>
   </div>
   {% elif f.type == "combo" %}
+  {# свой комбобокс (order.js): нативный <datalist> на мобильных показывает вариант,
+     но не даёт его выбрать (баг). data-combo = id источника пресетов ниже. #}
   <input class="input{% if not f.required %} input--optional{% endif %}{% if errors.get(name) %} input--error{% endif %}" type="text" id="{{ name }}" name="{{ name }}"
          value="{{ values.get(name, '') }}" placeholder="{{ f.placeholder or '' }}"
-         list="{{ name }}_list" autocomplete="off" {% if f.hint %}title="{{ f.hint }}"{% endif %}>
+         data-combo="{{ name }}_list" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" {% if f.hint %}title="{{ f.hint }}"{% endif %}>
   <datalist id="{{ name }}_list">
     {% for opt in f.presets %}<option value="{{ opt }}">{% endfor %}
   </datalist>

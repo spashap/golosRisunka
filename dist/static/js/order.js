@@ -254,6 +254,83 @@
     try { navigator.sendBeacon("/track/form-started"); } catch (e) {}
   });
 
+  // ---------- комбобоксы (тема / материалы) ----------
+  // Нативный <input list> + <datalist> на мобильных показывает подсказку, но часто
+  // НЕ даёт её выбрать (приходится дописывать слово вручную). Свой выпадающий список:
+  // выбор по mousedown (успевает до blur), стрелки/Enter с клавиатуры, свободный ввод сохраняется.
+  (function comboboxes() {
+    var listEl = null, inputEl = null, idx = -1, committing = false;
+
+    function presetsOf(input) {
+      var dl = document.getElementById(input.getAttribute("data-combo"));
+      if (!dl) return [];
+      return Array.prototype.map.call(dl.querySelectorAll("option"),
+        function (o) { return o.value; });
+    }
+    function close() {
+      if (listEl && listEl.parentNode) listEl.parentNode.removeChild(listEl);
+      if (inputEl) inputEl.setAttribute("aria-expanded", "false");
+      listEl = null; inputEl = null; idx = -1;
+    }
+    function commit(input, val) {
+      committing = true;                       // не переоткрывать список на свой же input-event
+      input.value = val;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      committing = false;
+      close();
+    }
+    function open(input) {
+      close();
+      var q = (input.value || "").trim().toLowerCase();
+      var matches = presetsOf(input).filter(function (p) {
+        return !q || p.toLowerCase().indexOf(q) !== -1;
+      });
+      if (!matches.length) return;
+      var ul = document.createElement("ul");
+      ul.className = "combo-list";
+      matches.forEach(function (p) {
+        var li = document.createElement("li");
+        li.className = "combo-list__item";
+        li.textContent = p;
+        li.addEventListener("mousedown", function (e) {
+          e.preventDefault();                  // удержать фокус и успеть до blur
+          commit(input, p);
+        });
+        ul.appendChild(li);
+      });
+      var ctl = (input.closest && input.closest(".ctl")) || input.parentNode;
+      ctl.style.position = "relative";
+      ctl.appendChild(ul);
+      listEl = ul; inputEl = input; idx = -1;
+      input.setAttribute("aria-expanded", "true");
+    }
+    function highlight(items) {
+      items.forEach(function (it, i) { it.classList.toggle("is-active", i === idx); });
+      if (idx >= 0 && items[idx]) items[idx].scrollIntoView({ block: "nearest" });
+    }
+    function isCombo(el) { return el && el.matches && el.matches("input[data-combo]"); }
+
+    document.addEventListener("focusin", function (e) { if (isCombo(e.target)) open(e.target); });
+    document.addEventListener("input", function (e) {
+      if (!committing && isCombo(e.target)) open(e.target);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (!listEl || e.target !== inputEl) return;
+      var items = listEl.querySelectorAll(".combo-list__item");
+      if (e.key === "ArrowDown") { e.preventDefault(); idx = Math.min(idx + 1, items.length - 1); highlight(items); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); idx = Math.max(idx - 1, 0); highlight(items); }
+      else if (e.key === "Enter" && idx >= 0) { e.preventDefault(); commit(inputEl, items[idx].textContent); }
+      else if (e.key === "Escape") { close(); }
+    });
+    document.addEventListener("focusout", function (e) {
+      if (e.target === inputEl) setTimeout(close, 150);   // дать mousedown сработать
+    });
+    document.addEventListener("click", function (e) {
+      if (listEl && !listEl.contains(e.target) && e.target !== inputEl) close();
+    });
+  })();
+
   restoreDraft();
   refresh();
 })();
