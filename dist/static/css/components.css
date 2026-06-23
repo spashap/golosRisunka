@@ -496,6 +496,12 @@ html.dk .btn { color: #241A12; }
   .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
 }
 
+/* --- Иллюстративные кейсы «Например, такие ситуации» (трас-блок) --- */
+.case-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.case p { color: var(--ink); font-size: var(--fs-body); line-height: 1.5; margin: 0; }
+.case strong { color: var(--accent2); font-weight: 700; }
+@media (max-width: 880px) { .case-list { grid-template-columns: 1fr; } }
+
 /* --- «Без мифов»: две колонки «не делаем / делаем» (спокойно, без красного) --- */
 .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .compare-col h3 { font-size: 20px; margin-bottom: 12px; }

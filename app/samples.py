@@ -80,9 +80,13 @@ def _load() -> list[Sample]:
         if not rjson.exists():
             continue
         data = json.loads(rjson.read_text(encoding="utf-8"))
-        dims = sorted(data["dimensions"], key=lambda d: -d["score"])
+        # Карточка ведёт ЛИЧНОСТЬЮ (философия 2.3): показываем первые 3 направления в
+        # ПОРЯДКЕ отчёта (личностные идут первыми), а не топ-3 по баллу; цитата — из
+        # портрета about_child, а не из заключения. Бейдж — сильнейшее направление.
+        dims_order = data["dimensions"]
+        dims_top = sorted(data["dimensions"], key=lambda d: -d["score"])
         first_name = data["child"]["name"].split()[0]
-        quote = _first_sentence(data["conclusion"].strip())
+        quote = _first_sentence((data.get("about_child") or data["conclusion"]).strip())
         thumb_url, tw, th = _thumb_file(settings.BASE_DIR / sd["drawing"], sd["token"])
         samples.append(Sample(
             token=sd["token"],
@@ -90,8 +94,8 @@ def _load() -> list[Sample]:
             age_display=data["child"]["age_display"],
             caption=sd["caption"],
             thumb_url=thumb_url, thumb_w=tw, thumb_h=th,
-            top_scores=[{"title": d["title"], "score": d["score"]} for d in dims[:3]],
-            badge=f"{dims[0]['title'].lower()} {dims[0]['score']}/10",
+            top_scores=[{"title": d["title"], "score": d["score"]} for d in dims_order[:3]],
+            badge=f"{dims_top[0]['title'].lower()} {dims_top[0]['score']}/10",
             quote=quote,
             html_path=rdir / "report.html",
             hero=sd["hero"],
