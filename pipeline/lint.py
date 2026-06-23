@@ -63,12 +63,17 @@ LIGHT_TERMS = re.compile(
     r"стеснительн\w*|неувер\w*|одиночеств\w*|печал\w*|груст\w*|\bзлост\w*|\bгнев\w*|"
     r"внутренн\w+\s+(?:мир\w*|сил\w*|состояни\w*)", re.IGNORECASE)
 
-# гипотезный оборот (условие 2 оправы)
+# гипотезный оборот (условие 2 оправы). Включает варианты по лицу/числу
+# (может/можно/можем/могут/могла…) и «предположить/предположение» — модель пишет их
+# естественно, без них линтер ложно ловит уже корректно оформленные гипотезы.
 HEDGE = re.compile(
-    r"может\s+(?:говорить|отражать|быть|означать|свидетельств\w+)|"
-    r"иногда\s+связыва\w+|часто\s+связыва\w+|можно\s+прочита\w+|можно\s+прочесть|"
+    r"мож(?:ет|но|ем|ете)\s+(?:говорить|отражать|быть|означать|свидетельств\w+|"
+    r"прочита\w+|прочесть|увидеть|услышать|предполож\w+)|"
+    r"могут\s+(?:говорить|отражать|быть|означать|свидетельств\w+)|"
+    r"могл[аио]\s+(?:говорить|отражать|свидетельств\w+)|"
+    r"предполож\w+|иногда\s+связыва\w+|часто\s+связыва\w+|"
     r"похож\w+\s+на|созда[её]т\s+впечатлени\w+|в\s+этом\s+ключе|это\s+гипотез\w+|"
-    r"догадк\w+|не\s+вывод|можно\s+(?:увидеть|услышать)\s+как|словно|как\s+будто", re.IGNORECASE)
+    r"догадк\w+|не\s+вывод|словно|как\s+будто", re.IGNORECASE)
 # атрибуция к традиции/автору (условие 1 оправы)
 ATTRIBUTION = re.compile(
     r"проективн\w+|традици\w+|подход\w+|Маховер|Ловенфельд|Lowenfeld|Выготск\w+|"
@@ -78,7 +83,7 @@ ATTRIBUTION = re.compile(
 # иначе «рисунок» где угодно рядом ложно оправдал бы «характер Лизы».
 WORK_REF = re.compile(
     r"работ\w*|рисун\w*|картин\w*|сцен\w*|сюжет\w*|композ\w*|лини\w*|штрих\w*|"
-    r"мазок|мазк\w*|цвет\w*|пейзаж\w*|персонаж\w*|изображени\w*|"
+    r"мазок|мазк\w*|цвет\w*|пейзаж\w*|персонаж\w*|геро\w*|изображени\w*|"
     r"небо|неба|небе|фон\w*|атмосфер\w*|гамм\w*|колорит\w*|погод\w*", re.IGNORECASE)
 _WORK_LOOKAHEAD = 40  # символов после термина, где артефакт-существительное снимает претензию
 
@@ -90,8 +95,12 @@ ALLOWED_CONTEXTS = [
 
 _WINDOW = 200  # символов в каждую сторону вокруг термина — окно проверки оправы
 
-# поля верхнего уровня, которые проверяем
-_CHECK_FIELDS = ("context_summary", "introduction", "about_child", "conclusion")
+# Интерпретационная проза (полный скан: HARD + проверка оправы зоны 2/3).
+_FRAME_FIELDS = ("introduction", "about_child", "conclusion")
+# Контекст-пересказ и списки идей/заданий (только HARD-баны). Frame-проверку тут НЕ
+# делаем: context_summary — пересказ слов родителя; рекомендации и направления — это
+# задания/идеи, где «настроение героя», «характер кота» легитимны (как и activities).
+# HARD-баны (диагноз-факт/командный тон/катастрофизация/прогноз-факт) ловятся ВЕЗДЕ.
 
 
 def _hard_scan(text: str, where: str) -> list[dict]:
@@ -150,18 +159,22 @@ def _scan(text: str, where: str) -> list[dict]:
 def find_violations(report_data: dict) -> list[dict]:
     """report_data — dict валидированного отчёта (model_dump)."""
     hits: list[dict] = []
-    for f in _CHECK_FIELDS:
+    # --- интерпретационные поля: HARD + проверка оправы ---
+    for f in _FRAME_FIELDS:
         if report_data.get(f):
             hits.extend(_scan(str(report_data[f]), f))
     for i, d in enumerate(report_data.get("dimensions") or []):
         for f in ("observation", "research_note"):
             if d.get(f):
                 hits.extend(_scan(str(d[f]), f"dimensions[{i}].{f} ({d.get('title')})"))
-    for field in ("understanding_recommendations", "art_recommendations"):
-        for i, r in enumerate(report_data.get(field) or []):
-            hits.extend(_scan(str(r), f"{field}[{i}]"))
     for i, sp in enumerate(report_data.get("specialists") or []):
         hits.extend(_scan(str(sp.get("reason", "")), f"specialists[{i}].reason"))
+    # --- контекст + списки идей/заданий: только HARD-баны (frame-проверка выключена) ---
+    if report_data.get("context_summary"):
+        hits.extend(_hard_scan(str(report_data["context_summary"]), "context_summary"))
+    for field in ("understanding_recommendations", "art_recommendations"):
+        for i, r in enumerate(report_data.get(field) or []):
+            hits.extend(_hard_scan(str(r), f"{field}[{i}]"))
     for i, dd in enumerate(report_data.get("development_directions") or []):
-        hits.extend(_scan(str(dd.get("text", "")), f"development_directions[{i}]"))
+        hits.extend(_hard_scan(str(dd.get("text", "")), f"development_directions[{i}]"))
     return hits
