@@ -6,13 +6,16 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image
 
 from config import settings
+
+log = logging.getLogger("samples")
 
 
 def _first_sentence(text: str, max_len: int = 220) -> str:
@@ -63,12 +66,22 @@ class Sample:
 
 def _thumb_file(path: Path, token: str, idx: int = 0,
                 size: int = 560, quality: int = 74) -> dict:
-    """Webp-миниатюра в static (spec §4.2: WebP с width/height, lazy ниже фолда).
-    idx>0 — второй+ рисунок сводного отчёта (имя файла со суффиксом)."""
+    """Webp-миниатюра в static (spec §4.2: WebP, lazy ниже фолда).
+    idx>0 — второй+ рисунок сводного отчёта (имя файла со суффиксом).
+    Если миниатюра уже есть (закоммичена/сгенерирована) — отдаём как есть, НЕ
+    перезаписываем: иначе на проде git-pull кладёт файлы от root, а веб-процесс
+    (www-data) падает при попытке записи → 500 (UseCase: см. ниже)."""
     out_dir = settings.BASE_DIR / "static" / "img" / "samples"
-    out_dir.mkdir(parents=True, exist_ok=True)
     name = f"{token}.webp" if idx == 0 else f"{token}-{idx}.webp"
     out = out_dir / name
+    url = f"/static/img/samples/{name}"
+    if out.exists():
+        try:
+            with Image.open(out) as im0:
+                return {"url": url, "w": im0.width, "h": im0.height}
+        except Exception:
+            pass  # битый файл — перегенерируем ниже
+    out_dir.mkdir(parents=True, exist_ok=True)
     im = Image.open(path)
     if im.mode != "RGB":
         bg = Image.new("RGB", im.size, (255, 255, 255))
@@ -76,38 +89,41 @@ def _thumb_file(path: Path, token: str, idx: int = 0,
         im = bg
     im.thumbnail((size, size), Image.LANCZOS)
     im.save(out, format="WEBP", quality=quality)
-    return {"url": f"/static/img/samples/{name}", "w": im.width, "h": im.height}
+    return {"url": url, "w": im.width, "h": im.height}
 
 
 def _load() -> list[Sample]:
     samples = []
     for sd in _SAMPLE_DEFS:
-        rdir = settings.BASE_DIR / sd["report_dir"]
-        rjson = rdir / "report.json"
-        if not rjson.exists():
-            continue
-        data = json.loads(rjson.read_text(encoding="utf-8"))
-        # Карточка ведёт личностью (2.3): первые 3 направления в ПОРЯДКЕ отчёта
-        # (личностные впереди), цитата — из портрета about_child, бейдж — сильнейшее.
-        dims_order = data["dimensions"]
-        dims_top = sorted(data["dimensions"], key=lambda d: -d["score"])
-        first_name = data["child"]["name"].split()[0]
-        quote = _first_sentence((data.get("about_child") or data["conclusion"]).strip())
-        thumbs = [_thumb_file(settings.BASE_DIR / d, sd["token"], i)
-                  for i, d in enumerate(sd["drawings"])]
-        samples.append(Sample(
-            token=sd["token"],
-            name=first_name,
-            age_display=data["child"]["age_display"],
-            caption=sd["caption"],
-            thumbs=thumbs,
-            top_scores=[{"title": d["title"], "score": d["score"]} for d in dims_order[:3]],
-            badge=f"{dims_top[0]['title'].lower()} {dims_top[0]['score']}/10",
-            quote=quote,
-            html_path=rdir / "report.html",
-            hero=sd["hero"],
-            n_drawings=sd["n_drawings"],
-        ))
+        try:
+            rdir = settings.BASE_DIR / sd["report_dir"]
+            rjson = rdir / "report.json"
+            if not rjson.exists():
+                continue
+            data = json.loads(rjson.read_text(encoding="utf-8"))
+            # Карточка ведёт личностью (2.3): первые 3 направления в ПОРЯДКЕ отчёта
+            # (личностные впереди), цитата — из портрета about_child, бейдж — сильнейшее.
+            dims_order = data["dimensions"]
+            dims_top = sorted(data["dimensions"], key=lambda d: -d["score"])
+            first_name = data["child"]["name"].split()[0]
+            quote = _first_sentence((data.get("about_child") or data["conclusion"]).strip())
+            thumbs = [_thumb_file(settings.BASE_DIR / d, sd["token"], i)
+                      for i, d in enumerate(sd["drawings"])]
+            samples.append(Sample(
+                token=sd["token"],
+                name=first_name,
+                age_display=data["child"]["age_display"],
+                caption=sd["caption"],
+                thumbs=thumbs,
+                top_scores=[{"title": d["title"], "score": d["score"]} for d in dims_order[:3]],
+                badge=f"{dims_top[0]['title'].lower()} {dims_top[0]['score']}/10",
+                quote=quote,
+                html_path=rdir / "report.html",
+                hero=sd["hero"],
+                n_drawings=sd["n_drawings"],
+            ))
+        except Exception:  # один сломанный образец не должен ронять страницу (500)
+            log.exception("sample %s failed to load — skipped", sd.get("token"))
     return samples
 
 
