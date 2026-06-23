@@ -543,18 +543,23 @@ html.dk .btn { color: #241A12; }
                background: var(--paper); border-radius: var(--radius-card);
                box-shadow: var(--shadow-card); color: var(--ink); }
 .report-card__badge { position: absolute; top: 12px; right: 12px; z-index: 3; }
-/* Рисунок(и) крупно — полароид; для сводного отчёта по 2 рисункам — веером под углом */
-.report-card__draws { display: flex; justify-content: center; align-items: flex-start;
-                      padding: 26px 18px 8px; }
+/* Рисунок(и) крупно — полароид. Фиксированная высота зоны → имя/оценки выровнены
+   по всем карточкам (1, 2 или 3 рисунка); содержимое центрируется внутри. */
+.report-card__draws { display: flex; justify-content: center; align-items: center;
+                      height: 196px; padding: 6px 16px; }
 .report-card__pol { background: var(--paper); padding: 8px 8px 12px; border-radius: 3px;
                     box-shadow: var(--shadow-pol); }
 .report-card__pol img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain;
                         background: var(--polbg); border-radius: 2px; }
-.report-card__draws .report-card__pol { width: 64%; transform: rotate(-2deg); }
-.report-card__draws--multi { padding-top: 32px; }
-.report-card__draws--multi .report-card__pol { width: 54%; }
-.report-card__draws--multi .report-card__pol:first-child { transform: rotate(-5deg); margin-right: -12%; z-index: 1; }
-.report-card__draws--multi .report-card__pol:last-child { transform: rotate(5deg); margin-top: 16px; z-index: 2; }
+/* один рисунок — крупный полароид по центру (без изменений, и так ок) */
+.report-card__draws:not(.report-card__draws--multi) .report-card__pol { width: 64%; transform: rotate(-2deg); }
+/* два-три рисунка — веер из полароидов под углом: крупнее, плотный нахлёст,
+   cover (без широких полей-полей внутри полароида) */
+.report-card__draws--multi .report-card__pol { width: 62%; padding: 6px 6px 8px; margin: 0 -12%; }
+.report-card__draws--multi .report-card__pol img { object-fit: cover; }
+.report-card__draws--multi .report-card__pol:first-child { transform: rotate(-5deg) translateY(-6px); z-index: 1; }
+.report-card__draws--multi .report-card__pol:nth-child(2) { transform: rotate(4deg) translateY(6px); z-index: 2; }
+.report-card__draws--multi .report-card__pol:nth-child(3) { transform: rotate(-2deg) translateY(-2px); z-index: 3; }
 /* Имя/возраст по центру под рисунком */
 .report-card__meta { text-align: center; padding: 8px 18px 2px; }
 .report-card__name { font-family: var(--font-head); font-weight: 800; font-size: 18px; }
@@ -1806,7 +1811,7 @@ html.dk .btn { color: #241A12; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.035</span>
+    <span class="foot-ver">V1.036</span>
   </div>
 </footer>
 
