@@ -85,8 +85,18 @@ def _process(conn: sqlite3.Connection, order: sqlite3.Row) -> str:
          "caption": f"Рисунок {i + 1}" if len(result.image_jpegs) > 1 else report.child.name}
         for i, j in enumerate(result.image_jpegs)
     ]
+    # управляемые из админки блоки в конце отчёта; выбор апсейла/дисклеймера — по числу
+    # рисунков (>3 не бывает, но clamp на всякий). Пусто = блок не выводится (gated в шаблоне).
+    texts = settings.get_report_texts()
+    n_key = str(min(len(rows), 3))
+    upsell_text = (texts.get("upsell") or {}).get(n_key, "")
+    disclaimer_text = (texts.get("disclaimer_main") or "") + \
+        (texts.get("disclaimer_by_count") or {}).get(n_key, "")
+    free_text = texts.get("free_text") or ""
+
     html_path, pdf_path = render_report_files(
-        report, drawings, generated_date=ru_date(datetime.date.today()), out_dir=out_dir)
+        report, drawings, generated_date=ru_date(datetime.date.today()), out_dir=out_dir,
+        upsell_text=upsell_text, disclaimer_text=disclaimer_text, free_text=free_text)
 
     token = _upsert_report_row(conn, order_id, html_path, pdf_path, json_path,
                                result.attempts_used)

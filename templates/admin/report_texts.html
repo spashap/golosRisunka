@@ -1,0 +1,49 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Тексты отчёта{% endblock %}
+{% block content %}
+<div class="admin-head"><h1 class="h2">Тексты в конце отчёта</h1></div>
+
+{% if saved == "ok" %}<p class="admin-flash admin-flash--ok">Сохранено — новые тексты подставятся при следующей генерации/перегенерации отчёта (без рестарта).</p>{% endif %}
+
+<p class="hint">Источник — <code>config/report_texts.json</code>. Эти блоки пайплайн дописывает
+в <strong>конец отчёта</strong> при генерации. Какой апсейл/дисклеймер показать — выбирается
+автоматически по числу рисунков в заказе (1 / 2 / 3). <strong>Пусто = блок не выводится.</strong>
+Это контент ОТЧЁТА (PDF/HTML), не лендинга.</p>
+
+<form method="post" action="/admin/report-texts/save">
+
+  <h2>Апсейл «рассеять туман» — по числу рисунков</h2>
+  <p class="hint">По одному рисунку нельзя отличить устойчивую черту от настроения одного дня —
+  это честная основа апсейла. Текст добавляется в конец отчёта для заказов с соответствующим
+  числом рисунков.</p>
+  <div class="form-card">
+    <div class="field"><label>Заказ с 1 рисунком</label>
+      <div class="ctl"><textarea class="input" name="upsell_1" rows="4">{{ (texts.upsell or {}).get("1", "") }}</textarea></div></div>
+    <div class="field"><label>Заказ с 2 рисунками</label>
+      <div class="ctl"><textarea class="input" name="upsell_2" rows="4">{{ (texts.upsell or {}).get("2", "") }}</textarea></div></div>
+    <div class="field"><label>Заказ с 3 рисунками</label>
+      <div class="ctl"><textarea class="input" name="upsell_3" rows="4">{{ (texts.upsell or {}).get("3", "") }}</textarea></div></div>
+  </div>
+
+  <h2 style="margin-top: 32px">Дисклеймер в конце отчёта</h2>
+  <div class="form-card">
+    <div class="field"><label>Основной дисклеймер (для всех отчётов)</label>
+      <div class="ctl"><textarea class="input" name="disclaimer_main" rows="5">{{ texts.disclaimer_main or "" }}</textarea></div></div>
+    <div class="field"><label>Добавка для 1 рисунка <span class="hint">(дописывается к основному; напр. «это один момент, не полная картина»)</span></label>
+      <div class="ctl"><textarea class="input" name="disclaimer_by_count_1" rows="3">{{ (texts.disclaimer_by_count or {}).get("1", "") }}</textarea></div></div>
+    <div class="field"><label>Добавка для 2 рисунков</label>
+      <div class="ctl"><textarea class="input" name="disclaimer_by_count_2" rows="3">{{ (texts.disclaimer_by_count or {}).get("2", "") }}</textarea></div></div>
+    <div class="field"><label>Добавка для 3 рисунков</label>
+      <div class="ctl"><textarea class="input" name="disclaimer_by_count_3" rows="3">{{ (texts.disclaimer_by_count or {}).get("3", "") }}</textarea></div></div>
+  </div>
+
+  <h2 style="margin-top: 32px">Свободный текст-блок</h2>
+  <p class="hint">Произвольный блок в самом конце отчёта — редактируется без кода. Пусто = не выводится.</p>
+  <div class="form-card">
+    <div class="field"><label>Свободный блок</label>
+      <div class="ctl"><textarea class="input" name="free_text" rows="5">{{ texts.free_text or "" }}</textarea></div></div>
+  </div>
+
+  <button class="btn btn--primary" type="submit" style="margin-top: 20px">Сохранить тексты</button>
+</form>
+{% endblock %}

@@ -60,6 +60,39 @@ def get_products() -> dict:
         _products_cache = (mtime, json.loads(_PRODUCTS_FILE.read_text(encoding="utf-8")))
     return _products_cache[1]
 
+
+# Управляемые из админки тексты, которые пайплайн дописывает в КОНЕЦ отчёта при
+# генерации (апсейл по числу рисунков + дисклеймеры + свободный блок). Pass-through,
+# без логики; принцип «меняется в одном месте, без кода». Читается воркером при рендере.
+_REPORT_TEXTS_FILE = BASE_DIR / "config" / "report_texts.json"
+_report_texts_cache: tuple[float, dict] | None = None
+
+# дефолты на случай отсутствия/повреждения файла — отчёт всё равно отрендерится
+_REPORT_TEXTS_DEFAULT = {
+    "upsell": {"1": "", "2": "", "3": ""},
+    "disclaimer_main": "",
+    "disclaimer_by_count": {"1": "", "2": "", "3": ""},
+    "free_text": "",
+}
+
+
+def get_report_texts() -> dict:
+    """Читает report_texts.json с кэшем по mtime — правки из админки видны без рестарта.
+    При отсутствии/ошибке файла возвращает безопасные пустые дефолты."""
+    global _report_texts_cache
+    import json
+    try:
+        mtime = _REPORT_TEXTS_FILE.stat().st_mtime
+    except OSError:
+        return dict(_REPORT_TEXTS_DEFAULT)
+    if _report_texts_cache is None or _report_texts_cache[0] != mtime:
+        try:
+            data = json.loads(_REPORT_TEXTS_FILE.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return dict(_REPORT_TEXTS_DEFAULT)
+        _report_texts_cache = (mtime, data)
+    return _report_texts_cache[1]
+
 # --- Site ---
 SITE_NAME = "Голос рисунка"
 SITE_DOMAIN = "golosrisunka.ru"

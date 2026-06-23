@@ -37,15 +37,22 @@ def drawing_to_data_uri(path: Path) -> str:
 
 
 def render_html(report: Report, drawings: list[dict], generated_date: str,
-                static_prefix: str = "/static", site_header: bool = False) -> str:
+                static_prefix: str = "/static", site_header: bool = False,
+                upsell_text: str = "", disclaimer_text: str = "",
+                free_text: str = "") -> str:
     """drawings: [{"src": data-URI (см. drawing_to_data_uri), "caption": подпись}, ...]
-    site_header=True — шапка сайта (только hosted-вариант, в PDF её нет)."""
+    site_header=True — шапка сайта (только hosted-вариант, в PDF её нет).
+    upsell_text / disclaimer_text / free_text — управляемые из админки блоки в конце
+    отчёта (выбор апсейла по числу рисунков делает вызывающий код); пусто = не выводится."""
     return _env.get_template("report.html").render(
         report=report,
         drawings=drawings,
         generated_date=generated_date,
         static=static_prefix,
         site_header=site_header,
+        upsell_text=upsell_text,
+        disclaimer_text=disclaimer_text,
+        free_text=free_text,
     )
 
 
@@ -58,16 +65,24 @@ def render_pdf(html_for_print: str, out_path: Path) -> None:
 
 
 def render_report_files(report: Report, drawings: list[dict], generated_date: str,
-                        out_dir: Path, basename: str = "report") -> tuple[Path, Path]:
-    """Сохраняет обе версии. Возвращает (html_path, pdf_path)."""
+                        out_dir: Path, basename: str = "report",
+                        upsell_text: str = "", disclaimer_text: str = "",
+                        free_text: str = "") -> tuple[Path, Path]:
+    """Сохраняет обе версии. Возвращает (html_path, pdf_path).
+    upsell_text / disclaimer_text / free_text — управляемые из админки блоки в конце
+    отчёта (пусто = не выводятся); прокидываются в обе версии (hosted и print)."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
     html_hosted = render_html(report, drawings, generated_date,
-                              static_prefix="/static", site_header=True)
+                              static_prefix="/static", site_header=True,
+                              upsell_text=upsell_text, disclaimer_text=disclaimer_text,
+                              free_text=free_text)
     html_path = out_dir / f"{basename}.html"
     html_path.write_text(html_hosted, encoding="utf-8")
 
-    html_print = render_html(report, drawings, generated_date, static_prefix="static")
+    html_print = render_html(report, drawings, generated_date, static_prefix="static",
+                             upsell_text=upsell_text, disclaimer_text=disclaimer_text,
+                             free_text=free_text)
     pdf_path = out_dir / f"{basename}.pdf"
     render_pdf(html_print, pdf_path)
 

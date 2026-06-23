@@ -113,3 +113,17 @@ table.r-scores .num { width: 8%; text-align: right; font-family: var(--font-head
 .r-conclusion { background: var(--alt); border-radius: 8pt; padding: 5mm 6mm; page-break-inside: avoid; }
 .r-footer-disclaimer { margin-top: 8mm; padding-top: 3mm; border-top: 1pt solid var(--alt);
                        color: var(--soft); font-size: 8.5pt; }
+
+/* --- Философия 2.3: портрет ребёнка, специалисты, админ-блоки --- */
+/* Портрет ребёнка — сердце отчёта: тёплая карточка с акцентной полосой «голоса» */
+.r-portrait { background: var(--alt); border-left: 3pt solid var(--accent2);
+              border-radius: 8pt; padding: 5mm 6mm; font-size: 10.5pt; line-height: 1.55;
+              page-break-inside: avoid; }
+/* Специалисты как ресурс — мягкий блок-пункт (как направления развития) */
+.r-specialists { page-break-inside: avoid; margin-bottom: 4mm; }
+.r-specialists .t { font-weight: 600; color: var(--ink); }
+/* Апсейл «рассеять туман» — спокойная плашка «голоса» (янтарь), не кричит */
+.r-upsell { background: var(--alt); border-left: 3pt solid var(--accent2); border-radius: 8pt;
+            padding: 4mm 6mm; font-size: 9.5pt; color: var(--muted); page-break-inside: avoid; }
+/* Управляемые дисклеймеры/свободный текст — мелко и спокойно */
+.r-admin-note { font-size: 9pt; color: var(--soft); page-break-inside: avoid; }

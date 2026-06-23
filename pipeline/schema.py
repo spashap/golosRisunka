@@ -1,14 +1,18 @@
-"""JSON-контракт отчёта (spec §7.3 + опциональный development_directions).
+"""JSON-контракт отчёта (философия 2.3 — портрет ребёнка как личности).
 
 Модель отдаёт ДАННЫЕ, шаблон владеет всем видом. Невалидный JSON от Gemini =
 неудачная попытка (spec §7.2) — поэтому валидация строгая.
+
+v2.3: ведут личностно-смысловые направления, навыки — поддержка. Добавлены
+about_child (нарративный портрет), раздельные рекомендации (понимание ребёнка /
+творческие занятия), specialists (тип специалиста как ресурс «если захотите глубже»).
 """
 from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator
 
-# 8 направлений спецификации; решение задач + логическое мышление можно
-# объединять при нехватке данных => допустимо 7 или 8 элементов.
+# Набор из 7 направлений (4 личностно-смысловых ведут + 3 навыковых поддерживают);
+# схема допускает 7–8 на случай расширения зоны 2.
 DIMENSIONS_MIN = 7
 DIMENSIONS_MAX = 8
 
@@ -19,8 +23,8 @@ class Child(BaseModel):
 
 
 class Dimension(BaseModel):
-    key: str = Field(min_length=1)            # "creativity", ...
-    title: str = Field(min_length=1)          # «Креативность»
+    key: str = Field(min_length=1)            # "world_and_themes", ...
+    title: str = Field(min_length=1)          # «Мир и темы рисунка»
     score: int = Field(ge=1, le=10)
     observation: str = Field(min_length=1)    # привязка к конкретным деталям рисунка
     research_note: str = ""                   # общая ссылка на исследование
@@ -33,12 +37,23 @@ class DevelopmentDirection(BaseModel):
     text: str = Field(min_length=1)
 
 
+class Specialist(BaseModel):
+    """Тип/область специалиста как полезный ресурс «если захотите глубже» (task §5),
+    НЕ сигнал тревоги. Опциональный блок."""
+    area: str = Field(min_length=1)   # «детский психолог, работающий с проективными методиками»
+    reason: str = Field(min_length=1)  # за что зацепился отчёт (видимая деталь/направление)
+
+
 class Report(BaseModel):
     child: Child
     context_summary: str = ""
     introduction: str = Field(min_length=1)
+    about_child: str = Field(min_length=1)    # нарративный портрет ребёнка как личности (ведущий блок)
     dimensions: list[Dimension]
-    recommendations: list[str] = Field(default_factory=list)
+    # рекомендации раздельно: ~половина про понимание/связь с ребёнком, ~половина творческие занятия
+    understanding_recommendations: list[str] = Field(default_factory=list)
+    art_recommendations: list[str] = Field(default_factory=list)
+    specialists: list[Specialist] | None = None
     development_directions: list[DevelopmentDirection] | None = None
     conclusion: str = Field(min_length=1)
     insufficient_input: bool = False
