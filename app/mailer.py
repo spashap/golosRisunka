@@ -82,6 +82,8 @@ def _unisender_send(to: str, subject: str, html_body: str,
         message["attachments"] = atts
     if settings.MAIL_SKIP_UNSUBSCRIBE:             # требует allow_skip_unsubscribe на аккаунте
         message["skip_unsubscribe"] = 1
+    if settings.UNISENDER_GO_CUSTOM_BACKEND_ID is not None:  # бэкенд = click.golosrisunka.ru
+        message["custom_backend_id"] = settings.UNISENDER_GO_CUSTOM_BACKEND_ID
 
     # Unisender Go: ключ — в HTTP-заголовке X-API-KEY (НЕ в теле, как у старого Unisender API).
     payload = json.dumps({"message": message}, ensure_ascii=False).encode("utf-8")

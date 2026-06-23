@@ -129,6 +129,12 @@ UNISENDER_GO_TIMEOUT = 20              # сек на HTTP-запрос к Unisen
 # Для транзакционных писем его убирает skip_unsubscribe, НО аккаунту нужен флаг
 # allow_skip_unsubscribe (включает поддержка Unisender Go). После включения — MAIL_SKIP_UNSUBSCRIBE=1.
 MAIL_SKIP_UNSUBSCRIBE = os.getenv("MAIL_SKIP_UNSUBSCRIBE", "0").strip().lower() in ("1", "true", "yes")
+# Бэкенд-домен отправки Unisender Go. Аккаунт ОБЩИЙ с shepotzvezd, дефолтный бэкенд —
+# click.shepotzvezd.ru, из-за чего Return-Path/бэкенд НЕ выровнены с golosrisunka.ru → письма
+# в спам. custom_backend_id привязывает отправку к click.golosrisunka.ru (Return-Path = наш домен,
+# DKIM/DMARC-выравнивание). ID выдаёт поддержка Unisender (наш = 31525). Пусто = не передаём.
+_cbid = os.getenv("UNISENDER_GO_CUSTOM_BACKEND_ID", "").strip()
+UNISENDER_GO_CUSTOM_BACKEND_ID = int(_cbid) if _cbid.isdigit() else None
 
 # --- Auth (spec §9) ---
 SESSION_DAYS = 30
