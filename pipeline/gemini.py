@@ -114,7 +114,15 @@ def generate_report(image_paths: list[Path], contexts: list[str] | str,
     system_prompt / enable_lint — точки расширения для prompt-лаборатории
     (scripts/prompt_lab.py). По умолчанию — боевое поведение без изменений:
     system_prompt=None → SYSTEM_PROMPT; enable_lint=True → линтер+repair как обычно."""
-    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+    # Таймаут на запрос (иначе зависший вызов блокирует воркера навсегда). base_url
+    # из GOOGLE_GEMINI_BASE_URL переподаём явно — иначе HttpOptions затрёт прод-прокси.
+    import os
+    _http_kwargs: dict = {"timeout": settings.GEMINI_TIMEOUT_MS}
+    _base = os.getenv("GOOGLE_GEMINI_BASE_URL")
+    if _base:
+        _http_kwargs["base_url"] = _base
+    client = genai.Client(api_key=settings.GEMINI_API_KEY,
+                          http_options=types.HttpOptions(**_http_kwargs))
 
     if isinstance(contexts, str):
         contexts = [contexts] * len(image_paths) if len(image_paths) > 1 else [contexts]
