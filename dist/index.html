@@ -542,18 +542,28 @@ html.dk .btn { color: #241A12; }
                display: flex; flex-direction: column;   /* кнопка всегда у низа */
                background: var(--paper); border-radius: var(--radius-card);
                box-shadow: var(--shadow-card); color: var(--ink); }
-.report-card__badge { position: absolute; top: 12px; right: 12px; z-index: 2; }
-.report-card__top { padding: 18px; border-bottom: 2px dashed rgba(0, 0, 0, .08); }
-.report-card__draw { float: left; width: 84px; height: 84px; border-radius: 12px;
-                     margin-right: 14px; background: rgba(0, 0, 0, .04);
-                     transform: rotate(-3deg); box-shadow: 0 3px 10px var(--shadow);
-                     overflow: hidden; }
-.report-card__draw img { width: 100%; height: 100%; object-fit: cover; }
-.report-card__name { font-family: var(--font-head); font-weight: 800; font-size: 18px;
-                     padding-top: 14px; }
+.report-card__badge { position: absolute; top: 12px; right: 12px; z-index: 3; }
+/* Рисунок(и) крупно — полароид; для сводного отчёта по 2 рисункам — веером под углом */
+.report-card__draws { display: flex; justify-content: center; align-items: flex-start;
+                      padding: 26px 18px 8px; }
+.report-card__pol { background: var(--paper); padding: 8px 8px 12px; border-radius: 3px;
+                    box-shadow: var(--shadow-pol); }
+.report-card__pol img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain;
+                        background: var(--polbg); border-radius: 2px; }
+.report-card__draws .report-card__pol { width: 64%; transform: rotate(-2deg); }
+.report-card__draws--multi { padding-top: 32px; }
+.report-card__draws--multi .report-card__pol { width: 54%; }
+.report-card__draws--multi .report-card__pol:first-child { transform: rotate(-5deg); margin-right: -12%; z-index: 1; }
+.report-card__draws--multi .report-card__pol:last-child { transform: rotate(5deg); margin-top: 16px; z-index: 2; }
+/* Имя/возраст по центру под рисунком */
+.report-card__meta { text-align: center; padding: 8px 18px 2px; }
+.report-card__name { font-family: var(--font-head); font-weight: 800; font-size: 18px; }
 .report-card__age { color: var(--soft); font-size: 14px; }
-.report-card__top::after { content: ""; display: block; clear: both; }
-.report-card__body { padding: 18px; }
+/* Оценки — компактно (маленький бар, название ведёт) */
+.report-card__scores { padding: 10px 18px 4px; }
+.score-bar--mini { grid-template-columns: 1fr 64px 20px; gap: 8px; margin-bottom: 8px;
+                   font-size: var(--fs-micro); }
+.score-bar--mini .score-bar__track { height: 6px; }
 .report-card__quote { font-family: var(--font-body); font-weight: 500; font-size: var(--fs-small);
                       line-height: 1.45; color: var(--ink); padding: 4px 18px 20px; }
 .report-card__link { display: block; text-align: center; padding: 14px;
@@ -1175,26 +1185,30 @@ html.dk .btn { color: #241A12; }
       
       <article class="report-card">
         <span class="badge badge--flat report-card__badge">пример отчёта</span>
-        <div class="report-card__top">
-          <div class="report-card__draw"><img src="/static/img/samples/primer-3-goda.webp" alt="Рисунок — Алексей, 3,5 года" loading="lazy" width="84" height="84"></div>
+        <div class="report-card__draws">
+          
+          <figure class="report-card__pol"><img src="/static/img/samples/primer-3-goda.webp" alt="Детский рисунок — Алексей, 3,5 года" loading="lazy"></figure>
+          
+        </div>
+        <div class="report-card__meta">
           <div class="report-card__name">Алексей</div>
           <div class="report-card__age">3 года 6 месяцев</div>
         </div>
-        <div class="report-card__body">
+        <div class="report-card__scores">
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Мир и темы рисунка</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
             <b>8</b>
           </div>
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Характер в линии и цвете</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
             <b>8</b>
           </div>
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Настроение и выразительность</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:70%"></i></div>
             <b>7</b>
@@ -1207,26 +1221,32 @@ html.dk .btn { color: #241A12; }
       
       <article class="report-card">
         <span class="badge badge--flat report-card__badge">пример · 2 рисунка</span>
-        <div class="report-card__top">
-          <div class="report-card__draw"><img src="/static/img/samples/primer-2-risunka.webp" alt="Рисунок — «Стич», Алиса, 6 лет" loading="lazy" width="84" height="84"></div>
+        <div class="report-card__draws report-card__draws--multi">
+          
+          <figure class="report-card__pol"><img src="/static/img/samples/primer-2-risunka.webp" alt="Детский рисунок — «Стич», Алиса, 6 лет, рисунок 1" loading="lazy"></figure>
+          
+          <figure class="report-card__pol"><img src="/static/img/samples/primer-2-risunka-1.webp" alt="Детский рисунок — «Стич», Алиса, 6 лет, рисунок 2" loading="lazy"></figure>
+          
+        </div>
+        <div class="report-card__meta">
           <div class="report-card__name">Алиса</div>
           <div class="report-card__age">6 лет</div>
         </div>
-        <div class="report-card__body">
+        <div class="report-card__scores">
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Мир и темы рисунка</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
             <b>9</b>
           </div>
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Характер в линии и цвете</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
             <b>8</b>
           </div>
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Настроение и выразительность</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
             <b>9</b>
@@ -1239,26 +1259,30 @@ html.dk .btn { color: #241A12; }
       
       <article class="report-card">
         <span class="badge badge--flat report-card__badge">пример отчёта</span>
-        <div class="report-card__top">
-          <div class="report-card__draw"><img src="/static/img/samples/primer-6-let.webp" alt="Рисунок — «Семья», Никита, 6 лет" loading="lazy" width="84" height="84"></div>
+        <div class="report-card__draws">
+          
+          <figure class="report-card__pol"><img src="/static/img/samples/primer-6-let.webp" alt="Детский рисунок — «Семья», Никита, 6 лет" loading="lazy"></figure>
+          
+        </div>
+        <div class="report-card__meta">
           <div class="report-card__name">Никита</div>
           <div class="report-card__age">6 лет</div>
         </div>
-        <div class="report-card__body">
+        <div class="report-card__scores">
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Мир и темы рисунка</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
             <b>9</b>
           </div>
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Характер в линии и цвете</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
             <b>8</b>
           </div>
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Настроение и выразительность</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
             <b>9</b>
@@ -1271,26 +1295,30 @@ html.dk .btn { color: #241A12; }
       
       <article class="report-card">
         <span class="badge badge--flat report-card__badge">пример отчёта</span>
-        <div class="report-card__top">
-          <div class="report-card__draw"><img src="/static/img/samples/primer-8-let.webp" alt="Рисунок — «Кот», Алина, 8 лет" loading="lazy" width="84" height="84"></div>
+        <div class="report-card__draws">
+          
+          <figure class="report-card__pol"><img src="/static/img/samples/primer-8-let.webp" alt="Детский рисунок — «Кот», Алина, 8 лет" loading="lazy"></figure>
+          
+        </div>
+        <div class="report-card__meta">
           <div class="report-card__name">Алина</div>
           <div class="report-card__age">8 лет</div>
         </div>
-        <div class="report-card__body">
+        <div class="report-card__scores">
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Мир и темы рисунка</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
             <b>9</b>
           </div>
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Характер в линии и цвете</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:90%"></i></div>
             <b>9</b>
           </div>
           
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>Настроение и выразительность</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
             <b>8</b>
@@ -1778,7 +1806,7 @@ html.dk .btn { color: #241A12; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.033</span>
+    <span class="foot-ver">V1.034</span>
   </div>
 </footer>
 

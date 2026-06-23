@@ -1,4 +1,4 @@
-"""Образцы отчётов для лендинга — из боевого пайплайна M3 (spec §4.1.3).
+"""Образцы отчётов для лендинга — из боевого пайплайна (spec §4.1.3).
 
 Когда заказчик заменит тестовые рисунки финальными, достаточно перегенерировать
 отчёты CLI-скриптом и поправить записи здесь.
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from PIL import Image
@@ -23,19 +23,21 @@ def _first_sentence(text: str, max_len: int = 220) -> str:
     return s if len(s) <= max_len else s[: max_len - 1] + "…"
 
 # Порядок = порядок карточек в карусели. hero=True → полароид на первом экране
-# (первые 3 hero). Сводный отчёт по 2 рисункам — в центре карусели (решение заказчика).
+# (первые 3 hero). drawings — все рисунки заказа (для сводного отчёта по 2 рисункам
+# показываем оба полароида веером). Сводный отчёт по 2 рисункам — в центре карусели.
 _SAMPLE_DEFS = [
     dict(token="primer-3-goda", report_dir="data/test_reports/Draw-3_5yr-v1-final",
-         drawing="projectSpec/testDrawings/Draw-3_5yr-v1.png",
+         drawings=["projectSpec/testDrawings/Draw-3_5yr-v1.png"],
          caption="Алексей, 3,5 года", hero=True, n_drawings=1),
     dict(token="primer-2-risunka", report_dir="data/test_reports/set1-consolidated",
-         drawing="projectSpec/testDrawings/set1-img1.png",
+         drawings=["projectSpec/testDrawings/set1-img1.png",
+                   "projectSpec/testDrawings/set1-img2.png"],
          caption="«Стич», Алиса, 6 лет", hero=False, n_drawings=2),
     dict(token="primer-6-let", report_dir="data/test_reports/Draw-6yr-v1-final",
-         drawing="projectSpec/testDrawings/Draw-6yr-v1.png",
+         drawings=["projectSpec/testDrawings/Draw-6yr-v1.png"],
          caption="«Семья», Никита, 6 лет", hero=True, n_drawings=1),
     dict(token="primer-8-let", report_dir="data/test_reports/Draw-8yr-v1-final",
-         drawing="projectSpec/testDrawings/Draw-8yr-v1.png",
+         drawings=["projectSpec/testDrawings/Draw-8yr-v1.png"],
          caption="«Кот», Алина, 8 лет", hero=True, n_drawings=1),
 ]
 
@@ -46,22 +48,27 @@ class Sample:
     name: str
     age_display: str
     caption: str
-    thumb_url: str             # /static/img/samples/<token>.webp (кэшируемо, lazy)
-    thumb_w: int
-    thumb_h: int
+    thumbs: list[dict]         # [{url, w, h}, ...] — один или несколько полароидов
     top_scores: list[dict]     # [{title, score}] — 3 строки для карточки
     badge: str                 # «креативность 8/10»
-    quote: str                 # короткая цитата из отчёта
+    quote: str                 # короткая цитата из отчёта (из портрета about_child)
     html_path: Path            # hosted html
     hero: bool = True          # участвует ли в полароидах первого экрана
     n_drawings: int = 1        # бейдж карточки: «пример · 2 рисунка»
 
+    @property
+    def thumb_url(self) -> str:        # совместимость: первый рисунок
+        return self.thumbs[0]["url"] if self.thumbs else ""
 
-def _thumb_file(path: Path, token: str, size: int = 480, quality: int = 72) -> tuple[str, int, int]:
-    """Webp-миниатюра в static (spec §4.2: WebP с width/height, lazy ниже фолда)."""
+
+def _thumb_file(path: Path, token: str, idx: int = 0,
+                size: int = 560, quality: int = 74) -> dict:
+    """Webp-миниатюра в static (spec §4.2: WebP с width/height, lazy ниже фолда).
+    idx>0 — второй+ рисунок сводного отчёта (имя файла со суффиксом)."""
     out_dir = settings.BASE_DIR / "static" / "img" / "samples"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out = out_dir / f"{token}.webp"
+    name = f"{token}.webp" if idx == 0 else f"{token}-{idx}.webp"
+    out = out_dir / name
     im = Image.open(path)
     if im.mode != "RGB":
         bg = Image.new("RGB", im.size, (255, 255, 255))
@@ -69,7 +76,7 @@ def _thumb_file(path: Path, token: str, size: int = 480, quality: int = 72) -> t
         im = bg
     im.thumbnail((size, size), Image.LANCZOS)
     im.save(out, format="WEBP", quality=quality)
-    return f"/static/img/samples/{token}.webp", im.width, im.height
+    return {"url": f"/static/img/samples/{name}", "w": im.width, "h": im.height}
 
 
 def _load() -> list[Sample]:
@@ -80,20 +87,20 @@ def _load() -> list[Sample]:
         if not rjson.exists():
             continue
         data = json.loads(rjson.read_text(encoding="utf-8"))
-        # Карточка ведёт ЛИЧНОСТЬЮ (философия 2.3): показываем первые 3 направления в
-        # ПОРЯДКЕ отчёта (личностные идут первыми), а не топ-3 по баллу; цитата — из
-        # портрета about_child, а не из заключения. Бейдж — сильнейшее направление.
+        # Карточка ведёт личностью (2.3): первые 3 направления в ПОРЯДКЕ отчёта
+        # (личностные впереди), цитата — из портрета about_child, бейдж — сильнейшее.
         dims_order = data["dimensions"]
         dims_top = sorted(data["dimensions"], key=lambda d: -d["score"])
         first_name = data["child"]["name"].split()[0]
         quote = _first_sentence((data.get("about_child") or data["conclusion"]).strip())
-        thumb_url, tw, th = _thumb_file(settings.BASE_DIR / sd["drawing"], sd["token"])
+        thumbs = [_thumb_file(settings.BASE_DIR / d, sd["token"], i)
+                  for i, d in enumerate(sd["drawings"])]
         samples.append(Sample(
             token=sd["token"],
             name=first_name,
             age_display=data["child"]["age_display"],
             caption=sd["caption"],
-            thumb_url=thumb_url, thumb_w=tw, thumb_h=th,
+            thumbs=thumbs,
             top_scores=[{"title": d["title"], "score": d["score"]} for d in dims_order[:3]],
             badge=f"{dims_top[0]['title'].lower()} {dims_top[0]['score']}/10",
             quote=quote,

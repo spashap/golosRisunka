@@ -167,14 +167,18 @@
       {% for s in samples %}
       <article class="report-card">
         <span class="badge badge--flat report-card__badge">{% if s.n_drawings > 1 %}пример · {{ s.n_drawings }} рисунка{% else %}пример отчёта{% endif %}</span>
-        <div class="report-card__top">
-          <div class="report-card__draw"><img src="{{ s.thumb_url }}" alt="Рисунок — {{ s.caption }}" loading="lazy" width="84" height="84"></div>
+        <div class="report-card__draws{% if s.thumbs|length > 1 %} report-card__draws--multi{% endif %}">
+          {% for t in s.thumbs %}
+          <figure class="report-card__pol"><img src="{{ t.url }}" alt="Детский рисунок — {{ s.caption }}{% if s.thumbs|length > 1 %}, рисунок {{ loop.index }}{% endif %}" loading="lazy"></figure>
+          {% endfor %}
+        </div>
+        <div class="report-card__meta">
           <div class="report-card__name">{{ s.name }}</div>
           <div class="report-card__age">{{ s.age_display }}</div>
         </div>
-        <div class="report-card__body">
+        <div class="report-card__scores">
           {% for t in s.top_scores %}
-          <div class="score-bar">
+          <div class="score-bar score-bar--mini">
             <span>{{ t.title }}</span>
             <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ t.score * 10 }}%"></i></div>
             <b>{{ t.score }}</b>
