@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -19,6 +20,8 @@ from pipeline.images import prepare_image
 from pipeline.lint import find_violations
 from pipeline.prompt import PROMPT_VERSION, SYSTEM_PROMPT, build_user_prompt
 from pipeline.schema import InsufficientReport, Report, validate_report
+
+log = logging.getLogger("gemini")
 
 
 class ReportGenerationError(Exception):
@@ -129,9 +132,13 @@ def generate_report(image_paths: list[Path], contexts: list[str] | str,
     if len(contexts) != len(image_paths):
         raise ValueError(f"contexts ({len(contexts)}) != images ({len(image_paths)})")
 
+    log.info("gemini: preparing %d image(s)", len(image_paths))
     jpegs = [prepare_image(p) for p in image_paths]
     parts: list = [types.Part.from_bytes(data=j, mime_type="image/jpeg") for j in jpegs]
     parts.append(build_user_prompt(contexts, common_context))
+    log.info("gemini: ready (model=%s, base_url=%s, timeout=%dms, prompt v%s, lint=%s)",
+             settings.GEMINI_MODEL, _base or "default-google",
+             settings.GEMINI_TIMEOUT_MS, PROMPT_VERSION, enable_lint)
 
     config = types.GenerateContentConfig(
         system_instruction=system_prompt or SYSTEM_PROMPT,
@@ -142,35 +149,49 @@ def generate_report(image_paths: list[Path], contexts: list[str] | str,
     attempts_log: list[str] = []
     for attempt in range(1, max_attempts + 1):
         try:
+            log.info("gemini: attempt %d/%d -> POST generate_content (waiting for model)...",
+                     attempt, max_attempts)
+            t0 = time.time()
             resp = client.models.generate_content(
                 model=settings.GEMINI_MODEL, contents=parts, config=config,
             )
             raw = resp.text or ""
+            log.info("gemini: attempt %d <- response in %.1fs (%d chars)",
+                     attempt, time.time() - t0, len(raw))
             if raw_dump_dir is not None:
                 raw_dump_dir.mkdir(parents=True, exist_ok=True)
                 (raw_dump_dir / f"attempt_{attempt}.txt").write_text(raw, encoding="utf-8")
             data = json.loads(_strip_markdown_fence(raw))
             report = validate_report(data)
+            log.info("gemini: attempt %d -> JSON validated (%s)", attempt,
+                     type(report).__name__)
 
             # лингвистический линтер + repair-проходы (не для insufficient)
             repair_rounds = 0
             violations: list[dict] = []
             if enable_lint and isinstance(report, Report):
                 violations = find_violations(report.model_dump())
+                log.info("gemini: lint found %d violation(s)", len(violations))
                 while violations and repair_rounds < 2:
                     repair_rounds += 1
+                    log.info("gemini: repair round %d -> POST (waiting)...", repair_rounds)
                     try:
                         fixed = _repair_report(client, report.model_dump(), violations)
                         candidate = validate_report(fixed)
                         if isinstance(candidate, Report):
                             new_violations = find_violations(candidate.model_dump())
+                            log.info("gemini: repair round %d done (%d -> %d violations)",
+                                     repair_rounds, len(violations), len(new_violations))
                             if len(new_violations) < len(violations):
                                 report, violations = candidate, new_violations
                                 continue
                     except (json.JSONDecodeError, ValidationError):
-                        pass  # неудачный repair не портит уже валидный отчёт
+                        log.info("gemini: repair round %d produced invalid JSON — kept original",
+                                 repair_rounds)
                     break
 
+            log.info("gemini: SUCCESS (attempts=%d, repairs=%d, lint_left=%d)",
+                     attempt, repair_rounds, len(violations))
             return GenerationResult(
                 report=report, raw_json_text=raw,
                 attempts_used=attempt, image_jpegs=jpegs,
@@ -178,11 +199,16 @@ def generate_report(image_paths: list[Path], contexts: list[str] | str,
             )
         except (json.JSONDecodeError, ValidationError) as e:
             attempts_log.append(f"attempt {attempt}: invalid output: {e}")
-        except Exception as e:  # сетевые/API ошибки — тоже неудачная попытка
+            log.warning("gemini: attempt %d INVALID OUTPUT: %s", attempt, e)
+        except Exception as e:  # сетевые/API ошибки/таймаут — тоже неудачная попытка
             attempts_log.append(f"attempt {attempt}: {type(e).__name__}: {e}")
+            log.warning("gemini: attempt %d ERROR: %s: %s", attempt, type(e).__name__, e)
         if attempt < max_attempts:
-            time.sleep(min(5 * attempt, 30))
+            backoff = min(5 * attempt, 30)
+            log.info("gemini: retrying in %ds (attempt %d failed)", backoff, attempt)
+            time.sleep(backoff)
 
+    log.error("gemini: ALL %d attempts exhausted", max_attempts)
     raise ReportGenerationError(
         f"Gemini: {max_attempts} попыток исчерпано", attempts_log,
     )
