@@ -326,9 +326,12 @@ html.dk .btn { color: #241A12; }
 .hero {
   position: relative; z-index: 2; min-height: 600px; display: flex; align-items: center;
   /* абсолютный /static-путь: CSS на лендинге инлайнится, относительный путь сломался бы.
-     Плоский url() (без image-set) — максимальная совместимость браузеров. */
+     image-set отдаёт лёгкий webp современным браузерам; плоский url() ниже — фолбэк.
+     Мобильная (≤600px) версия грузит уменьшённый hero-800.* — см. медиазапрос ниже. */
   background-color: var(--bg);
   background-image: url(/static/img/hero.jpg);
+  background-image: image-set(url(/static/img/hero.webp) type("image/webp"),
+                              url(/static/img/hero.jpg) type("image/jpeg"));
   background-position: center 32%;
   background-size: cover;
   background-repeat: no-repeat;
@@ -396,7 +399,10 @@ html.dk .btn { color: #241A12; }
 
 /* HERO мобайл: карточка прозрачнее, фото дышит */
 @media (max-width: 600px) {
-  .hero { min-height: 74vh; align-items: center; }
+  .hero { min-height: 74vh; align-items: center;
+          background-image: url(/static/img/hero-800.jpg);
+          background-image: image-set(url(/static/img/hero-800.webp) type("image/webp"),
+                                      url(/static/img/hero-800.jpg) type("image/jpeg")); }
   .hero__in { padding: 0 16px; }
   .hero__card { max-width: 100%; background: rgba(255, 250, 240, .58);
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 22px 20px 24px; }

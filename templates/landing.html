@@ -28,7 +28,10 @@
 <link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" as="image" href="{{ static }}/img/hero.jpg" type="image/jpeg" fetchpriority="high">
+{# LCP hero: preload лёгкий webp под фактический брейкпоинт (мобайл грузит hero-800).
+   Браузеры без webp пропустят (type) и возьмут jpg при разборе CSS. #}
+<link rel="preload" as="image" href="{{ static }}/img/hero-800.webp" type="image/webp" media="(max-width: 600px)" fetchpriority="high">
+<link rel="preload" as="image" href="{{ static }}/img/hero.webp" type="image/webp" media="(min-width: 601px)" fetchpriority="high">
 <link rel="stylesheet" href="{{ static }}/css/fonts.css">
 {# Критический CSS инлайном: токены + компоненты (перфоманс, spec §4.2) #}
 <style>{{ inline_css | safe }}</style>
@@ -39,6 +42,7 @@
 
 {% include "_header.html" %}
 
+<main>
 <!-- 1. HERO: кино-фото на весь экран + матовая карточка. Cold traffic: чистый хук, CTA-бонус. -->
 <section class="hero">
   <div class="hero__in">
@@ -255,7 +259,8 @@
     </div>
     <div class="rot-dots" role="tablist" aria-label="Отзывы">
       {% for t in testimonials %}
-      <button class="rot-dot{% if loop.first %} is-active{% endif %}" type="button"
+      <button class="rot-dot{% if loop.first %} is-active{% endif %}" type="button" role="tab"
+              aria-selected="{{ 'true' if loop.first else 'false' }}"
               data-dot="{{ loop.index0 }}" aria-label="Отзыв {{ loop.index }}" data-ym-goal="landing_reviews_dot"></button>
       {% endfor %}
     </div>
@@ -342,6 +347,7 @@
   </div>
 </section>
 {% endif %}
+</main>
 
 <footer class="foot">
   <div class="wrap">
@@ -422,6 +428,7 @@ document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
       var d = document.createElement("button");
       d.className = "car-dot" + (i === 0 ? " is-active" : "");
       d.type = "button"; d.setAttribute("aria-label", "Карточка " + (i + 1));
+      d.setAttribute("role", "tab"); d.setAttribute("aria-selected", i === 0 ? "true" : "false");
       (function (idx) { d.addEventListener("click", function () {
         c.scrollTo({ left: setW + idx * step, behavior: "smooth" });
       }); })(i);
@@ -432,7 +439,10 @@ document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
     if (!dots.length) return;
     var rel = ((c.scrollLeft % setW) + setW) % setW;
     var active = Math.round(rel / step) % n;
-    dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+    dots.forEach(function (dd, k) {
+      dd.classList.toggle("is-active", k === active);
+      dd.setAttribute("aria-selected", k === active ? "true" : "false");
+    });
   }
 });
 
@@ -444,10 +454,10 @@ document.querySelectorAll(".quote-rotator").forEach(function (r) {
   var i = 0, timer;
   function show(n) {
     qs[i].classList.remove("is-active");
-    if (dots[i]) dots[i].classList.remove("is-active");
+    if (dots[i]) { dots[i].classList.remove("is-active"); dots[i].setAttribute("aria-selected", "false"); }
     i = (n + qs.length) % qs.length;
     qs[i].classList.add("is-active");
-    if (dots[i]) dots[i].classList.add("is-active");
+    if (dots[i]) { dots[i].classList.add("is-active"); dots[i].setAttribute("aria-selected", "true"); }
   }
   function play() { timer = setInterval(function () { show(i + 1); }, +r.dataset.interval || 7000); }
   function stop() { clearInterval(timer); }
