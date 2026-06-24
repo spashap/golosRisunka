@@ -27,9 +27,11 @@
         </div>
         <button class="btn btn--primary" type="submit" style="width: 100%" data-ym-goal="login_request_code">Получить код</button>
       </form>
-      <p class="hint" style="text-align: center; margin-top: 16px">
-        Код не приходит? <a href="/login/recover" data-ym-goal="login_recover_open">Войти по данным ребёнка</a>
-      </p>
+      <div style="margin-top: 18px; text-align: center">
+        <p class="sub" style="font-size: 14px; margin: 0 0 10px">Код не приходит на почту?</p>
+        <a class="btn btn--ghost" href="/login/recover" style="display: block; width: 100%"
+           data-ym-goal="login_recover_open">Войти по данным ребёнка</a>
+      </div>
 
       {% elif step == "recover" %}
       <p class="sub" style="font-size: 14px; margin: -8px 0 18px">
@@ -84,9 +86,8 @@
         <input type="hidden" name="email" value="{{ email }}">
         <button class="btn btn--ghost" type="submit" data-ym-goal="login_resend">Прислать код ещё раз</button>
       </form>
-      <p class="hint" style="text-align: center; margin-top: 12px">
-        Письмо так и не пришло? <a href="/login/recover" data-ym-goal="login_recover_open">Войти по данным ребёнка</a>
-      </p>
+      <a class="btn btn--ghost" href="/login/recover" style="display: block; width: 100%; margin-top: 12px"
+         data-ym-goal="login_recover_open">Войти по данным ребёнка</a>
       {% endif %}
     </div>
     <p class="hint" style="text-align: center">
