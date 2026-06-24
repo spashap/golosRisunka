@@ -25,3 +25,9 @@ __pycache__/
 # локальные настройки Claude Code
 .claude/
 projectSpec/blog/
+
+# локальный скрипт удалённого деплоя (вход по ssh-ключу, не секрет — держим вне репо)
+deploy-remote.bat
+
+# артефакт-заглушка от старого бага release.bat (echo с '>' создавал файл 'pushed')
+pushed

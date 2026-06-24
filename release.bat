@@ -24,7 +24,7 @@ echo == 5/5 git push ==
 git push || goto :err
 
 echo.
-echo == DONE -> pushed V%VER% ==
+echo == DONE - pushed V%VER% ==
 goto :eof
 
 :err
