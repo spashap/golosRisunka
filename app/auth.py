@@ -37,6 +37,109 @@ def _iso(dt: datetime.datetime) -> str:
     return dt.isoformat(timespec="seconds")
 
 
+def ensure_login_token(db: sqlite3.Connection, customer_id: int) -> str:
+    """Возвращает durable magic-login токен покупателя (создаёт при отсутствии).
+    Токен живёт вечно — он попадает в письма, ссылка не должна «протухать».
+    Свой commit (вызывается уже ПОСЛЕ основной транзакции письма/оплаты)."""
+    row = db.execute("SELECT login_token FROM customers WHERE id = ?",
+                     (customer_id,)).fetchone()
+    if row and row["login_token"]:
+        return row["login_token"]
+    token = new_token(24)
+    db.execute("UPDATE customers SET login_token = ? WHERE id = ?", (token, customer_id))
+    db.commit()
+    return token
+
+
+def login_link_for(db: sqlite3.Connection, email: str | None = None,
+                   customer_id: int | None = None) -> str | None:
+    """Персональная ссылка «войти в кабинет» для письма. None, если покупателя
+    с таким email ещё нет (новый адрес на /login — кабинета у него всё равно нет).
+    db — явное соединение (воркер передаёт своё, веб — get_db())."""
+    if customer_id is None:
+        if not email:
+            return None
+        row = db.execute("SELECT id FROM customers WHERE email = ?",
+                         (email.strip().lower(),)).fetchone()
+        if row is None:
+            return None
+        customer_id = row["id"]
+    token = ensure_login_token(db, customer_id)
+    return f"{settings.PUBLIC_BASE_URL}/enter/{token}"
+
+
+def login_with_token(token: str) -> str | None:
+    """Magic-link вход: по durable-токену покупателя выдаёт session token.
+    None, если токен неизвестен (старая/битая ссылка)."""
+    db = get_db()
+    row = db.execute("SELECT id FROM customers WHERE login_token = ?",
+                     (token,)).fetchone()
+    if row is None:
+        log.info("magic-link login: unknown token")
+        return None
+    session = create_session(db, row["id"])
+    db.commit()
+    log.info("magic-link login OK (customer %s)", row["id"])
+    return session
+
+
+def _norm_name(s: str | None) -> str:
+    """Нормализация имени для сравнения: без краёв, схлопнутые пробелы, lower
+    (Python lower корректен для кириллицы — в отличие от SQLite lower())."""
+    return " ".join((s or "").split()).lower()
+
+
+def _record_recovery(db: sqlite3.Connection, email: str, success: int) -> None:
+    db.execute("INSERT INTO recovery_attempts (email, success, created_at)"
+               " VALUES (?, ?, ?)", (email, success, now()))
+    db.commit()
+
+
+def recover_login(email: str, child_name: str, child_birth: str) -> str:
+    """Резервный вход «по данным ребёнка»: email + имя ребёнка + месяц рождения
+    ('YYYY-MM'). Возвращает session token при совпадении. AuthError иначе.
+    Лимит неудач на email (settings.RECOVERY_MAX_FAILS) гасит подбор."""
+    db = get_db()
+    email = email.strip().lower()
+    since = _iso(_utcnow() - datetime.timedelta(minutes=settings.RECOVERY_WINDOW_MINUTES))
+    fails = db.execute(
+        "SELECT COUNT(*) AS n FROM recovery_attempts"
+        " WHERE email = ? AND success = 0 AND created_at > ?",
+        (email, since)).fetchone()["n"]
+    if fails >= settings.RECOVERY_MAX_FAILS:
+        log.warning("recovery login rate-limited for %s (%d fails in window)", email, fails)
+        raise AuthError("Слишком много попыток. Попробуйте позже "
+                        "или войдите по коду из письма.")
+
+    want_name = _norm_name(child_name)
+    want_birth = (child_birth or "").strip()
+    if not want_name or not want_birth:
+        _record_recovery(db, email, 0)
+        raise AuthError("Укажите имя ребёнка и месяц его рождения.")
+
+    # Сравнение в Python: SQLite lower() не сворачивает кириллицу.
+    rows = db.execute(
+        "SELECT ch.name AS name, ch.birth_ym AS birth_ym, ch.customer_id AS cid"
+        " FROM children ch JOIN customers cu ON cu.id = ch.customer_id"
+        " WHERE cu.email = ?", (email,)).fetchall()
+    match = next((r for r in rows
+                  if _norm_name(r["name"]) == want_name
+                  and (r["birth_ym"] or "") == want_birth), None)
+    if match is None:
+        # Сообщение одинаково для «email не покупал» и «данные не сходятся» —
+        # не раскрываем, есть ли заказы у этого адреса.
+        _record_recovery(db, email, 0)
+        log.info("recovery login mismatch for %s", email)
+        raise AuthError("Не нашли совпадения по данным ребёнка. "
+                        "Проверьте имя и месяц рождения — или войдите по коду из письма.")
+
+    _record_recovery(db, email, 1)
+    token = create_session(db, match["cid"])
+    db.commit()
+    log.info("recovery login OK for %s (customer %s)", email, match["cid"])
+    return token
+
+
 def request_code(email: str) -> None:
     """Создаёт и «отправляет» код входа. AuthError при rate limit."""
     db = get_db()
@@ -58,10 +161,15 @@ def request_code(email: str) -> None:
     db.commit()
 
     html = render_email("login_code.html", code=code,
-                        ttl_minutes=settings.LOGIN_CODE_TTL_MINUTES)
+                        ttl_minutes=settings.LOGIN_CODE_TTL_MINUTES,
+                        cabinet_link=login_link_for(db, email=email))
     send_email(email, f"Код входа — {settings.SITE_NAME}", html, kind="login_code")
-    # до Unisender код читается из консоли/лога (план M7); ASCII-строка
-    log.info("LOGIN CODE for %s: %s", email, code)
+    if settings.MAIL_BACKEND == "unisender":
+        # боевой режим: код реально уходит письмом — НЕ пишем его значение в лог/файл
+        log.info("login code issued for %s (delivered by email)", email)
+    else:
+        # dev/outbox: письма «никуда» не уходят — печатаем код для удобства (ASCII-строка)
+        log.info("LOGIN CODE for %s: %s", email, code)
 
 
 def verify_code(email: str, code: str) -> str:

@@ -7,6 +7,21 @@
   <div style="max-width:520px; margin:0 auto">
     <div style="font-size:14px; color:#5a6273; margin-bottom:18px">{{ site_name }}</div>
     {% block content %}{% endblock %}
+    {% if cabinet_link %}
+    <hr style="border:none; border-top:1px solid #e6eaf0; margin:24px 0 16px">
+    <p style="font-size:13px; color:#5a6b84; line-height:1.6; margin:0 0 10px; text-align:center">
+      Войти в личный кабинет одним нажатием — код вводить не нужно:
+    </p>
+    <p style="text-align:center; margin:0 0 6px">
+      <a href="{{ cabinet_link }}" style="display:inline-block; background:#2b6cb0; color:#ffffff;
+         text-decoration:none; font-size:15px; font-weight:bold; padding:11px 26px; border-radius:10px">
+        Открыть кабинет
+      </a>
+    </p>
+    <p style="font-size:11px; color:#9aa7ba; line-height:1.5; margin:0; text-align:center">
+      Ссылка персональная — не пересылайте её другим.
+    </p>
+    {% endif %}
     <hr style="border:none; border-top:1px solid #e6eaf0; margin:24px 0 12px">
     <p style="font-size:12px; color:#7b8aa0; line-height:1.55; margin:0">
       Это образовательное наблюдение за навыками, которые видны в рисунке,

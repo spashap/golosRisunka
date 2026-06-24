@@ -3,10 +3,12 @@ from flask import Flask, g, render_template
 
 from app import track
 from app.db import init_db
+from app.logging_setup import configure_logging
 from config import settings
 
 
 def create_app() -> Flask:
+    configure_logging(settings.WEB_LOG)  # без этого INFO веб-процесса (отправка писем!) нигде не виден
     app = Flask(
         __name__,
         static_folder=str(settings.BASE_DIR / "static"),

@@ -18,23 +18,8 @@ sys.path.insert(0, str(BASE_DIR))
 
 from app import jobs
 from app.db import connect, init_db
+from app.logging_setup import configure_logging
 from config import settings
-
-
-def setup_logging() -> None:
-    settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
-    fmt = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
-    file_h = logging.FileHandler(settings.WORKER_LOG, encoding="utf-8")
-    file_h.setFormatter(fmt)
-    console_h = logging.StreamHandler()
-    console_h.setFormatter(fmt)
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
-    root.addHandler(file_h)
-    root.addHandler(console_h)
-    # болтливые библиотеки — только предупреждения (наши jobs/mailer/worker — INFO)
-    for noisy in ("fontTools", "weasyprint", "httpx", "google_genai", "PIL"):
-        logging.getLogger(noisy).setLevel(logging.WARNING)
 
 
 def main() -> int:
@@ -42,7 +27,7 @@ def main() -> int:
     ap.add_argument("--once", action="store_true",
                     help="process pending orders and exit")
     args = ap.parse_args()
-    setup_logging()
+    configure_logging(settings.WORKER_LOG)
     log = logging.getLogger("worker")
 
     init_db()

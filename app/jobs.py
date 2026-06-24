@@ -17,6 +17,7 @@ import traceback
 from pathlib import Path
 
 from app.db import new_token, now, track
+from app.auth import login_link_for
 from app.mailer import render_email, send_admin_alert, send_email
 from config import settings
 from config.form_fields import child_to_common, drawing_to_story
@@ -110,7 +111,8 @@ def _process(conn: sqlite3.Connection, order: sqlite3.Row) -> str:
 
     html = render_email("report_ready.html", child_name=report.child.name,
                         report_url=f"{settings.PUBLIC_BASE_URL}/r/{token}",
-                        drawings_count=len(rows))
+                        drawings_count=len(rows),
+                        cabinet_link=login_link_for(conn, email=order["email"]))
     send_email(order["email"], f"Отчёт готов — {settings.SITE_NAME}", html,
                attachments=[pdf_path], kind="report_ready")
     log.info("order %s: DELIVERED (attempts=%d, repairs=%d)",
@@ -157,7 +159,8 @@ def resend_report_email(conn: sqlite3.Connection, order_id: int) -> bool:
 
     html = render_email("report_ready.html", child_name=child_name,
                         report_url=f"{settings.PUBLIC_BASE_URL}/r/{row['public_token']}",
-                        drawings_count=drawings_n)
+                        drawings_count=drawings_n,
+                        cabinet_link=login_link_for(conn, email=order["email"]))
     send_email(order["email"], f"Отчёт готов — {settings.SITE_NAME}", html,
                attachments=[pdf_path], kind="report_ready")
     if order["status"] != "delivered":
@@ -178,7 +181,8 @@ def _handle_insufficient(conn: sqlite3.Connection, order: sqlite3.Row,
           customer_id=order["customer_id"],
           payload={"order_id": order_id, "reason": report.insufficient_reason}, conn=conn)
 
-    html = render_email("insufficient.html", reason=report.insufficient_reason)
+    html = render_email("insufficient.html", reason=report.insufficient_reason,
+                        cabinet_link=login_link_for(conn, email=order["email"]))
     send_email(order["email"], f"Нужны фотографии получше — {settings.SITE_NAME}",
                html, kind="insufficient")
     send_admin_alert(f"order {order_id}: insufficient input",

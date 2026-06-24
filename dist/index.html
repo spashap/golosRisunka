@@ -29,7 +29,9 @@
 <link rel="preload" href="/static/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" as="image" href="/static/img/hero.jpg" type="image/jpeg" fetchpriority="high">
+
+<link rel="preload" as="image" href="/static/img/hero-800.webp" type="image/webp" media="(max-width: 600px)" fetchpriority="high">
+<link rel="preload" as="image" href="/static/img/hero.webp" type="image/webp" media="(min-width: 601px)" fetchpriority="high">
 <link rel="stylesheet" href="/static/css/fonts.css">
 
 <style>/* ============================================================
@@ -447,9 +449,12 @@ html.dk .btn { color: #241A12; }
 .hero {
   position: relative; z-index: 2; min-height: 600px; display: flex; align-items: center;
   /* абсолютный /static-путь: CSS на лендинге инлайнится, относительный путь сломался бы.
-     Плоский url() (без image-set) — максимальная совместимость браузеров. */
+     image-set отдаёт лёгкий webp современным браузерам; плоский url() ниже — фолбэк.
+     Мобильная (≤600px) версия грузит уменьшённый hero-800.* — см. медиазапрос ниже. */
   background-color: var(--bg);
   background-image: url(/static/img/hero.jpg);
+  background-image: image-set(url(/static/img/hero.webp) type("image/webp"),
+                              url(/static/img/hero.jpg) type("image/jpeg"));
   background-position: center 32%;
   background-size: cover;
   background-repeat: no-repeat;
@@ -517,7 +522,10 @@ html.dk .btn { color: #241A12; }
 
 /* HERO мобайл: карточка прозрачнее, фото дышит */
 @media (max-width: 600px) {
-  .hero { min-height: 74vh; align-items: center; }
+  .hero { min-height: 74vh; align-items: center;
+          background-image: url(/static/img/hero-800.jpg);
+          background-image: image-set(url(/static/img/hero-800.webp) type("image/webp"),
+                                      url(/static/img/hero-800.jpg) type("image/jpeg")); }
   .hero__in { padding: 0 16px; }
   .hero__card { max-width: 100%; background: rgba(255, 250, 240, .58);
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 22px 20px 24px; }
@@ -1073,6 +1081,7 @@ html.dk .btn { color: #241A12; }
   </div>
 </header>
 
+<main>
 <!-- 1. HERO: кино-фото на весь экран + матовая карточка. Cold traffic: чистый хук, CTA-бонус. -->
 <section class="hero">
   <div class="hero__in">
@@ -1426,16 +1435,20 @@ html.dk .btn { color: #241A12; }
     </div>
     <div class="rot-dots" role="tablist" aria-label="Отзывы">
       
-      <button class="rot-dot is-active" type="button"
+      <button class="rot-dot is-active" type="button" role="tab"
+              aria-selected="true"
               data-dot="0" aria-label="Отзыв 1" data-ym-goal="landing_reviews_dot"></button>
       
-      <button class="rot-dot" type="button"
+      <button class="rot-dot" type="button" role="tab"
+              aria-selected="false"
               data-dot="1" aria-label="Отзыв 2" data-ym-goal="landing_reviews_dot"></button>
       
-      <button class="rot-dot" type="button"
+      <button class="rot-dot" type="button" role="tab"
+              aria-selected="false"
               data-dot="2" aria-label="Отзыв 3" data-ym-goal="landing_reviews_dot"></button>
       
-      <button class="rot-dot" type="button"
+      <button class="rot-dot" type="button" role="tab"
+              aria-selected="false"
               data-dot="3" aria-label="Отзыв 4" data-ym-goal="landing_reviews_dot"></button>
       
     </div>
@@ -1814,6 +1827,7 @@ html.dk .btn { color: #241A12; }
   </div>
 </section>
 
+</main>
 
 <footer class="foot">
   <div class="wrap">
@@ -1822,7 +1836,7 @@ html.dk .btn { color: #241A12; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.037</span>
+    <span class="foot-ver">V1.039</span>
   </div>
 </footer>
 
@@ -1894,6 +1908,7 @@ document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
       var d = document.createElement("button");
       d.className = "car-dot" + (i === 0 ? " is-active" : "");
       d.type = "button"; d.setAttribute("aria-label", "Карточка " + (i + 1));
+      d.setAttribute("role", "tab"); d.setAttribute("aria-selected", i === 0 ? "true" : "false");
       (function (idx) { d.addEventListener("click", function () {
         c.scrollTo({ left: setW + idx * step, behavior: "smooth" });
       }); })(i);
@@ -1904,7 +1919,10 @@ document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
     if (!dots.length) return;
     var rel = ((c.scrollLeft % setW) + setW) % setW;
     var active = Math.round(rel / step) % n;
-    dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+    dots.forEach(function (dd, k) {
+      dd.classList.toggle("is-active", k === active);
+      dd.setAttribute("aria-selected", k === active ? "true" : "false");
+    });
   }
 });
 
@@ -1916,10 +1934,10 @@ document.querySelectorAll(".quote-rotator").forEach(function (r) {
   var i = 0, timer;
   function show(n) {
     qs[i].classList.remove("is-active");
-    if (dots[i]) dots[i].classList.remove("is-active");
+    if (dots[i]) { dots[i].classList.remove("is-active"); dots[i].setAttribute("aria-selected", "false"); }
     i = (n + qs.length) % qs.length;
     qs[i].classList.add("is-active");
-    if (dots[i]) dots[i].classList.add("is-active");
+    if (dots[i]) { dots[i].classList.add("is-active"); dots[i].setAttribute("aria-selected", "true"); }
   }
   function play() { timer = setInterval(function () { show(i + 1); }, +r.dataset.interval || 7000); }
   function stop() { clearInterval(timer); }

@@ -118,6 +118,7 @@ UPLOAD_MAX_BYTES = 15 * 1024 * 1024
 # --- Worker / email (Phase 6) ---
 WORKER_POLL_SECONDS = 5                # период опроса orders.status='paid'
 WORKER_LOG = DATA_DIR / "worker.log"   # UTF-8 лог воркера (консоль — только ASCII!)
+WEB_LOG = DATA_DIR / "web.log"         # UTF-8 лог веб-процесса (gunicorn → ещё и journald)
 MAIL_BACKEND = os.getenv("MAIL_BACKEND", "outbox")  # 'outbox' (файлы) | 'unisender' (Unisender Go)
 OUTBOX_DIR = DATA_DIR / "outbox"       # backend 'outbox': письма как HTML-файлы
 # Отправитель транзакционных писем (домен golosrisunka.ru, DKIM настраивается в Unisender).
@@ -145,3 +146,7 @@ SESSION_DAYS = 30
 LOGIN_CODE_TTL_MINUTES = 30
 LOGIN_CODE_RESEND_MINUTES = 10
 LOGIN_CODE_MAX_ATTEMPTS = 5
+# Резервный вход «по данным ребёнка» (когда код не доходит): лимит неудачных
+# попыток на один email в окне — гасит подбор месяца рождения по конкретной жертве.
+RECOVERY_MAX_FAILS = 5
+RECOVERY_WINDOW_MINUTES = 30

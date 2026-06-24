@@ -27,6 +27,44 @@
         </div>
         <button class="btn btn--primary" type="submit" style="width: 100%" data-ym-goal="login_request_code">Получить код</button>
       </form>
+      <p class="hint" style="text-align: center; margin-top: 16px">
+        Код не приходит? <a href="/login/recover" data-ym-goal="login_recover_open">Войти по данным ребёнка</a>
+      </p>
+
+      {% elif step == "recover" %}
+      <p class="sub" style="font-size: 14px; margin: -8px 0 18px">
+        Если код из письма не доходит — войдите по данным заказа: email, имя ребёнка
+        и месяц его рождения (как указывали при оформлении).
+      </p>
+      <form method="post" action="/login/recover">
+        <div class="field">
+          <label for="email">Email заказа</label>
+          <div class="ctl">
+            <input class="input{% if error %} input--error{% endif %}" type="email"
+                   id="email" name="email" value="{{ email }}" placeholder="you@example.com"
+                   autocomplete="email" required {% if not email %}autofocus{% endif %}>
+          </div>
+        </div>
+        <div class="field">
+          <label for="child_name">Имя ребёнка</label>
+          <div class="ctl">
+            <input class="input" type="text" id="child_name" name="child_name"
+                   placeholder="Как указывали при заказе" autocomplete="off" required
+                   {% if email %}autofocus{% endif %}>
+          </div>
+        </div>
+        <div class="field">
+          <label for="child_birth">Месяц рождения ребёнка</label>
+          <div class="ctl">
+            <input class="input" type="month" id="child_birth" name="child_birth" required>
+            {% if error %}<div class="err">{{ error }}</div>{% endif %}
+          </div>
+        </div>
+        <button class="btn btn--primary" type="submit" style="width: 100%" data-ym-goal="login_recover_submit">Войти</button>
+      </form>
+      <p class="hint" style="text-align: center; margin-top: 16px">
+        <a href="/login" data-ym-goal="login_recover_back">← Вернуться ко входу по коду</a>
+      </p>
 
       {% else %}
       <form method="post" action="/login/verify">
@@ -46,6 +84,9 @@
         <input type="hidden" name="email" value="{{ email }}">
         <button class="btn btn--ghost" type="submit" data-ym-goal="login_resend">Прислать код ещё раз</button>
       </form>
+      <p class="hint" style="text-align: center; margin-top: 12px">
+        Письмо так и не пришло? <a href="/login/recover" data-ym-goal="login_recover_open">Войти по данным ребёнка</a>
+      </p>
       {% endif %}
     </div>
     <p class="hint" style="text-align: center">

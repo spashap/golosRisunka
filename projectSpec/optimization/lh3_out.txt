@@ -1,0 +1,63 @@
+=== LCP BREAKDOWN (mobile) ===
+   Time to first byte 437 ms
+   Resource load delay 21 ms
+   Resource load duration 389 ms
+   Element render delay 50 ms
+
+=== lcp-discovery-insight score=1 
+   {"type": "checklist", "items": {"priorityHinted": {"label": "fetchpriority=high applied", "value": true}, "requestDiscoverable": {"label": "Request is discoverable in initial document", "value": true}, "eagerlyLoaded": {"label": "LCP resources should not use loading=lazy", "value": true}}}
+   {"type": "node", "lhId": "page-0-SECTION", "path": "1,HTML,4,BODY,2,SECTION", "selector": "body > section.hero", "boundingRect": {"top": 77, "bottom": 686, "left": 8, "right": 404, "width": 396, "height": 609}, "snippet": "<section class=\"hero\">", "nodeLabel": "У каждого рисунка есть голос\nДети часто говорят рисунками о том, о чём не всегд…"}
+
+=== ACCESSIBILITY NODE DETAILS ===
+
+### color-contrast
+  snippet: <span class="badge badge--corner">
+  expl: Fix any of the following:
+  Element has insufficient color contrast of 3.35 (foreground color: #b9722a, background color: #fbefd9, font size: 9.8pt (13px), font weight: bold). Expected contrast ratio 
+  snippet: <div class="p-sub">
+  expl: Fix any of the following:
+  Element has insufficient color contrast of 4.22 (foreground color: #887660, background color: #fffbf2, font size: 10.5pt (14px), font weight: normal). Expected contrast rat
+  snippet: <li>
+  expl: Fix any of the following:
+  Element has insufficient color contrast of 4.22 (foreground color: #887660, background color: #fffbf2, font size: 11.3pt (15px), font weight: normal). Expected contrast rat
+  snippet: <li>
+  expl: Fix any of the following:
+  Element has insufficient color contrast of 4.22 (foreground color: #887660, background color: #fffbf2, font size: 11.3pt (15px), font weight: normal). Expected contrast rat
+  snippet: <li>
+  expl: Fix any of the following:
+  Element has insufficient color contrast of 4.22 (foreground color: #887660, background color: #fffbf2, font size: 11.3pt (15px), font weight: normal). Expected contrast rat
+  snippet: <li>
+  expl: Fix any of the following:
+  Element has insufficient color contrast of 4.22 (foreground color: #887660, background color: #fffbf2, font size: 11.3pt (15px), font weight: normal). Expected contrast rat
+  snippet: <span class="p-soon-note">
+  expl: Fix any of the following:
+  Element has insufficient color contrast of 2.46 (foreground color: #b49f84, background color: #fffbf2, font size: 11.3pt (15px), font weight: normal). Expected contrast rat
+
+### aria-required-children
+  snippet: <div class="car-dots" role="tablist" aria-label="Прокрутка примеров">
+  expl: Fix any of the following:
+  Element has children which are not allowed: button[aria-label]
+  snippet: <div class="rot-dots" role="tablist" aria-label="Отзывы">
+  expl: Fix any of the following:
+  Element has children which are not allowed: button[aria-label]
+  snippet: <div class="car-dots" role="tablist" aria-label="Прокрутка статей">
+  expl: Fix any of the following:
+  Element has children which are not allowed: button[aria-label]
+
+### landmark-one-main
+  snippet: <html lang="ru" class="">
+  expl: Fix all of the following:
+  Document does not have a main landmark
+
+=== INSPECTOR ISSUES ===
+   {"issueType": "Cookie", "subItems": {"type": "subitems", "items": [{"url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}, {"url": "https://mc.yandex.com/watch/109824945?wmode=7&page-url=https%3A%2F%2Fgolosrisunka.ru%2F&charset=utf-8&uah=chu%0A%22Chromium%22%3Bv%3D%22149%22%2C%22Google%20Chrome
+
+=== THIRD PARTY COOKIES ===
+   {"name": "pythia_ivid", "url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}
+   {"name": "_ymab_param", "url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}
+   {"name": "sessguard", "url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}
+   {"name": "mda2_beacon", "url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}
+   {"name": "lah", "url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}
+   {"name": "yashr", "url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}
+   {"name": "gdpr", "url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}
+   {"name": "_ym_uid", "url": "https://mc.yandex.ru/metrika/tag.js?id=109824945"}

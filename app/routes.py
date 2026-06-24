@@ -11,7 +11,8 @@ from flask import (Blueprint, Response, abort, g, jsonify, redirect,
 
 from app import yookassa
 from app.auth import (SESSION_COOKIE, AuthError, current_customer,
-                      destroy_session, request_code, verify_code)
+                      destroy_session, login_with_token, recover_login,
+                      request_code, verify_code)
 from app.blog import get_post, get_posts
 from app.db import get_db
 from app.orders import EMAIL_RE, FormError, validate_and_create_order
@@ -222,6 +223,50 @@ def login_verify():
     resp.set_cookie(SESSION_COOKIE, token, max_age=settings.SESSION_DAYS * 24 * 3600,
                     httponly=True, samesite="Lax")
     return resp
+
+
+def _logged_in_redirect(token: str):
+    """Ставит session-cookie и ведёт в кабинет (общий хвост для всех входов)."""
+    resp = redirect(url_for("main.cabinet"))
+    resp.set_cookie(SESSION_COOKIE, token, max_age=settings.SESSION_DAYS * 24 * 3600,
+                    httponly=True, samesite="Lax")
+    return resp
+
+
+@bp.get("/enter/<token>")
+def login_enter(token):
+    """Magic-link из письма: durable-токен покупателя → сессия без кода."""
+    session = login_with_token(token)
+    if session is None:
+        return render_template("login.html", step="email", email="", error=None,
+                               notice="Ссылка не сработала — войдите по email ниже."), 404
+    track_event("login_magic")
+    return _logged_in_redirect(session)
+
+
+@bp.get("/login/recover")
+def login_recover_form():
+    if current_customer():
+        return redirect(url_for("main.cabinet"))
+    track_event("login_recover_view")
+    return render_template("login.html", step="recover", email="", error=None, notice=None)
+
+
+@bp.post("/login/recover")
+def login_recover():
+    email = (request.form.get("email") or "").strip().lower()
+    child_name = (request.form.get("child_name") or "").strip()
+    child_birth = (request.form.get("child_birth") or "").strip()
+    if not EMAIL_RE.match(email):
+        return render_template("login.html", step="recover", email=email,
+                               error="Укажите корректный email", notice=None), 400
+    try:
+        token = recover_login(email, child_name, child_birth)
+    except AuthError as e:
+        return render_template("login.html", step="recover", email=email,
+                               error=str(e), notice=None), 400
+    track_event("login_recover_success")
+    return _logged_in_redirect(token)
 
 
 @bp.post("/logout")
@@ -549,7 +594,7 @@ SEO_BOTS = ["YandexBot", "Yandex", "Googlebot", "Google-Extended", "Bingbot",
             "GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot",
             "Claude-SearchBot", "anthropic-ai", "PerplexityBot", "PerplexityBot/1.0"]
 # Что закрываем у всех: админка, кабинет, вход, оплата, непубличные отчёты, служебное.
-SEO_DISALLOW = ["/admin", "/cabinet", "/login", "/logout", "/order/success",
+SEO_DISALLOW = ["/admin", "/cabinet", "/login", "/logout", "/enter/", "/order/success",
                 "/pay/", "/r/", "/t/", "/track/"]
 
 

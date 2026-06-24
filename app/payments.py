@@ -81,8 +81,10 @@ def mark_paid(order_id: int) -> dict | None:
     # в кабинет. Шлём ТОЛЬКО при первом переходе в paid — дубли отсечены идемпотентностью
     # выше. Сбой письма не должен ломать подтверждение оплаты.
     try:
+        from app.auth import login_link_for
         html = render_email("payment_received.html",
-                            login_url=f"{settings.PUBLIC_BASE_URL}/login")
+                            login_url=f"{settings.PUBLIC_BASE_URL}/login",
+                            cabinet_link=login_link_for(db, customer_id=customer_id))
         send_email(email, f"Оплата получена — {settings.SITE_NAME}", html,
                    kind="payment_received")
     except Exception:

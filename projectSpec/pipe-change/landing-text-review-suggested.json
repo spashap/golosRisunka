@@ -1,0 +1,861 @@
+{
+  "_meta": {
+    "file_purpose": "Russian copy review for the golosrisunka.ru landing page. A native-Russian editor (e.g. ChatGPT) corrects each block for fluent, natural Russian WITHOUT changing meaning or concept, and returns the same structure with each block's 'suggested_text' filled in.",
+    "how_to_use": "For every object in 'blocks', read 'purpose' (English context) and 'russian_text' (current copy), then write a corrected version into 'suggested_text'. If the original is already good, copy it into 'suggested_text' unchanged. Do NOT add, remove, reorder, or merge blocks. Return valid JSON in exactly this shape.",
+    "editor_rules": [
+      "Fix grammar, word choice, naturalness and flow for fluent, native Russian.",
+      "DO NOT change the meaning, the marketing concept, or the message of any block.",
+      "Keep roughly the same length — UI space is limited (headings short, list items one line).",
+      "Preserve guillemet quotes («ёлочки»), the letter ё, em dashes (—), names and terms.",
+      "Keep template tokens EXACTLY as-is, e.g. {{ min_price }} ₽ — do not translate or remove them.",
+      "For blocks with \"seo_sensitive\": true, keep the listed keyword phrases intact (these are search queries we rank for).",
+      "Do NOT edit blocks with \"do_not_edit\": true (these are real customer quotes or fixed UI).",
+      "Blocks with \"config_managed\": true live in an admin panel; still suggest improved text, the owner will apply them."
+    ]
+  },
+  "project_context": {
+    "product": "Голос рисунка (golosrisunka.ru) — a Russian-language web service. A parent uploads 1–3 of their child's drawings plus short context, pays (~2999 ₽), and receives a warm, personal PDF report that reads the child AS A PERSON through the drawing: character, themes, inner world, mood, interests — and how to understand and support them. Drawing skills are included but secondary.",
+    "goal": "The landing page must sell and deliver the hero's promise: help a parent understand their child through their drawings, and convert a skeptical Russian parent into a paying customer.",
+    "north_star": "A mother reads the page and feels: 'This is about MY child — his soul, who he is — not about how he holds a pencil. I am understood. This is worth paying for.' Remember: 99% of parents do NOT want to raise an artist.",
+    "audience": "Russian-speaking parents (mostly mothers) of children aged 3–12. They are skeptical — burned by esoteric 'fortune-teller' TV/content — and need seriousness, proof and concreteness before paying.",
+    "voice_and_tone": "Warm, human, confident; serious and scientific (methodics: Piaget / Пиаже, Lowenfeld / Ловенфельд, Vygotsky / Выготский) as the antidote to esoteric guessing — but never dry. Speak to a loving parent, not to a buyer of 'skill scores'.",
+    "hard_rules": [
+      "Never promise 'diagnosis/diagnostics' (диагноз/диагностика) as a benefit. The word 'диагноз' may appear ONLY in soft-negative form ('не диагноз', 'без диагнозов'), never as what we deliver.",
+      "We reveal what the child EXPRESSES through the drawing — never 'we diagnose hidden problems/traumas from one photo'.",
+      "We help 'understand and support' (понять и поддержать) the child — never 'fix/cure/solve a problem' (исправить/вылечить/решить проблему).",
+      "Any psychological reading is a careful HYPOTHESIS to check with the child, framed by methodics — not a verdict, not fortune-telling by colors/symbols.",
+      "Illustrative scenarios are clearly framed as examples ('например, такая ситуация'), never presented as real clients."
+    ]
+  },
+  "blocks": [
+    {
+      "id": "hero.eyebrow",
+      "location": "Hero — eyebrow above the headline",
+      "purpose": "Tiny tagline / emotional hook: every drawing has a voice.",
+      "russian_text": "У каждого рисунка есть голос",
+      "suggested_text": "У каждого рисунка есть голос"
+    },
+    {
+      "id": "hero.h1",
+      "location": "Hero — main H1 headline",
+      "purpose": "Core emotional promise. Owner wants this concept kept; correct only fluency.",
+      "russian_text": "Дети часто говорят рисунками о том, о чём не всегда могут сказать словами.",
+      "suggested_text": "Дети часто говорят рисунками о том, о чём не всегда могут сказать словами."
+    },
+    {
+      "id": "hero.lead",
+      "location": "Hero — lead paragraph under H1",
+      "purpose": "Restates the promise: we help see the child's character, themes, inner world through the drawing, and how to understand/support him — gently, by methodics, not guessing.",
+      "russian_text": "Поймите, что выражает ваш ребёнок: мы помогаем разглядеть за рисунком его характер, темы и внутренний мир — и подсказываем, как понять и поддержать именно его. Бережно, по методикам, а не по гаданиям.",
+      "suggested_text": "Поймите, что выражает ваш ребёнок: мы помогаем разглядеть за рисунком его характер, важные для него темы и внутренний мир — и подсказываем, как понять и поддержать именно его. Бережно, по методикам, без гаданий."
+    },
+    {
+      "id": "hero.cta",
+      "location": "Hero — primary button",
+      "purpose": "Primary call to action with price.",
+      "russian_text": "Получить отчёт — {{ min_price }} ₽",
+      "suggested_text": "Получить отчёт — {{ min_price }} ₽"
+    },
+    {
+      "id": "hero.popup_note",
+      "location": "Hero — 'what's included' popup line",
+      "purpose": "Quick reassurance line: delivery, count, account.",
+      "russian_text": "PDF на почту в течение часа · 1–3 рисунка · личный кабинет",
+      "suggested_text": "PDF на почту в течение часа · 1–3 рисунка · личный кабинет"
+    },
+    {
+      "id": "hero.chip.1",
+      "location": "Hero — chip",
+      "purpose": "Feature chip: report length.",
+      "russian_text": "около 8 страниц",
+      "suggested_text": "Около 8 страниц"
+    },
+    {
+      "id": "hero.chip.2",
+      "location": "Hero — chip",
+      "purpose": "Feature chip: 7 directions/dimensions.",
+      "russian_text": "7 направлений",
+      "suggested_text": "7 направлений"
+    },
+    {
+      "id": "hero.chip.3",
+      "location": "Hero — chip",
+      "purpose": "Reassurance chip (soft-negative use of 'диагноз' is allowed here).",
+      "russian_text": "Без диагнозов",
+      "suggested_text": "Без диагнозов"
+    },
+    {
+      "id": "hero.chip.4",
+      "location": "Hero — chip",
+      "purpose": "Privacy reassurance chip.",
+      "russian_text": "Рисунки видите только вы",
+      "suggested_text": "Рисунки видите только вы"
+    },
+    {
+      "id": "bolshe.h2",
+      "location": "Section 'More than just a drawing' — heading",
+      "purpose": "Discovery section heading: there's more behind a child's drawing.",
+      "russian_text": "Больше, чем просто рисунок",
+      "suggested_text": "Больше, чем просто рисунок"
+    },
+    {
+      "id": "bolshe.sub",
+      "location": "Section 'More than just a drawing' — subheading",
+      "purpose": "Behind 'just a bird/house' there's almost always something about the child; we help see it.",
+      "russian_text": "За «просто птицей» или «просто домиком» почти всегда стоит что-то про самого ребёнка — что его занимает, что он проживает, что для него важно. Мы помогаем это увидеть.",
+      "suggested_text": "За «просто птицей» или «просто домиком» почти всегда есть что-то о самом ребёнке: что его занимает, что он проживает, что для него важно. Мы помогаем это увидеть."
+    },
+    {
+      "id": "bolshe.li.1",
+      "location": "Section 'More than just a drawing' — list item",
+      "purpose": "You see dark colors → we help understand the theme the child is living through (not the 'dark = anxiety' myth).",
+      "russian_text": "Видите тёмные цвета — помогаем понять, какую тему ребёнок проживает (а не пугаемся мифом «тёмное = тревога»)",
+      "suggested_text": "Видите тёмные цвета — помогаем понять, какую тему проживает ребёнок, а не пугаться мифа «тёмное = тревога»"
+    },
+    {
+      "id": "bolshe.li.2",
+      "location": "Section 'More than just a drawing' — list item",
+      "purpose": "You see a repeated subject → we show what matters in it for the child.",
+      "russian_text": "Видите один и тот же сюжет снова и снова — показываем, что в нём важного для ребёнка",
+      "suggested_text": "Видите один и тот же сюжет снова и снова — показываем, что в нём важно для ребёнка"
+    },
+    {
+      "id": "bolshe.li.3",
+      "location": "Section 'More than just a drawing' — list item",
+      "purpose": "You see a 'scribble' → we see the developmental stage and current interests.",
+      "russian_text": "Видите «каляку» — видим, на каком этапе развития ребёнок и что ему сейчас интересно",
+      "suggested_text": "Видите «каляку» — смотрим, на каком этапе развития ребёнок и что ему сейчас интересно"
+    },
+    {
+      "id": "vnutri.h2",
+      "location": "Section 'What you'll learn about the child' — heading",
+      "purpose": "Heading: what you learn about the child.",
+      "russian_text": "Что вы узнаете о ребёнке",
+      "suggested_text": "Что вы узнаете о ребёнке"
+    },
+    {
+      "id": "vnutri.sub",
+      "location": "Section 'What you'll learn' — subheading",
+      "purpose": "Parents see just a house/cat/person; we help see the child behind it.",
+      "russian_text": "Иногда родители смотрят на рисунок и видят просто дом, кота или человечка. Мы помогаем увидеть за этим самого ребёнка.",
+      "suggested_text": "Иногда родители смотрят на рисунок и видят просто дом, кота или человечка. Мы помогаем увидеть за этим самого ребёнка."
+    },
+    {
+      "id": "vnutri.li.1",
+      "location": "Section 'What you'll learn' — list item",
+      "purpose": "What excites/draws the child — which worlds and themes he picks again and again.",
+      "russian_text": "Что волнует и влечёт вашего ребёнка — какие миры и темы он выбирает снова и снова",
+      "suggested_text": "Что волнует вашего ребёнка и к чему его тянет — какие миры и темы он выбирает снова и снова"
+    },
+    {
+      "id": "vnutri.li.2",
+      "location": "Section 'What you'll learn' — list item",
+      "purpose": "His character and approach to the world — gently, as a hypothesis from lines/color/subjects.",
+      "russian_text": "Какой у него характер и подход к миру — бережно, как гипотезу по линиям, цвету и сюжетам",
+      "suggested_text": "Какой у него характер и подход к миру — бережно, в виде гипотезы по линиям, цвету и сюжетам"
+    },
+    {
+      "id": "vnutri.li.3",
+      "location": "Section 'What you'll learn' — list item",
+      "purpose": "The mood living in his drawings — what he may be saying without words.",
+      "russian_text": "Какое настроение живёт в его рисунках — и о чём он, возможно, говорит без слов",
+      "suggested_text": "Какое настроение живёт в его рисунках — и о чём он, возможно, говорит без слов"
+    },
+    {
+      "id": "vnutri.li.4",
+      "location": "Section 'What you'll learn' — list item",
+      "purpose": "Which stories and heroes matter to him — what it says about his view of people.",
+      "russian_text": "Какие истории и герои для него важны — и что это говорит о его взгляде на людей",
+      "suggested_text": "Какие истории и герои ему важны — и что это говорит о его взгляде на людей"
+    },
+    {
+      "id": "vnutri.li.5",
+      "location": "Section 'What you'll learn' — list item",
+      "purpose": "How to understand and support exactly him — what to ask, notice, say.",
+      "russian_text": "Как понять и поддержать именно его — какие вопросы задать, что заметить, что сказать",
+      "suggested_text": "Как понять и поддержать именно его — какие вопросы задать, что заметить, что сказать"
+    },
+    {
+      "id": "vnutri.li.6",
+      "location": "Section 'What you'll learn' — list item",
+      "purpose": "Also drawing strengths and simple home activities — as support, not the main point.",
+      "russian_text": "А ещё — сильные стороны в рисовании и простые занятия для дома (как поддержка, не главное)",
+      "suggested_text": "А ещё — сильные стороны в рисовании и простые занятия для дома: как поддержка, не главное"
+    },
+    {
+      "id": "vnutri.scores_note",
+      "location": "Section 'What you'll learn' — note under the list",
+      "purpose": "Each of 7 directions has a clear observation with a score; personality directions lead, skills support.",
+      "russian_text": "По каждому из 7 направлений — понятное наблюдение с оценкой; личностные направления ведут, навыки идут как поддержка.",
+      "suggested_text": "По каждому из 7 направлений — понятное наблюдение и оценка; личностные направления на первом месте, навыки — как поддержка."
+    },
+    {
+      "id": "logika.h2",
+      "location": "Section 'How the conclusion is built' — heading",
+      "purpose": "Heading: how a conclusion in the report is formed.",
+      "russian_text": "Как строится вывод в отчёте",
+      "suggested_text": "Как строится вывод в отчёте"
+    },
+    {
+      "id": "logika.sub",
+      "location": "Section 'How the conclusion is built' — subheading",
+      "purpose": "We look at concrete details and gently explain what they MAY say about the child — a hypothesis to check with him, not a verdict.",
+      "russian_text": "Мы смотрим на конкретные детали рисунка и бережно объясняем, что они могут говорить о ребёнке — как гипотезу, которую лучше проверить в разговоре с ним, а не как приговор.",
+      "suggested_text": "Мы смотрим на конкретные детали рисунка и бережно объясняем, о чём они могут говорить: как гипотезу, которую лучше проверить в разговоре с ребёнком, а не как приговор."
+    },
+    {
+      "id": "logika.step1.label",
+      "location": "Section 'How the conclusion is built' — flow card 1 label",
+      "purpose": "Step label: visible detail.",
+      "russian_text": "Видимая деталь",
+      "suggested_text": "Видимая деталь"
+    },
+    {
+      "id": "logika.step1.text",
+      "location": "Section 'How the conclusion is built' — flow card 1 text",
+      "purpose": "Example detail (the firebird sample): a warm bird flying through a dark, densely colored sky.",
+      "russian_text": "Тёплая птица летит сквозь тёмное, плотно закрашенное небо.",
+      "suggested_text": "Тёплая птица летит сквозь тёмное, плотно закрашенное небо."
+    },
+    {
+      "id": "logika.step2.label",
+      "location": "Section 'How the conclusion is built' — flow card 2 label",
+      "purpose": "Step label: what it may say.",
+      "russian_text": "Что это может говорить",
+      "suggested_text": "О чём это может говорить"
+    },
+    {
+      "id": "logika.step2.text",
+      "location": "Section 'How the conclusion is built' — flow card 2 text",
+      "purpose": "In the tradition of reading drawings it can be seen as an image of light passing through something hard — a gentle hypothesis, not a diagnosis.",
+      "russian_text": "В традиции прочтения рисунка это можно увидеть как образ света, идущего через непростое — бережная гипотеза, не диагноз.",
+      "suggested_text": "В традиции прочтения рисунков это можно увидеть как образ света, проходящего через что-то непростое, — бережная гипотеза, не диагноз."
+    },
+    {
+      "id": "logika.step3.label",
+      "location": "Section 'How the conclusion is built' — flow card 3 label",
+      "purpose": "Step label: what to ask the child.",
+      "russian_text": "Что спросить у ребёнка",
+      "suggested_text": "Что спросить у ребёнка"
+    },
+    {
+      "id": "logika.step3.text",
+      "location": "Section 'How the conclusion is built' — flow card 3 text",
+      "purpose": "Ask where his bird is flying and what's there in the sky — and listen to his story.",
+      "russian_text": "Спросить, куда летит его птица и что там, в небе, — и послушать его историю.",
+      "suggested_text": "Можно спросить, куда летит его птица, что там, в небе, — и послушать его историю."
+    },
+    {
+      "id": "logika.closing",
+      "location": "Section 'How the conclusion is built' — closing line",
+      "purpose": "Summary of the method: visible detail → gentle interpretation → what to ask & how to support.",
+      "russian_text": "Так устроен отчёт: видимая деталь → бережная интерпретация → что спросить и как поддержать.",
+      "suggested_text": "Так устроен отчёт: видимая деталь → бережная интерпретация → что спросить и как поддержать."
+    },
+    {
+      "id": "situacii.h2",
+      "location": "Section 'Example situations' — heading",
+      "purpose": "Heading for illustrative (non-real-client) scenarios.",
+      "russian_text": "Например, такие ситуации",
+      "suggested_text": "Например, такие ситуации"
+    },
+    {
+      "id": "situacii.sub",
+      "location": "Section 'Example situations' — subheading",
+      "purpose": "Explicitly: these are NOT real clients, but examples of what you can get.",
+      "russian_text": "Это не реальные клиенты, а примеры того, что вы можете получить — как отчёт раскрывает то, что ребёнок выражает рисунком, и что подсказывает родителю.",
+      "suggested_text": "Это не реальные клиенты, а примеры того, что может дать отчёт: как он раскрывает то, что ребёнок выражает рисунком, и что подсказывает родителю."
+    },
+    {
+      "id": "situacii.case.1",
+      "location": "Section 'Example situations' — case 1",
+      "purpose": "Dark colors scenario. Must keep the 'например, такая ситуация' framing and stay on the 'what the child expresses' side (no diagnosing hidden problems).",
+      "russian_text": "Например, такая ситуация: ребёнок несколько недель рисует только чёрным, и родитель тревожится. В отчёте мы спокойно показываем, что в его рисунках раз за разом повторяется тема — например, космос или драконы, — а тёмный фон часто делает яркое ещё ярче; и подсказываем, какие вопросы задать ребёнку и за чем понаблюдать в следующих рисунках. Без пугающих трактовок.",
+      "suggested_text": "Например, такая ситуация: ребёнок несколько недель рисует только чёрным, и родитель начинает тревожиться. В отчёте мы спокойно показываем, что в его рисунках раз за разом повторяется тема — например, космос или драконы, — а тёмный фон часто делает яркое ещё ярче; и подсказываем, какие вопросы задать ребёнку и за чем понаблюдать в следующих рисунках. Без пугающих трактовок."
+    },
+    {
+      "id": "situacii.case.2",
+      "location": "Section 'Example situations' — case 2",
+      "purpose": "Repeated subject (same house) scenario.",
+      "russian_text": "Например, такая ситуация: ребёнок рисует один и тот же домик снова и снова. Мы помогаем увидеть, что для него в этом домике важно — свой мир, безопасность, любимые люди рядом, — и как мягко расспросить его об этом.",
+      "suggested_text": "Например, такая ситуация: ребёнок снова и снова рисует один и тот же домик. Мы помогаем увидеть, что для него в этом домике важно — свой мир, безопасность, любимые люди рядом, — и как мягко расспросить его об этом."
+    },
+    {
+      "id": "situacii.case.3",
+      "location": "Section 'Example situations' — case 3",
+      "purpose": "One character, no people scenario — do not conclude 'unsociable'.",
+      "russian_text": "Например, такая ситуация: на рисунках почти всегда один персонаж, без других людей. Мы не делаем вывод «необщительный» — мы показываем, что это особенность выбранной темы, и подсказываем, как поддержать интерес ребёнка к историям с героями.",
+      "suggested_text": "Например, такая ситуация: на рисунках почти всегда один персонаж, без других людей. Мы не делаем вывод «необщительный» — показываем, что это может быть особенностью выбранной темы, и подсказываем, как поддержать интерес ребёнка к историям с героями."
+    },
+    {
+      "id": "situacii.case.4",
+      "location": "Section 'Example situations' — case 4",
+      "purpose": "Series over time scenario — honest upsell: one drawing is a moment, a series shows what's stable.",
+      "russian_text": "Например, такая ситуация: вы прислали три рисунка за разные дни. Мы показываем, что повторяется из работы в работу (устойчивое), а что появилось впервые (настроение момента) — по одному рисунку этого не увидеть.",
+      "suggested_text": "Например, такая ситуация: вы прислали три рисунка за разные дни. Мы показываем, что повторяется из работы в работу (устойчивое), а что появилось впервые (настроение момента), — по одному рисунку этого не увидеть."
+    },
+    {
+      "id": "primery.h2",
+      "location": "Section 'Sample reports' — heading",
+      "purpose": "Heading inviting to see what parents learn about the child.",
+      "russian_text": "Посмотрите, что родители узнают о ребёнке из отчёта",
+      "suggested_text": "Посмотрите, что родители узнают о ребёнке в отчёте"
+    },
+    {
+      "id": "primery.sub",
+      "location": "Section 'Sample reports' — subheading",
+      "purpose": "Open real examples: inside — a portrait of the child, themes and character, gentle observations and tips for the parent.",
+      "russian_text": "Откройте реальные примеры: внутри — портрет ребёнка, его темы и характер, бережные наблюдения и подсказки родителю.",
+      "suggested_text": "Откройте реальные примеры: внутри — портрет ребёнка, его темы и характер, бережные наблюдения и подсказки родителю."
+    },
+    {
+      "id": "primery.card_link",
+      "location": "Section 'Sample reports' — card link label",
+      "purpose": "Link to open a sample report.",
+      "russian_text": "Смотреть пример отчёта →",
+      "suggested_text": "Смотреть пример отчёта →"
+    },
+    {
+      "id": "primery.scores_note",
+      "location": "Section 'Sample reports' — note under carousel",
+      "purpose": "Scores relate to the drawing, not the whole child; an average score is not a problem.",
+      "russian_text": "Оценки относятся к конкретному рисунку, а не к ребёнку в целом. Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете.",
+      "suggested_text": "Оценки относятся к конкретному рисунку, а не к ребёнку в целом. Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете."
+    },
+    {
+      "id": "mifov.h2",
+      "location": "Section 'Carefully, by methodics — not by guessing' — heading",
+      "purpose": "Anti-esoteric positioning heading. We read the child carefully, not by fortune-telling.",
+      "russian_text": "Бережно и по методикам — не по гаданиям",
+      "suggested_text": "Бережно и по методикам — не по гаданиям"
+    },
+    {
+      "id": "mifov.sub",
+      "location": "Section 'Carefully, by methodics' — subheading",
+      "purpose": "We don't guess by colors/symbols; we read carefully by developmental stages and methodics, as observation and hypothesis, not a verdict.",
+      "russian_text": "Мы не гадаем по цветам и символам. Мы читаем рисунок бережно — по этапам детского развития и методикам (Пиаже, Ловенфельд, Выготский), как наблюдение и гипотезу, а не приговор.",
+      "suggested_text": "Мы не гадаем по цветам и символам. Мы бережно читаем рисунок — с учётом этапов детского развития и методик (Пиаже, Ловенфельд, Выготский), как наблюдение и гипотезу, а не приговор."
+    },
+    {
+      "id": "mifov.no.h3",
+      "location": "Section 'Carefully, by methodics' — left column heading (what myths/guessers do)",
+      "purpose": "Column heading: myths and fortune-telling.",
+      "russian_text": "Мифы и гадания",
+      "suggested_text": "Мифы и гадания"
+    },
+    {
+      "id": "mifov.no.1",
+      "location": "Section — myths column item",
+      "purpose": "Myth: black = depression, red = aggression.",
+      "russian_text": "«чёрный цвет = депрессия», «красный = агрессия»",
+      "suggested_text": "«чёрный цвет = депрессия», «красный = агрессия»"
+    },
+    {
+      "id": "mifov.no.2",
+      "location": "Section — myths column item",
+      "purpose": "Myth: diagnose from a single photo.",
+      "russian_text": "ставят диагноз по одному фото",
+      "suggested_text": "делают выводы по одному фото"
+    },
+    {
+      "id": "mifov.no.3",
+      "location": "Section — myths column item",
+      "purpose": "Myth: scare with 'hidden traumas'.",
+      "russian_text": "пугают «скрытыми травмами»",
+      "suggested_text": "пугают «скрытыми травмами»"
+    },
+    {
+      "id": "mifov.no.4",
+      "location": "Section — myths column item",
+      "purpose": "Myth: present a guess as fact.",
+      "russian_text": "выдают догадку за факт",
+      "suggested_text": "выдают догадку за факт"
+    },
+    {
+      "id": "mifov.yes.h3",
+      "location": "Section 'Carefully, by methodics' — right column heading (what we do)",
+      "purpose": "Column heading: we — carefully, by science.",
+      "russian_text": "Мы — бережно, по науке",
+      "suggested_text": "Мы — бережно и по методикам"
+    },
+    {
+      "id": "mifov.yes.1",
+      "location": "Section — we column item",
+      "purpose": "We read character, themes, mood — gently, as a hypothesis.",
+      "russian_text": "читаем характер, темы и настроение ребёнка — бережно, как гипотезу",
+      "suggested_text": "читаем характер, темы и настроение ребёнка — бережно, как гипотезу"
+    },
+    {
+      "id": "mifov.yes.2",
+      "location": "Section — we column item",
+      "purpose": "We rely on visible details and child-development methodics.",
+      "russian_text": "опираемся на видимые детали рисунка и методики детского развития",
+      "suggested_text": "опираемся на видимые детали рисунка и методики детского развития"
+    },
+    {
+      "id": "mifov.yes.3",
+      "location": "Section — we column item",
+      "purpose": "We say honestly: one drawing is a moment, a series shows more precisely.",
+      "russian_text": "честно говорим: один рисунок — момент, серия покажет точнее",
+      "suggested_text": "честно говорим: один рисунок — момент, серия покажет точнее"
+    },
+    {
+      "id": "mifov.yes.4",
+      "location": "Section — we column item",
+      "purpose": "We suggest what to ask the child and how to support him.",
+      "russian_text": "подсказываем, что спросить у ребёнка и как его поддержать",
+      "suggested_text": "подсказываем, что спросить у ребёнка и как его поддержать"
+    },
+    {
+      "id": "kak.h2",
+      "location": "Section 'How it works' — heading",
+      "purpose": "Heading: how it works.",
+      "russian_text": "Как это работает",
+      "suggested_text": "Как это работает"
+    },
+    {
+      "id": "kak.sub",
+      "location": "Section 'How it works' — subheading",
+      "purpose": "Three steps and the personal report is in your inbox.",
+      "russian_text": "Три шага — и персональный отчёт у вас на почте.",
+      "suggested_text": "Три шага — и персональный отчёт у вас на почте."
+    },
+    {
+      "id": "kak.step1.h3",
+      "location": "Section 'How it works' — step 1 heading",
+      "purpose": "Step 1: upload drawings.",
+      "russian_text": "Загрузите рисунки",
+      "suggested_text": "Загрузите рисунки"
+    },
+    {
+      "id": "kak.step1.text",
+      "location": "Section 'How it works' — step 1 text",
+      "purpose": "1–3 drawings the child already made; nothing special to draw.",
+      "russian_text": "Подойдёт 1–3 рисунка, которые ребёнок уже нарисовал. Ничего специально рисовать не нужно.",
+      "suggested_text": "Подойдёт 1–3 рисунка, которые ребёнок уже нарисовал. Ничего специально рисовать не нужно."
+    },
+    {
+      "id": "kak.step2.h3",
+      "location": "Section 'How it works' — step 2 heading",
+      "purpose": "Step 2: add short context.",
+      "russian_text": "Добавьте короткий контекст",
+      "suggested_text": "Добавьте короткий контекст"
+    },
+    {
+      "id": "kak.step2.text",
+      "location": "Section 'How it works' — step 2 text",
+      "purpose": "Age, materials, theme, assignment — form takes 2–3 minutes.",
+      "russian_text": "Возраст, материалы, тема и что было задано — форма занимает 2–3 минуты.",
+      "suggested_text": "Возраст, материалы, тема и задание — форма занимает 2–3 минуты."
+    },
+    {
+      "id": "kak.step3.h3",
+      "location": "Section 'How it works' — step 3 heading",
+      "purpose": "Step 3: get the PDF report.",
+      "russian_text": "Получите PDF-отчёт",
+      "suggested_text": "Получите PDF-отчёт"
+    },
+    {
+      "id": "kak.step3.text",
+      "location": "Section 'How it works' — step 3 text",
+      "purpose": "Usually within an hour; sent to email and available in the account.",
+      "russian_text": "Обычно в течение часа. Отчёт придёт на почту и будет доступен в личном кабинете.",
+      "suggested_text": "Обычно в течение часа. Отчёт придёт на почту и будет доступен в личном кабинете."
+    },
+    {
+      "id": "reviews.title",
+      "location": "Testimonials strip — title",
+      "purpose": "Strip title above real testimonials.",
+      "russian_text": "Что родители неожиданно заметили о своих детях",
+      "suggested_text": "Что родители неожиданно замечают о своих детях"
+    },
+    {
+      "id": "reviews.note",
+      "location": "Testimonials strip — note",
+      "purpose": "Subtitle: reviews from closed testing.",
+      "russian_text": "Отзывы из закрытого тестирования",
+      "suggested_text": "Отзывы из закрытого тестирования"
+    },
+    {
+      "id": "reviews.quote.1",
+      "location": "Testimonials — real customer quote (DO NOT EDIT)",
+      "purpose": "Real review — kept verbatim; included for context only.",
+      "do_not_edit": true,
+      "russian_text": "Сын месяц рисовал только чёрной ручкой, я успела напридумывать себе всякого. Отчёт спокойно показал, что он сейчас осваивает контур — и правда, через месяц вернулись цвета.",
+      "suggested_text": "Сын месяц рисовал только чёрной ручкой, я успела напридумывать себе всякого. Отчёт спокойно показал, что он сейчас осваивает контур — и правда, через месяц вернулись цвета."
+    },
+    {
+      "id": "reviews.quote.2",
+      "location": "Testimonials — real customer quote (DO NOT EDIT)",
+      "purpose": "Real review — kept verbatim.",
+      "do_not_edit": true,
+      "russian_text": "Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений я бы сама никогда не заметила.",
+      "suggested_text": "Я будто впервые посмотрела на рисунки дочки внимательно. Половину наблюдений я бы сама никогда не заметила."
+    },
+    {
+      "id": "reviews.quote.3",
+      "location": "Testimonials — real customer quote (DO NOT EDIT)",
+      "purpose": "Real review — kept verbatim.",
+      "do_not_edit": true,
+      "russian_text": "Распечатали отчёт и повесили рядом с рисунком. Дочка ходит гордая: «это про меня написали».",
+      "suggested_text": "Распечатали отчёт и повесили рядом с рисунком. Дочка ходит гордая: «это про меня написали»."
+    },
+    {
+      "id": "reviews.quote.4",
+      "location": "Testimonials — real customer quote (DO NOT EDIT)",
+      "purpose": "Real review — kept verbatim.",
+      "do_not_edit": true,
+      "russian_text": "Отправила три рисунка — получила один связный рассказ: что повторяется из работы в работу, а что появилось впервые. Совсем не то, что я ждала от «анализа по фото».",
+      "suggested_text": "Отправила три рисунка — получила один связный рассказ: что повторяется из работы в работу, а что появилось впервые. Совсем не то, что я ждала от «анализа по фото»."
+    },
+    {
+      "id": "trust.h2",
+      "location": "Section 'Why trust us' — heading",
+      "purpose": "Heading: why we can be trusted.",
+      "russian_text": "Почему нам можно доверять",
+      "suggested_text": "Почему нам можно доверять"
+    },
+    {
+      "id": "trust.card1.h3",
+      "location": "Section 'Why trust us' — card 1 heading",
+      "purpose": "Money-back guarantee.",
+      "russian_text": "Возврат денег",
+      "suggested_text": "Возврат денег"
+    },
+    {
+      "id": "trust.card1.text",
+      "location": "Section 'Why trust us' — card 1 text",
+      "purpose": "If unhappy, write within 7 days — refund without extra questions.",
+      "russian_text": "Если отчёт не понравился, напишите в течение 7 дней — вернём оплату без лишних вопросов.",
+      "suggested_text": "Если отчёт не понравится, напишите в течение 7 дней — вернём оплату без лишних вопросов."
+    },
+    {
+      "id": "trust.card2.h3",
+      "location": "Section 'Why trust us' — card 2 heading",
+      "purpose": "Privacy.",
+      "russian_text": "Рисунки видите только вы",
+      "suggested_text": "Рисунки видите только вы"
+    },
+    {
+      "id": "trust.card2.text",
+      "location": "Section 'Why trust us' — card 2 text",
+      "purpose": "Child's works are not published, used in ads, or shared.",
+      "russian_text": "Работы ребёнка не публикуются, не используются в рекламе и не передаются третьим лицам.",
+      "suggested_text": "Работы ребёнка не публикуются, не используются в рекламе и не передаются третьим лицам."
+    },
+    {
+      "id": "trust.card3.h3",
+      "location": "Section 'Why trust us' — card 3 heading",
+      "purpose": "Carefully and by methodics.",
+      "russian_text": "Бережно и по методикам",
+      "suggested_text": "Бережно и по методикам"
+    },
+    {
+      "id": "trust.card3.text",
+      "location": "Section 'Why trust us' — card 3 text",
+      "purpose": "We don't guess or invent hidden meanings — each observation rests on visible details and child-development methodics, as a hypothesis.",
+      "russian_text": "Мы не гадаем и не выдумываем скрытых смыслов — каждое наблюдение опирается на видимые детали рисунка и методики детского развития, как гипотеза.",
+      "suggested_text": "Мы не гадаем и не выдумываем скрытые смыслы: каждое наблюдение опирается на видимые детали рисунка и методики детского развития и подаётся как гипотеза."
+    },
+    {
+      "id": "ceny.h2",
+      "location": "Pricing section — heading",
+      "purpose": "Heading: choose a report.",
+      "russian_text": "Выберите отчёт",
+      "suggested_text": "Выберите отчёт"
+    },
+    {
+      "id": "ceny.sub",
+      "location": "Pricing section — subheading",
+      "purpose": "For start, the 1–3 drawings report; the over-time development report comes later.",
+      "russian_text": "Для старта доступен отчёт по 1–3 рисункам одного периода. Отчёт о развитии во времени появится позже.",
+      "suggested_text": "Сейчас доступен отчёт по 1–3 рисункам одного периода. Отчёт о развитии во времени появится позже."
+    },
+    {
+      "id": "product.snapshot.title",
+      "location": "Pricing — product title (admin-config)",
+      "purpose": "Main product title.",
+      "config_managed": true,
+      "russian_text": "Персональный отчёт о рисунках вашего ребёнка",
+      "suggested_text": "Персональный отчёт о рисунках вашего ребёнка"
+    },
+    {
+      "id": "product.snapshot.subtitle",
+      "location": "Pricing — product subtitle (admin-config)",
+      "purpose": "Product subtitle.",
+      "config_managed": true,
+      "russian_text": "1–3 рисунка одного периода",
+      "suggested_text": "1–3 рисунка одного периода"
+    },
+    {
+      "id": "product.snapshot.feature.1",
+      "location": "Pricing — product feature (admin-config)",
+      "purpose": "Feature bullet.",
+      "config_managed": true,
+      "russian_text": "Тёплый персональный PDF — около 8 страниц",
+      "suggested_text": "Тёплый персональный PDF-отчёт — около 8 страниц"
+    },
+    {
+      "id": "product.snapshot.feature.2",
+      "location": "Pricing — product feature (admin-config)",
+      "purpose": "Feature bullet.",
+      "config_managed": true,
+      "russian_text": "Единый отчёт по 1–3 рисункам",
+      "suggested_text": "Единый отчёт по 1–3 рисункам"
+    },
+    {
+      "id": "product.snapshot.feature.3",
+      "location": "Pricing — product feature (admin-config)",
+      "purpose": "Feature bullet — note current copy is skills-flavored; could lean more to personality.",
+      "config_managed": true,
+      "russian_text": "7 направлений развития с оценками и понятными объяснениями",
+      "suggested_text": "7 направлений о ребёнке — с оценками и понятными объяснениями"
+    },
+    {
+      "id": "product.snapshot.feature.4",
+      "location": "Pricing — product feature (admin-config)",
+      "purpose": "Feature bullet.",
+      "config_managed": true,
+      "russian_text": "Что можно предложить дома — после каждого направления",
+      "suggested_text": "Что можно предложить ребёнку дома — после каждого направления"
+    },
+    {
+      "id": "product.snapshot.feature.5",
+      "location": "Pricing — product feature (admin-config)",
+      "purpose": "Feature bullet.",
+      "config_managed": true,
+      "russian_text": "PDF на почту + личный кабинет",
+      "suggested_text": "PDF на почту + личный кабинет"
+    },
+    {
+      "id": "product.snapshot.feature.6",
+      "location": "Pricing — product feature (admin-config)",
+      "purpose": "Feature bullet.",
+      "config_managed": true,
+      "russian_text": "Возврат денег в течение 7 дней",
+      "suggested_text": "Возврат денег в течение 7 дней"
+    },
+    {
+      "id": "faq.q1",
+      "location": "FAQ — question 1",
+      "purpose": "Curiosity-first question: what interesting things can I learn about my child.",
+      "russian_text": "Что интересного я могу узнать о ребёнке из отчёта?",
+      "suggested_text": "Что интересного я могу узнать о ребёнке из отчёта?"
+    },
+    {
+      "id": "faq.a1",
+      "location": "FAQ — answer 1",
+      "purpose": "Lists what you learn (themes, character, mood, how to support); skills secondary; gently, as observation, not guessing/diagnosis.",
+      "russian_text": "Вы увидите, что волнует и влечёт вашего ребёнка, какие темы и сюжеты он выбирает снова и снова, какой у него характер и подход к миру, какое настроение живёт в его рисунках — и как его понять и поддержать. А ещё — сильные стороны в рисовании. Всё бережно, по видимым деталям и методикам детского развития: как наблюдение и гипотеза, а не гадание и не диагноз.",
+      "suggested_text": "Вы увидите, что волнует вашего ребёнка и к чему его тянет, какие темы и сюжеты он выбирает снова и снова, какой у него характер и подход к миру, какое настроение живёт в его рисунках — и как его понять и поддержать. А ещё — сильные стороны в рисовании. Всё бережно, по видимым деталям и методикам детского развития: как наблюдение и гипотеза, а не гадание и не диагноз."
+    },
+    {
+      "id": "faq.q2",
+      "location": "FAQ — question 2",
+      "purpose": "Age range.",
+      "russian_text": "Какой возраст ребёнка подходит?",
+      "suggested_text": "Какой возраст ребёнка подходит?"
+    },
+    {
+      "id": "faq.a2",
+      "location": "FAQ — answer 2",
+      "purpose": "3–12; report accounts for developmental stage.",
+      "russian_text": "От 3 до 12 лет. Отчёт учитывает возрастной этап развития рисунка: то, что типично для трёх лет, читается иначе, чем для девяти.",
+      "suggested_text": "От 3 до 12 лет. В отчёте учитывается возрастной этап развития рисунка: то, что типично для трёх лет, читается иначе, чем для девяти."
+    },
+    {
+      "id": "faq.q3",
+      "location": "FAQ — question 3",
+      "purpose": "What to send.",
+      "russian_text": "Что нужно прислать?",
+      "suggested_text": "Что нужно прислать?"
+    },
+    {
+      "id": "faq.a3",
+      "location": "FAQ — answer 3",
+      "purpose": "Photos of 1–3 existing drawings + short context.",
+      "russian_text": "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, материалы, тема, было ли задание. Ничего специально рисовать не нужно.",
+      "suggested_text": "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, материалы, тема, было ли задание. Ничего специально рисовать не нужно."
+    },
+    {
+      "id": "faq.q4",
+      "location": "FAQ — question 4",
+      "purpose": "How fast.",
+      "russian_text": "Как быстро придёт отчёт?",
+      "suggested_text": "Как быстро придёт отчёт?"
+    },
+    {
+      "id": "faq.a4",
+      "location": "FAQ — answer 4",
+      "purpose": "Usually within an hour; email + account.",
+      "russian_text": "Обычно в течение часа после оплаты. PDF придёт на почту и будет доступен в личном кабинете.",
+      "suggested_text": "Обычно в течение часа после оплаты. PDF придёт на почту и будет доступен в личном кабинете."
+    },
+    {
+      "id": "faq.q5",
+      "location": "FAQ — question 5 (SEO anchor — keep keywords 'психологическая диагностика', 'диагноз')",
+      "purpose": "Is this psychological diagnostics? Not a diagnosis? Keep the question's keywords for SEO.",
+      "seo_sensitive": true,
+      "russian_text": "Это психологическая диагностика? Это не диагноз?",
+      "suggested_text": "Это психологическая диагностика? Это не диагноз?"
+    },
+    {
+      "id": "faq.a5",
+      "location": "FAQ — answer 5",
+      "purpose": "Positive identity: gentle observation + hypothesis by methodics, not a clinical diagnosis or fortune-telling; see a specialist if seriously worried.",
+      "russian_text": "Это бережное наблюдение и подсказка, а не клинический диагноз. Мы помогаем понять характер, темы и внутренний мир ребёнка — опираясь на видимые детали рисунка и методики детского развития (Пиаже, Ловенфельд, Выготский), и всегда как гипотезу, которую лучше проверить в разговоре с самим ребёнком. Это не гадание по цветам и символам и не постановка диагноза. Если вас что-то серьёзно тревожит — обратитесь к профильному специалисту.",
+      "suggested_text": "Это бережное наблюдение и подсказки для родителя, а не клинический диагноз. Мы помогаем понять характер, темы и внутренний мир ребёнка — опираясь на видимые детали рисунка и методики детского развития (Пиаже, Ловенфельд, Выготский), всегда в формате гипотезы, которую лучше проверить в разговоре с самим ребёнком. Это не гадание по цветам и символам и не постановка диагноза. Если вас что-то серьёзно тревожит — обратитесь к профильному специалисту."
+    },
+    {
+      "id": "faq.q6",
+      "location": "FAQ — question 6",
+      "purpose": "What do scores 6/8/9 mean.",
+      "russian_text": "Что означают оценки 6/10, 8/10 или 9/10?",
+      "suggested_text": "Что означают оценки 6/10, 8/10 или 9/10?"
+    },
+    {
+      "id": "faq.a6",
+      "location": "FAQ — answer 6",
+      "purpose": "Scores are a supporting layer about the drawing, not the child as a person; average isn't a problem.",
+      "russian_text": "Оценки — вспомогательный слой: они относятся к конкретному рисунку или серии, а не к ребёнку как личности. Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете (например, если на рисунке один объект без персонажей).",
+      "suggested_text": "Оценки — вспомогательный слой: они относятся к конкретному рисунку или серии, а не к ребёнку как личности. Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете (например, если на рисунке один объект без персонажей)."
+    },
+    {
+      "id": "faq.q7",
+      "location": "FAQ — question 7",
+      "purpose": "How do I know it's not a generic template.",
+      "russian_text": "Как понять, что отчёт не общий шаблон?",
+      "suggested_text": "Как понять, что отчёт не общий шаблон?"
+    },
+    {
+      "id": "faq.a7",
+      "location": "FAQ — answer 7",
+      "purpose": "Every observation tied to concrete details of THIS drawing; that's why we ask for context.",
+      "russian_text": "Каждое наблюдение привязано к конкретным деталям именно этого рисунка: цвету, линиям, сюжету, выбранным темам и героям, материалам и возрасту ребёнка. Поэтому отчёт нельзя написать о каком-то другом ребёнке — и поэтому мы просим не только фото, но и короткий контекст.",
+      "suggested_text": "Каждое наблюдение привязано к конкретным деталям именно этого рисунка: цвету, линиям, сюжету, выбранным темам и героям, материалам и возрасту ребёнка. Поэтому отчёт не выглядит как текст «про любого ребёнка» — и поэтому мы просим не только фото, но и короткий контекст."
+    },
+    {
+      "id": "faq.q8",
+      "location": "FAQ — question 8",
+      "purpose": "What if the drawing worries me.",
+      "russian_text": "А если рисунок меня тревожит?",
+      "suggested_text": "А если рисунок меня тревожит?"
+    },
+    {
+      "id": "faq.a8",
+      "location": "FAQ — answer 8",
+      "purpose": "Helps calmly see what the child expresses, separate from myths; we don't diagnose or scare; see a specialist if seriously worried.",
+      "russian_text": "Отчёт поможет спокойно увидеть, что ребёнок выражает рисунком, и отделить наблюдения от популярных мифов («тёмный цвет = тревога» и подобных). Мы не ставим диагнозов и не пугаем. Но если вас серьёзно беспокоит состояние, поведение или безопасность ребёнка, лучше обратиться к профильному специалисту — отчёт не заменяет консультацию.",
+      "suggested_text": "Отчёт поможет спокойно увидеть, что ребёнок выражает рисунком, и отделить наблюдения от популярных мифов («тёмный цвет = тревога» и подобных). Мы не ставим диагнозов и не пугаем. Но если вас серьёзно беспокоит состояние, поведение или безопасность ребёнка, лучше обратиться к профильному специалисту — отчёт не заменяет консультацию."
+    },
+    {
+      "id": "faq.q9",
+      "location": "FAQ — question 9",
+      "purpose": "What if I don't like the report.",
+      "russian_text": "А если отчёт мне не понравится?",
+      "suggested_text": "А если отчёт мне не понравится?"
+    },
+    {
+      "id": "faq.a9",
+      "location": "FAQ — answer 9",
+      "purpose": "Write within 7 days — money back.",
+      "russian_text": "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов.",
+      "suggested_text": "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов."
+    },
+    {
+      "id": "faq.q10",
+      "location": "FAQ — question 10",
+      "purpose": "Who will see my child's drawings.",
+      "russian_text": "Кто увидит рисунки моего ребёнка?",
+      "suggested_text": "Кто увидит рисунки моего ребёнка?"
+    },
+    {
+      "id": "faq.a10",
+      "location": "FAQ — answer 10",
+      "purpose": "Only you; not published/ad/shared.",
+      "russian_text": "Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам.",
+      "suggested_text": "Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам."
+    },
+    {
+      "id": "faq.q11",
+      "location": "FAQ — question 11 (SEO anchor — keep keyword 'Как понять рисунок ребёнка 4–5 лет')",
+      "purpose": "SEO question. Keep the keyword phrasing.",
+      "seo_sensitive": true,
+      "russian_text": "Как понять рисунок ребёнка 4–5 лет?",
+      "suggested_text": "Как понять рисунок ребёнка 4–5 лет?"
+    },
+    {
+      "id": "faq.a11",
+      "location": "FAQ — answer 11",
+      "purpose": "Developmental shift at 4–5; understanding = seeing what the child expresses and the stage, not a 'secret meaning' by color.",
+      "russian_text": "В 4–5 лет ребёнок переходит от «головоногов» к более полным фигурам, появляются любимые сюжеты и цвета. Понять рисунок — значит увидеть, что ребёнок выражает, что ему сейчас важно и на каком этапе развития он находится, а не искать «тайный смысл» по цветам. Именно это бережно показывает наш отчёт — по возрастным особенностям и видимым деталям, как наблюдение, а не диагноз.",
+      "suggested_text": "В 4–5 лет ребёнок часто переходит от «головоногов» к более полным фигурам, у него появляются любимые сюжеты и цвета. Понять рисунок — значит увидеть, что ребёнок выражает, что ему сейчас важно и на каком этапе развития он находится, а не искать «тайный смысл» по цветам. Именно это бережно показывает наш отчёт — по возрастным особенностям и видимым деталям, как наблюдение, а не диагноз."
+    },
+    {
+      "id": "faq.q12",
+      "location": "FAQ — question 12 (SEO anchor — keep keyword 'интерпретировать детский рисунок дома самому')",
+      "purpose": "SEO question. Keep the keyword phrasing.",
+      "seo_sensitive": true,
+      "russian_text": "Как интерпретировать детский рисунок дома самому?",
+      "suggested_text": "Как интерпретировать детский рисунок дома самому?"
+    },
+    {
+      "id": "faq.a12",
+      "location": "FAQ — answer 12",
+      "purpose": "At home, look at what the child chooses to draw and ask him; gentle observation, not guessing/diagnosis.",
+      "russian_text": "Дома полезно смотреть не на «значения цветов», а на то, что ребёнок выбирает рисовать: какие темы и сюжеты повторяются, какие герои ему важны, как уверенно он ведёт линию, как использует лист. И главное — расспрашивать самого ребёнка о его рисунке. Это бережное наблюдение за тем, что он выражает, а не гадание и не психологический диагноз.",
+      "suggested_text": "Дома полезно смотреть не на «значения цветов», а на то, что ребёнок выбирает рисовать: какие темы и сюжеты повторяются, какие герои ему важны, как уверенно он ведёт линию, как использует лист. И главное — расспрашивать самого ребёнка о его рисунке. Это бережное наблюдение за тем, что он выражает, а не гадание и не психологический диагноз."
+    },
+    {
+      "id": "blog.h2",
+      "location": "Blog section — heading",
+      "purpose": "Heading over blog carousel.",
+      "russian_text": "Разбираемся в детских рисунках без мифов и страшных трактовок",
+      "suggested_text": "Разбираемся в детских рисунках без мифов и страшных трактовок"
+    },
+    {
+      "id": "blog.sub",
+      "location": "Blog section — subheading",
+      "purpose": "Calm answers to questions almost every parent has.",
+      "russian_text": "Спокойные ответы на вопросы, которые возникают почти у каждого родителя.",
+      "suggested_text": "Спокойные ответы на вопросы, которые возникают почти у каждого родителя."
+    },
+    {
+      "id": "footer.disclaimer",
+      "location": "Footer — disclaimer line",
+      "purpose": "Positive-identity disclaimer: a tool that helps understand the child through the drawing — gentle observation and a tip, not a diagnosis or fortune-telling.",
+      "russian_text": "Инструмент, который помогает понять ребёнка через его рисунок — бережное наблюдение и подсказка, а не диагноз и не гадание",
+      "suggested_text": "Инструмент, который помогает понять ребёнка через его рисунок — бережное наблюдение и подсказка, а не диагноз и не гадание"
+    },
+    {
+      "id": "meta.title",
+      "location": "HTML <title> (SEO — keep keyword 'анализ детского рисунка по фото')",
+      "purpose": "Page title. Keep the head keyword; keep brand suffix.",
+      "seo_sensitive": true,
+      "russian_text": "Анализ детского рисунка по фото — что рисунок говорит о ребёнке | Голос рисунка",
+      "suggested_text": "Анализ детского рисунка по фото — что рисунок говорит о ребёнке | Голос рисунка"
+    },
+    {
+      "id": "meta.description",
+      "location": "HTML meta description (SEO — keep 'анализ детского рисунка по фото'; keep {{ min_price }} ₽ token)",
+      "purpose": "Search snippet. Keep keywords and the price token.",
+      "seo_sensitive": true,
+      "russian_text": "Анализ детского рисунка по фото: персональный PDF-отчёт о том, что рисунок говорит о ребёнке — его характер, темы, внутренний мир и как его понять и поддержать. Бережно, по методикам, без гаданий и диагнозов. {{ min_price }} ₽, обычно готов за час.",
+      "suggested_text": "Анализ детского рисунка по фото: персональный PDF-отчёт о том, что рисунок говорит о ребёнке — о его характере, темах, внутреннем мире и о том, как его понять и поддержать. Бережно, по методикам, без гаданий и диагнозов. {{ min_price }} ₽, обычно готов за час."
+    },
+    {
+      "id": "meta.og_title",
+      "location": "Open Graph / Twitter title",
+      "purpose": "Social share title.",
+      "russian_text": "Услышьте, что рисунки вашего ребёнка могут рассказать о нём",
+      "suggested_text": "Услышьте, что рисунки вашего ребёнка могут рассказать о нём"
+    },
+    {
+      "id": "meta.og_description",
+      "location": "Open Graph description (keep {{ min_price }} ₽ token)",
+      "purpose": "Social share description.",
+      "russian_text": "Персональный PDF-отчёт: характер, темы и внутренний мир ребёнка через его рисунок — и как его понять и поддержать. Бережно, по методикам, без гаданий и диагнозов. {{ min_price }} ₽.",
+      "suggested_text": "Персональный PDF-отчёт: характер, темы и внутренний мир ребёнка через его рисунок — и как его понять и поддержать. Бережно, по методикам, без гаданий и диагнозов. {{ min_price }} ₽."
+    }
+  ]
+}

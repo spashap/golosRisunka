@@ -17,6 +17,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS customers (
     id INTEGER PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
+    login_token TEXT,                     -- durable magic-login token (ссылки «войти» в письмах)
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS children (
@@ -80,6 +81,16 @@ CREATE TABLE IF NOT EXISTS login_codes (
     attempts INTEGER DEFAULT 0,
     requested_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS recovery_attempts (
+    -- попытки входа «по данным ребёнка» (резервный вход, когда код не доходит).
+    -- IP НЕ храним (как и в events) — лимитируем по email: брутфорс месяца рождения
+    -- бьёт по конкретной жертве, поэтому email-лимит и есть нужный контроль.
+    id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL,
+    success INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_recovery_email ON recovery_attempts(email, created_at);
 CREATE TABLE IF NOT EXISTS coupons (
     code TEXT PRIMARY KEY,
     percent_off INTEGER NOT NULL,
@@ -141,6 +152,15 @@ def _migrate(conn: sqlite3.Connection) -> None:
                 "geo_country", "geo_region", "geo_city"):
         if col not in cols:
             conn.execute(f"ALTER TABLE events ADD COLUMN {col} TEXT")
+
+    # durable magic-login токен покупателя (ссылка «войти» в каждом письме).
+    # Колонку добавляем ДО индекса: на старой БД executescript(SCHEMA) пропускает
+    # CREATE TABLE customers, поэтому уникальный индекс строим здесь, после ALTER.
+    ccols = {r["name"] for r in conn.execute("PRAGMA table_info(customers)")}
+    if "login_token" not in ccols:
+        conn.execute("ALTER TABLE customers ADD COLUMN login_token TEXT")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_login_token"
+                 " ON customers(login_token)")
 
 
 def get_db() -> sqlite3.Connection:
