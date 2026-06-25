@@ -82,13 +82,20 @@ def _build_receipt(email: str, amount_kopecks: int, product_title: str) -> dict:
 
 
 def create_payment(order_id: int, amount_kopecks: int, email: str,
-                   description: str, product_title: str) -> dict:
-    """Создаёт встроенный платёж. Возвращает {payment_id, confirmation_token, status}.
+                   description: str, product_title: str,
+                   return_url: str | None = None) -> dict:
+    """Создаёт платёж. Возвращает {payment_id, confirmation_token, confirmation_url, status}.
+    `return_url` задан -> redirect-флоу (платёжная страница ЮKassa): на мобильном СБП
+    показывает выбор банка / переход в банк-приложение, чего НЕ умеет embedded-виджет
+    (только QR — бесполезен, когда сканировать нечем со своего же экрана). Без `return_url`
+    -> встроенный виджет (confirmation=embedded), как было — десктоп остаётся на странице.
     Сумма берётся точно из копеек заказа (скидка купона может давать копейки)."""
+    confirmation = ({"type": "redirect", "return_url": return_url}
+                    if return_url else {"type": "embedded"})
     payload = {
         "amount": {"value": _amount_value(amount_kopecks), "currency": "RUB"},
         "capture": True,
-        "confirmation": {"type": "embedded"},
+        "confirmation": confirmation,
         "description": description[:128],
         "metadata": {"order_id": str(order_id)},
     }
@@ -109,6 +116,7 @@ def create_payment(order_id: int, amount_kopecks: int, email: str,
                 conf = data.get("confirmation") or {}
                 return {"payment_id": data.get("id"),
                         "confirmation_token": conf.get("confirmation_token"),
+                        "confirmation_url": conf.get("confirmation_url"),
                         "status": data.get("status")}
             if status == 429 or 500 <= status < 600:
                 last = f"HTTP {status}"

@@ -1,0 +1,43 @@
+{% extends "_base.html" %}
+{% block title %}Проверяем оплату — Голос рисунка{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 480px; text-align: center">
+    <div class="form-card">
+      <h3>Проверяем оплату…</h3>
+      <p style="color: var(--muted); margin: 14px 0">
+        Заказ №{{ order_id }}. Это занимает несколько секунд — не закрывайте страницу.
+      </p>
+      <div id="wait-msg" class="hint" style="margin-top: 10px"></div>
+      <p style="margin-top: 16px"><a href="/cabinet" style="color: var(--soft)">Перейти в кабинет →</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var orderId = {{ order_id }};
+  var msg = document.getElementById('wait-msg');
+  var tries = 0;
+  var iv = setInterval(function () {
+    tries++;
+    fetch('/pay/yookassa/status/' + orderId)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.payment_status === 'paid') {
+          clearInterval(iv);
+          window.location.href = '/order/success/' + orderId;
+        } else if (tries >= 60) {            // ~2 минуты — webhook должен был успеть
+          clearInterval(iv);
+          msg.textContent = 'Если вы завершили оплату — отчёт уже в работе, загляните в кабинет или почту. '
+            + 'Если оплата не прошла — вернитесь к форме и попробуйте снова.';
+          try { var fd = new FormData(); fd.append('ev', 'pay_status_timeout'); navigator.sendBeacon('/t/e', fd); }
+          catch (e) { /* нестрашно */ }
+        }
+      })
+      .catch(function () { /* сеть моргнула — продолжаем */ });
+  }, 2000);
+})();
+</script>
+{% endblock %}

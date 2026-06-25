@@ -19,7 +19,7 @@ from app.orders import EMAIL_RE, FormError, validate_and_create_order
 from app.payments import create_payment, mark_paid
 from app.yookassa import YuKassaError
 from app.samples import get_sample_by_token, get_samples
-from app.track import track_event
+from app.track import parse_device, track_event
 from config import settings
 from config.form_fields import CHILD_FIELDS, COUPON_FIELD, DRAWING_FIELDS, EMAIL_FIELD
 
@@ -111,16 +111,28 @@ def landing():
 
 _GOAL_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_:-")
 
+# Диагностические события оплаты с фронта (фиксированный список, чтобы маяк нельзя
+# было засорить произвольными именами). Видны как есть в /admin/actions — ловят
+# проблемы клиентов на чекауте (особенно мобильный СБП): redirect ушёл/виджет упал/
+# поллинг истёк по таймауту без успеха.
+_DIAG_EVENTS = {"pay_redirect_go", "pay_widget_error",
+                "pay_widget_render_failed", "pay_status_timeout"}
+
 
 @bp.post("/t/e")
 def track_beacon():
     """First-party приём через navigator.sendBeacon. Дёшево, анонимно, не роняет ничего.
     - g=<goal>  -> событие 'click:<goal>' (UI-цели data-ym-goal);
+    - ev=<name> -> диагностическое событие из _DIAG_EVENTS (как есть, без префикса);
     - engaged=1 -> событие 'engaged' (вовлечённость: скролл/взаимодействие/15с видимого
       пребывания — см. _metrika.html). Шлётся максимум раз за загрузку страницы; в админке
       «Визиты» считаем вовлечённых = DISTINCT visitor_id с событием 'engaged'."""
     if request.form.get("engaged") or request.args.get("engaged"):
         track_event("engaged")
+        return ("", 204)
+    ev = (request.form.get("ev") or request.args.get("ev") or "").strip().lower()
+    if ev in _DIAG_EVENTS:
+        track_event(ev)
         return ("", 204)
     goal = (request.form.get("g") or request.args.get("g") or "").strip().lower()
     if goal and len(goal) <= 64 and set(goal) <= _GOAL_CHARS:
@@ -432,9 +444,21 @@ def checkout(order_id: int):
                            yukassa_enabled=settings.yukassa_enabled())
 
 
+def _confirmation_response(pay: dict) -> dict | None:
+    """Из ответа ЮKassa достаём то, чем фронт откроет оплату: confirmation_url
+    (redirect-флоу, мобильный) или confirmation_token (виджет, десктоп). None — нечем."""
+    if pay.get("confirmation_url"):
+        return {"confirmation_url": pay["confirmation_url"]}
+    if pay.get("confirmation_token"):
+        return {"confirmation_token": pay["confirmation_token"]}
+    return None
+
+
 @bp.post("/pay/yookassa/create/<int:order_id>")
 def yookassa_create(order_id: int):
-    """Создаёт встроенный платёж ЮKassa и возвращает confirmation_token для виджета."""
+    """Создаёт платёж ЮKassa. Мобильный -> redirect-флоу (на платёжной странице ЮKassa
+    СБП даёт выбор банка / переход в банк-приложение; embedded-виджет показывал бы только
+    QR — бесполезный на телефоне). Десктоп/планшет -> встроенный виджет, как было."""
     db = get_db()
     order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     if order is None:
@@ -443,14 +467,20 @@ def yookassa_create(order_id: int):
         return jsonify({"already_paid": True})
     if not settings.yukassa_enabled():
         return jsonify({"error": "unavailable"}), 503
+    is_mobile = parse_device(request.user_agent.string if request else None) == "mobile"
     # Переиспользуем ещё «висящий» платёж, чтобы не плодить дубли (note #8 shepotZvezd).
+    # Тип подтверждения зафиксирован при создании — отдаём то, что у него есть.
     if order["yookassa_payment_id"]:
         existing = yookassa.get_payment(order["yookassa_payment_id"])
         if existing and existing.get("status") == "pending":
-            tok = (existing.get("confirmation") or {}).get("confirmation_token")
-            if tok:
-                return jsonify({"confirmation_token": tok})
+            conf = existing.get("confirmation") or {}
+            resp = _confirmation_response({"confirmation_url": conf.get("confirmation_url"),
+                                           "confirmation_token": conf.get("confirmation_token")})
+            if resp:
+                return jsonify(resp)
     product = settings.get_products()[order["product_code"]]
+    return_url = (f"{settings.PUBLIC_BASE_URL}/pay/yookassa/return/{order_id}"
+                  if is_mobile else None)
     try:
         pay = yookassa.create_payment(
             order_id=order_id,
@@ -458,16 +488,22 @@ def yookassa_create(order_id: int):
             email=order["email"],
             description=f"{product['title']} — {settings.SITE_NAME}",
             product_title=product["title"],
+            return_url=return_url,
         )
     except YuKassaError as e:
         log.error("yookassa create_payment failed for order %s: %s", order_id, e)
+        track_event("pay_create_failed", {"order_id": order_id, "mobile": is_mobile})
         return jsonify({"error": "create_failed"}), 502
     db.execute("UPDATE orders SET yookassa_payment_id = ? WHERE id = ?",
                (pay["payment_id"], order_id))
     db.commit()
-    if not pay.get("confirmation_token"):
-        return jsonify({"error": "no_token"}), 502
-    return jsonify({"confirmation_token": pay["confirmation_token"]})
+    track_event("pay_init_mobile_redirect" if is_mobile else "pay_init_desktop_widget",
+                {"order_id": order_id})
+    resp = _confirmation_response(pay)
+    if resp is None:
+        track_event("pay_no_confirmation", {"order_id": order_id, "mobile": is_mobile})
+        return jsonify({"error": "no_confirmation"}), 502
+    return jsonify(resp)
 
 
 def _settle_payment(payment_id: str):
@@ -535,6 +571,32 @@ def yookassa_status(order_id: int):
                                 httponly=True, samesite="Lax")
             return resp
     return jsonify({"payment_status": "pending"})
+
+
+@bp.get("/pay/yookassa/return/<int:order_id>")
+def yookassa_return(order_id: int):
+    """Возврат с платёжной страницы ЮKassa (redirect-флоу для мобильного СБП).
+    Webhook мог опоздать — подтверждаем оплату здесь же и ведём на «принято»;
+    если ещё не подтверждено (webhook в пути или клиент бросил оплату) — страница
+    ожидания с поллингом. pay_return_pending = сигнал «возможна проблема у клиента»."""
+    order = get_db().execute(
+        "SELECT status, yookassa_payment_id FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if order is None:
+        abort(404)
+    if order["status"] != "created":          # уже оплачен (webhook успел)
+        track_event("pay_return", {"order_id": order_id, "settled": True})
+        return redirect(url_for("main.order_success", order_id=order_id))
+    result = _settle_payment(order["yookassa_payment_id"]) if order["yookassa_payment_id"] else None
+    if result:
+        track_event("pay_return", {"order_id": order_id, "settled": True})
+        resp = redirect(url_for("main.order_success", order_id=order_id))
+        if result.get("session_token"):
+            resp.set_cookie(SESSION_COOKIE, result["session_token"],
+                            max_age=settings.SESSION_DAYS * 24 * 3600,
+                            httponly=True, samesite="Lax")
+        return resp
+    track_event("pay_return_pending", {"order_id": order_id})
+    return render_template("pay_wait.html", order_id=order_id)
 
 
 @bp.get("/order/success/<int:order_id>")
