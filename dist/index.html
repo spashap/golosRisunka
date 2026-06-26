@@ -95,6 +95,14 @@
   --radius-sm:  10px;
   --radius-pill:99px;
 
+  /* ---------- Вертикальный ритм секций (ЕДИНЫЙ регулятор отступов) ----------
+     Все .section берут паддинг сверху/снизу ТОЛЬКО отсюда. Меняешь тут →
+     меняется расстояние между ВСЕМИ блоками сайта. Зазор между двумя
+     соседними секциями = 2 × --section-y (низ предыдущей + верх следующей),
+     поэтому значение держим скромным. Мобильный override — внизу файла. */
+  --section-y:       40px;   /* паддинг секции по вертикали (десктоп) */
+  --section-y-strip: 28px;   /* узкая лента-отзывы (section--strip) */
+
   /* ---------- Тени (тёплые, мягкие — без жёстких чёрных) ---------- */
   --shadow:        rgba(58, 42, 28, .14);
   --shadow-card:   0 14px 34px rgba(58, 42, 28, .12);
@@ -121,6 +129,12 @@ html.dk {
   --shadow:rgba(0,0,0,.5);
   --shadow-card:0 14px 34px rgba(0,0,0,.4);
 }
+
+/* ---------- Мобильный вертикальный ритм (тот же ЕДИНЫЙ регулятор) ----------
+   Один источник: меняем только значения токенов, а не паддинг каждого блока. */
+@media (max-width: 880px) {
+  :root { --section-y: 26px; --section-y-strip: 18px; }
+}
 ﻿/* ============================================================
    Компонентная библиотека — spec §3.4. Правило (закон #3):
    новый блок = композиция этих компонентов. Не хватает — добавь
@@ -143,7 +157,7 @@ body {
 /* --- Layout --- */
 .wrap { max-width: var(--wrap-max); margin: 0 auto; padding: 0 24px; }
 
-.section { padding: 60px 0; position: relative; }
+.section { padding: var(--section-y) 0; position: relative; }
 .section--alt { background: var(--alt); }
 .section--soft { background: var(--bg-soft); }
 
@@ -687,8 +701,8 @@ html.dk .btn { color: #241A12; }
   .steps { grid-template-columns: 1fr; }
   .price-grid { grid-template-columns: 1fr; }
 
-  /* мобайл: компактнее вертикальный ритм — меньше пустот между блоками */
-  .section { padding: 40px 0; }
+  /* мобайл: компактнее вертикальный ритм — ритм секций задаётся токеном
+     --section-y (см. tokens.css), здесь только внутрисекционные отступы */
   .sub { margin-bottom: 20px; }
   .card--pad { padding: 18px 16px; }
   .chips { margin-top: 18px; gap: 8px; }
@@ -797,7 +811,7 @@ html.dk .btn { color: #241A12; }
 @media (max-width: 600px) { .blog-grid { grid-template-columns: 1fr; gap: 18px; } }
 
 /* --- Отзывы: узкая лента-ротатор (одна цитата, автосмена) --- */
-.section--strip { padding: 30px 0; }
+.section--strip { padding: var(--section-y-strip) 0; }
 .strip-title {
   text-align: center; margin-bottom: 12px;
   font-size: 13px; font-weight: 600; letter-spacing: .08em;
@@ -1836,7 +1850,7 @@ html.dk .btn { color: #241A12; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.044</span>
+    <span class="foot-ver">V1.045</span>
   </div>
 </footer>
 
