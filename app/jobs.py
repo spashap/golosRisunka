@@ -24,6 +24,27 @@ from config.form_fields import child_to_common, drawing_to_story
 
 log = logging.getLogger("jobs")
 
+# Маркеры транзитных (временных) сбоев — стоит перезапустить позже, само починится:
+# упавший прокси (502/disconnect), таймаут, 5xx, троттлинг. Если НИ один не встретился
+# (битый JSON модели, 400/403, баг кода) — ошибка постоянная, перезапуск не поможет.
+_TRANSIENT_MARKERS = (
+    "remoteprotocolerror", "server disconnected", "bad gateway", "502", "503", "504",
+    "500", "servererror", "readtimeout", "connecttimeout", "connecterror", "readerror",
+    "timeout", "timed out", "temporarily", "unavailable", "resourceexhausted", "429",
+    "connectionerror", "remotedisconnected", "deadlineexceeded",
+)
+
+
+def _is_transient(exc: Exception) -> bool:
+    """Сбой временный (сеть/прокси/троттлинг) → имеет смысл авто-перезапуск."""
+    text = (repr(exc) + "\n" + "\n".join(getattr(exc, "attempts_log", []))).lower()
+    return any(m in text for m in _TRANSIENT_MARKERS)
+
+
+def _iso_plus_minutes(minutes: int) -> str:
+    return (datetime.datetime.now(datetime.timezone.utc)
+            + datetime.timedelta(minutes=minutes)).isoformat(timespec="seconds")
+
 
 def run_order(conn: sqlite3.Connection, order_id: int) -> str:
     """Полный цикл одного заказа. Возвращает финальный статус
@@ -101,7 +122,8 @@ def _process(conn: sqlite3.Connection, order: sqlite3.Row) -> str:
 
     token = _upsert_report_row(conn, order_id, html_path, pdf_path, json_path,
                                result.attempts_used)
-    conn.execute("UPDATE orders SET status = 'delivered' WHERE id = ?", (order_id,))
+    conn.execute("UPDATE orders SET status = 'delivered', next_retry_at = NULL"
+                 " WHERE id = ?", (order_id,))
     conn.commit()
     track("report_delivered", visitor_id=order["visitor_id"],
           customer_id=order["customer_id"],
@@ -200,16 +222,38 @@ def _handle_failure(conn: sqlite3.Connection, order: sqlite3.Row, exc: Exception
     err_dir.mkdir(parents=True, exist_ok=True)
     (err_dir / "error.log").write_text(f"{now()}\n{detail}", encoding="utf-8")
 
-    conn.execute("UPDATE orders SET status = 'failed' WHERE id = ?", (order_id,))
+    # самовосстановление: транзитный сбой (упавший прокси/таймаут/5xx) → перезапуск позже,
+    # а не вечный 'failed' с ручным regenerate. Постоянная ошибка / исчерпанные ретраи —
+    # окончательный fail + алерт админу.
+    backoff = settings.WORKER_AUTO_RETRY_BACKOFF_MIN
+    done = order["retry_count"] or 0
+    if _is_transient(exc) and done < len(backoff):
+        delay = backoff[done]
+        next_at = _iso_plus_minutes(delay)
+        conn.execute("UPDATE orders SET status = 'failed', retry_count = ?,"
+                     " next_retry_at = ? WHERE id = ?", (done + 1, next_at, order_id))
+        conn.commit()
+        track("report_retry_scheduled", visitor_id=order["visitor_id"],
+              customer_id=order["customer_id"],
+              payload={"order_id": order_id, "error": type(exc).__name__,
+                       "attempt": done + 1, "delay_min": delay}, conn=conn)
+        log.warning("order %s: transient failure (%s) - auto-retry %d/%d in %dmin",
+                    order_id, type(exc).__name__, done + 1, len(backoff), delay)
+        return "failed"
+
+    conn.execute("UPDATE orders SET status = 'failed', next_retry_at = NULL"
+                 " WHERE id = ?", (order_id,))
     conn.commit()
     track("report_failed", visitor_id=order["visitor_id"],
           customer_id=order["customer_id"],
-          payload={"order_id": order_id, "error": type(exc).__name__}, conn=conn)
+          payload={"order_id": order_id, "error": type(exc).__name__,
+                   "retries": done}, conn=conn)
+    tried = f" после {done} авто-перезапуск(ов)" if done else ""
     send_admin_alert(f"order {order_id}: generation FAILED",
-                     f"Заказ {order_id} ({order['email']}) не сгенерировался.\n"
+                     f"Заказ {order_id} ({order['email']}) не сгенерировался{tried}.\n"
                      f"Перезапуск: scripts/regenerate_report.py {order_id}\n\n{detail}")
-    log.error("order %s: FAILED (%s) - see %s", order_id, type(exc).__name__,
-              err_dir / "error.log")
+    log.error("order %s: FAILED (%s, retries=%d) - see %s", order_id,
+              type(exc).__name__, done, err_dir / "error.log")
     return "failed"
 
 

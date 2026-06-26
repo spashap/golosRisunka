@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
 
 from app import jobs
-from app.db import connect, init_db
+from app.db import connect, init_db, now as db_now
 from app.logging_setup import configure_logging
 from config import settings
 
@@ -44,6 +44,15 @@ def main() -> int:
         row = conn.execute(
             "SELECT id FROM orders WHERE status = 'paid' ORDER BY paid_at, id LIMIT 1"
         ).fetchone()
+        if not row:
+            # самовосстановление: транзитно упавшие заказы, у которых подошло время
+            # авто-перезапуска (next_retry_at <= now). Новые оплаты — в приоритете.
+            row = conn.execute(
+                "SELECT id FROM orders WHERE status = 'failed'"
+                " AND next_retry_at IS NOT NULL AND next_retry_at <= ?"
+                " ORDER BY next_retry_at LIMIT 1", (db_now(),)).fetchone()
+            if row:
+                log.info("order %s: auto-retry due - requeuing", row["id"])
         if row:
             jobs.run_order(conn, row["id"])
             continue                      # сразу к следующему в очереди

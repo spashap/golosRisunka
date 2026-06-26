@@ -117,6 +117,12 @@ UPLOAD_MAX_BYTES = 15 * 1024 * 1024
 
 # --- Worker / email (Phase 6) ---
 WORKER_POLL_SECONDS = 5                # период опроса orders.status='paid'
+# Самовосстановление: если все GEMINI_MAX_ATTEMPTS попыток упали ПО ТРАНЗИТНОЙ причине
+# (прокси отдал 502/disconnect, таймаут, 5xx, 429) — заказ НЕ хоронится в 'failed'
+# навсегда, а перезапускается воркером позже. Бэкоф (в минутах) задаёт паузы между
+# авто-перезапусками; длина списка = сколько раз пробуем, дальше — окончательный fail +
+# алерт админу. Непереходные ошибки (битый JSON, 400/403) хоронятся сразу.
+WORKER_AUTO_RETRY_BACKOFF_MIN = [5, 15, 30, 60, 120]
 WORKER_LOG = DATA_DIR / "worker.log"   # UTF-8 лог воркера (консоль — только ASCII!)
 WEB_LOG = DATA_DIR / "web.log"         # UTF-8 лог веб-процесса (gunicorn → ещё и journald)
 MAIL_BACKEND = os.getenv("MAIL_BACKEND", "outbox")  # 'outbox' (файлы) | 'unisender' (Unisender Go)

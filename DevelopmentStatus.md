@@ -1075,3 +1075,43 @@ root-owned — либо не перезаписывать существующи
 
 КЛЮЧЕВОЕ: старая «только навыки» философия (CLAUDE.md §7.4, projectSpec/reportSamples) ОТМЕНЕНА. Текущая
 истина — PROMPT_VERSION 4.0 + [[report-person-pivot-2-3]] + хендофф-файл.
+
+## 26.06.2026 — Самовосстановление воркера при транзитных сбоях Gemini-прокси (локально, НЕ задеплоено)
+ПРОБЛЕМА (повторно): заказ 7 (jsemesh@gmail.com) не сгенерировался — все 5 попыток упали за ~50 с с
+`RemoteProtocolError: Server disconnected` / `ServerError: 502 Bad Gateway` от Cloudflare-Worker-прокси
+(`gemini-proxy.spashap.workers.dev`; нога прокси→Google моргнула). Заказ ушёл в вечный `failed`, доставлен
+только после РУЧНОГО regenerate из админки. Любой сбой прокси длиннее окна 5 ретраев = застрявший заказ +
+ручная работа. См. UseCase #27.
+
+РЕШЕНИЕ — авто-перезапуск во времени (не только 5 ретраев внутри одного вызова):
+- `app/jobs.py`: `_is_transient(exc)` сканит `repr`+`attempts_log` на сетевые/5xx/троттл-маркеры
+  (RemoteProtocolError, Server disconnected, 502/503/504/500, ServerError, *Timeout, 429, UNAVAILABLE…).
+  `_handle_failure`: транзитный сбой И `retry_count < len(WORKER_AUTO_RETRY_BACKOFF_MIN)` (`[5,15,30,60,120]` мин)
+  → НЕ хоронить, а `retry_count+1` + `next_retry_at = now+бэкоф`, событие `report_retry_scheduled`, БЕЗ алерта
+  админу. Постоянная ошибка (битый JSON, 400/403, баг) / исчерпанные ретраи → как раньше: `next_retry_at=NULL`,
+  `report_failed`, алерт (теперь с числом потраченных авто-ретраев).
+- `worker.py`: когда очередь `paid` пуста — берёт `failed` с `next_retry_at <= now` (приоритет у новых оплат)
+  и гонит через тот же `run_order`. Стартовый сброс `generating→paid` не трогаем.
+- Ручной regenerate (CLI `scripts/regenerate_report.py` И админ `/orders/<id>/regenerate`) обнуляет
+  `retry_count=0, next_retry_at=NULL` — осознанный свежий старт = полный новый набор авто-ретраев.
+- БД: новые колонки `orders.retry_count` / `orders.next_retry_at` (идемпотентный `_migrate` ADD COLUMN;
+  применены к локальной БД). Тюнинг пауз — `WORKER_AUTO_RETRY_BACKOFF_MIN` в `config/settings.py`.
+Проверено локально: классификатор (502/disconnect→retry, битый JSON/баг→fail), миграция, запрос воркера, компиляция.
+НЕ задеплоено (жду явного go). Деплой: `./deploy.sh` (рестарт воркера подхватит миграцию через init_db).
+
+КОРНЕВАЯ ПРИЧИНА НАЙДЕНА И ИСПРАВЛЕНА (тот же день, после ресёрча — авто-ретрай выше = лишь страховка):
+сбои не случайны, это документированный паттерн Gemini-2.5-Pro. Достали исходник воркера-прокси —
+он чистый **passthrough** (`return fetch(target,…)`, форвардит `pathname+search`), т.е. прокси НИ ПРИ ЧЁМ.
+Реальная причина: `pipeline/gemini.py` звал **НЕстримовый** `generate_content` — пока Pro «думает» 60-120 с,
+по соединению НЕ идёт ни байта, и таймаут простоя в тракте (фронт Google ~60 с и/или Cloudflare ~100 с)
+рвёт простаивающий сокет → `RemoteProtocolError: Server disconnected` / fetch воркера падает → `502`.
+Passthrough-воркер может прокинуть только те байты, что ЕСТЬ → молчащий вызов он не спасёт → чинить надо
+на стороне клиента. ИСПРАВЛЕНИЕ — **стрим end-to-end**: основной вызов И linter-`_repair_report` переведены
+на `client.models.generate_content_stream(...)` (склейка `chunk.text` → `json.loads` целиком; JSON тот же,
+просто чанками). Байты идут постоянно → каждый хоп «живой» → разрыв по простою не наступает. httpx-`timeout`
+не помогал, т.к. сокет рвёт промежуточный узел, а не клиент. `scripts/gemini_ping.py` оставлен НЕстримовым
+(мгновенный 1-словный пробник). Воркер/инфру НЕ трогали. Проверено: `generate_content_stream` есть в SDK 2.8.0,
+компиляция ОК, других НЕстримовых `generate_content(` в коде нет (кроме ping). Источники: discuss.ai.google.dev/t/83274,
+python-genai#1617, LibreChat#6082 (Cloudflare 100 с).
+ХЕНДОФФ ДЛЯ shepotZvezd (та же коробка, тот же путь Gemini-Pro для отчётов): `projectSpec/gemini-streaming-fix-shepotzvezd.md`.
+НЕ задеплоено (жду явного go).

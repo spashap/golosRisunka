@@ -515,7 +515,8 @@ def order_regenerate(order_id: int):
     elif order["status"] == "generating":
         msg = f"Заказ {order_id}: уже генерируется"
     else:
-        conn.execute("UPDATE orders SET status = 'paid' WHERE id = ?", (order_id,))
+        conn.execute("UPDATE orders SET status = 'paid', retry_count = 0,"
+                     " next_retry_at = NULL WHERE id = ?", (order_id,))
         conn.commit()
         msg = (f"Заказ {order_id}: перегенерация запущена (текущий промпт) — "
                f"воркер сгенерирует заново и отправит письмо")

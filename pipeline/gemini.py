@@ -85,14 +85,17 @@ def _repair_report(client: "genai.Client", report_dict: dict,
     )
     prompt = (f"{_REPAIR_INSTRUCTION}\n\nНайденные нарушения:\n{issues}\n\n"
               f"JSON отчёта:\n{json.dumps(report_dict, ensure_ascii=False)}")
-    resp = client.models.generate_content(
-        model=settings.GEMINI_MODEL,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json", temperature=0.2,
-        ),
+    cfg = types.GenerateContentConfig(
+        response_mime_type="application/json", temperature=0.2,
     )
-    return json.loads(_strip_markdown_fence(resp.text or ""))
+    # Стрим по той же причине, что и основной вызов (см. generate_report): не копить
+    # простой соединения, иначе прокси/фронт рвут его на длинном repair.
+    chunks: list[str] = []
+    for chunk in client.models.generate_content_stream(
+            model=settings.GEMINI_MODEL, contents=prompt, config=cfg):
+        if chunk.text:
+            chunks.append(chunk.text)
+    return json.loads(_strip_markdown_fence("".join(chunks)))
 
 
 def _strip_markdown_fence(text: str) -> str:
@@ -149,14 +152,23 @@ def generate_report(image_paths: list[Path], contexts: list[str] | str,
     attempts_log: list[str] = []
     for attempt in range(1, max_attempts + 1):
         try:
-            log.info("gemini: attempt %d/%d -> POST generate_content (waiting for model)...",
+            log.info("gemini: attempt %d/%d -> streamGenerateContent (streaming)...",
                      attempt, max_attempts)
             t0 = time.time()
-            resp = client.models.generate_content(
-                model=settings.GEMINI_MODEL, contents=parts, config=config,
-            )
-            raw = resp.text or ""
-            log.info("gemini: attempt %d <- response in %.1fs (%d chars)",
+            # СТРИМ, а не блокирующий generate_content. Gemini 2.5 Pro «думает» десятки
+            # секунд, и при НЕстриме за это время по соединению не идёт НИ БАЙТА —
+            # промежуточный узел (фронт Gemini и/или Cloudflare-воркер) рвёт простаивающее
+            # соединение на ~60-100с: httpx ловит RemoteProtocolError 'Server disconnected',
+            # либо воркер отдаёт 502. Стрим шлёт чанки по мере генерации → каждый хоп
+            # остаётся «живым», таймаут ПРОСТОЯ не срабатывает. JSON на выходе тот же,
+            # просто собран из кусков. (Воркер-прокси уже passthrough — менять его не надо.)
+            chunks: list[str] = []
+            for chunk in client.models.generate_content_stream(
+                    model=settings.GEMINI_MODEL, contents=parts, config=config):
+                if chunk.text:
+                    chunks.append(chunk.text)
+            raw = "".join(chunks)
+            log.info("gemini: attempt %d <- streamed in %.1fs (%d chars)",
                      attempt, time.time() - t0, len(raw))
             if raw_dump_dir is not None:
                 raw_dump_dir.mkdir(parents=True, exist_ok=True)

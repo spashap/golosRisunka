@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS orders (
     child_json TEXT,                      -- данные ребёнка из формы (до создания child)
     visitor_id TEXT,                      -- аналитика: кто купил
     utm_json TEXT,                        -- first-touch UTM на момент заказа
+    retry_count INTEGER DEFAULT 0,        -- сколько авто-перезапусков уже было (транзитные сбои)
+    next_retry_at TEXT,                   -- когда воркеру забрать 'failed'-заказ снова (UTC ISO); NULL = не перезапускать
     created_at TEXT NOT NULL,
     paid_at TEXT
 );
@@ -161,6 +163,13 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE customers ADD COLUMN login_token TEXT")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_login_token"
                  " ON customers(login_token)")
+
+    # самовосстановление воркера: счётчик авто-перезапусков и время следующего.
+    ocols = {r["name"] for r in conn.execute("PRAGMA table_info(orders)")}
+    if "retry_count" not in ocols:
+        conn.execute("ALTER TABLE orders ADD COLUMN retry_count INTEGER DEFAULT 0")
+    if "next_retry_at" not in ocols:
+        conn.execute("ALTER TABLE orders ADD COLUMN next_retry_at TEXT")
 
 
 def get_db() -> sqlite3.Connection:

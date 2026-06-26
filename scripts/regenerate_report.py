@@ -33,6 +33,11 @@ def main() -> int:
         print(f"order {args.order_id}: not found")
         return 1
     print(f"order {args.order_id}: status '{order['status']}' -> regenerating")
+    # ручной перезапуск = осознанный свежий старт: обнуляем счётчик авто-перезапусков,
+    # чтобы заказ снова получил полный набор попыток самовосстановления.
+    conn.execute("UPDATE orders SET retry_count = 0, next_retry_at = NULL WHERE id = ?",
+                 (args.order_id,))
+    conn.commit()
     status = jobs.run_order(conn, args.order_id)
     print(f"order {args.order_id}: final status '{status}'")
     return 0 if status == "delivered" else 1
