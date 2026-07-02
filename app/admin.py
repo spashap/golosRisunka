@@ -1,8 +1,8 @@
 """Админка /admin: левый сайдбар, раздел = один экран.
 
 Разделы: analytics (KPI/воронка/источники/события), orders, clients,
-coupons (создание/вкл-выкл), settings (цены и продукты -> config/products.json),
-emails (исходящие из data/outbox/ до Unisender).
+coupons (создание/вкл-выкл), prices (цены до/после скидки -> config/products.json),
+settings (тексты продуктов -> config/products.json), emails (исходящие из data/outbox/).
 
 Доступ ОТДЕЛЬНЫЙ от клиентского /login: пароль из .env (ADMIN_PASS).
 Кука gr_a = HMAC от пароля (stateless; смена пароля разлогинивает).
@@ -35,6 +35,7 @@ SECTIONS = [
     ("admin.orders", "Заказы"),
     ("admin.clients", "Клиенты"),
     ("admin.coupons", "Промокоды"),
+    ("admin.prices", "Цены"),
     ("admin.site_settings", "Настройки сайта"),
     ("admin.report_texts", "Тексты отчёта"),
     ("admin.emails", "Письма"),
@@ -579,6 +580,50 @@ def coupons_toggle(code: str):
     return redirect(url_for("admin.coupons"))
 
 
+@bp_admin.get("/prices")
+def prices():
+    """Цены продуктов: до скидки (зачёркнутая) и после скидки (к оплате).
+    ЮKassa получает цену ПОСЛЕ скидки минус промокод — см. orders.py."""
+    _guard()
+    return _render("admin.prices", "admin/prices.html",
+                   products=settings.get_products(),
+                   saved=request.args.get("saved"),
+                   err=request.args.get("err"))
+
+
+@bp_admin.post("/prices/save")
+def prices_save():
+    """Правка ТОЛЬКО ценовых полей поверх текущего products.json:
+    остальные ключи (тексты, фичи, enabled) не трогаем."""
+    _guard()
+    path = settings.BASE_DIR / "config" / "products.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    for code, p in data.items():
+        f = lambda k: request.form.get(f"{code}_{k}", "").strip()
+        try:
+            price = int(f("price_rub"))
+        except ValueError:
+            return redirect(url_for("admin.prices", err="Цена к оплате — целое число, ₽"))
+        if price < 1:
+            return redirect(url_for("admin.prices", err="Цена к оплате должна быть больше нуля"))
+        # Цена до скидки необязательна: пусто => на сайте нет зачёркнутой цены.
+        old = f("old_price_rub")
+        if old:
+            try:
+                old_price = int(old)
+            except ValueError:
+                return redirect(url_for("admin.prices", err="Цена до скидки — целое число, ₽"))
+            if old_price <= price:
+                return redirect(url_for("admin.prices",
+                                        err="Цена до скидки должна быть выше цены к оплате"))
+            p["old_price_rub"] = old_price
+        else:
+            p.pop("old_price_rub", None)
+        p["price_rub"] = price
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return redirect(url_for("admin.prices", saved="ok"))
+
+
 @bp_admin.get("/settings")
 def site_settings():
     _guard()
@@ -604,16 +649,7 @@ def settings_products_save():
         if f("title"):
             p["title"] = f("title")
         p["subtitle"] = f("subtitle")
-        try:
-            p["price_rub"] = int(f("price_rub"))
-            # Старая цена необязательна: пусто => нет зачёркнутой цены (не выдумываем скидку).
-            old = f("old_price_rub")
-            if old:
-                p["old_price_rub"] = int(old)
-            else:
-                p.pop("old_price_rub", None)
-        except ValueError:
-            return redirect(url_for("admin.site_settings", saved="err"))
+        # Цены редактируются на отдельной странице «Цены» (/admin/prices).
         p["features"] = [ln.strip() for ln in
                          request.form.get(f"{code}_features", "").splitlines() if ln.strip()]
     if not any(p["enabled"] for p in data.values()):

@@ -3,12 +3,12 @@
 {% block content %}
 <div class="admin-head"><h1 class="h2">Настройки сайта</h1></div>
 
-{% if saved == "ok" %}<p class="admin-flash admin-flash--ok">Сохранено — лендинг и форма заказа уже отдают новые цены (без рестарта).</p>{% endif %}
-{% if saved == "err" %}<p class="admin-flash admin-flash--err">Не сохранено: проверьте, что цены — целые числа и включён хотя бы один продукт.</p>{% endif %}
+{% if saved == "ok" %}<p class="admin-flash admin-flash--ok">Сохранено — лендинг и форма заказа уже отдают новые тексты (без рестарта).</p>{% endif %}
+{% if saved == "err" %}<p class="admin-flash admin-flash--err">Не сохранено: должен быть включён хотя бы один продукт.</p>{% endif %}
 
-<h2>Продукты и цены</h2>
-<p class="hint">Источник — <code>config/products.json</code>. Кнопка «Заказать» и цена
-на лендинге, форма заказа и schema.org обновляются сразу после сохранения.</p>
+<h2>Продукты</h2>
+<p class="hint">Источник — <code>config/products.json</code>. Лендинг, форма заказа и schema.org
+обновляются сразу после сохранения. Цены редактируются на странице <a href="/admin/prices">Цены</a>.</p>
 
 <form method="post" action="/admin/settings/products">
   <div class="admin-products">
@@ -21,10 +21,6 @@
         <div class="ctl"><input class="input" name="{{ code }}_title" value="{{ p.title }}"></div></div>
       <div class="field"><label>Подзаголовок</label>
         <div class="ctl"><input class="input" name="{{ code }}_subtitle" value="{{ p.subtitle }}"></div></div>
-      <div class="field"><label>Цена, ₽</label>
-        <div class="ctl"><input class="input" name="{{ code }}_price_rub" type="number" min="1" value="{{ p.price_rub }}"></div></div>
-      <div class="field"><label>Старая цена (зачёркнутая, необязательно), ₽</label>
-        <div class="ctl"><input class="input" name="{{ code }}_old_price_rub" type="number" min="1" value="{{ p.old_price_rub or '' }}"></div></div>
       <div class="field"><label>Пункты с галочками (по одному в строке)</label>
         <div class="ctl"><textarea class="input" name="{{ code }}_features" rows="5">{{ p.features | join("\n") }}</textarea></div></div>
     </div>

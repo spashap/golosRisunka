@@ -1,0 +1,57 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Цены{% endblock %}
+{% block content %}
+<div class="admin-head"><h1 class="h2">Цены</h1></div>
+
+{% if saved == "ok" %}<p class="admin-flash admin-flash--ok">Сохранено — лендинг, форма заказа и оплата уже используют новые цены (без рестарта).</p>{% endif %}
+{% if err %}<p class="admin-flash admin-flash--err">Не сохранено: {{ err }}.</p>{% endif %}
+
+<p class="hint">Источник — <code>config/products.json</code>. На сайте показываются обе цены:
+«до скидки» — зачёркнутая, «к оплате» — действующая. <b>ЮKassa получает цену «к оплате»,
+и если покупатель ввёл промокод — минус его скидка.</b> Пустая цена «до скидки» =
+зачёркнутая цена на сайте не показывается.</p>
+
+<form method="post" action="/admin/prices/save">
+  <div class="admin-products">
+    {% for code, p in products.items() %}
+    <div class="form-card" data-product="{{ code }}">
+      <h3>{{ p.title }} <code>{{ code }}</code>
+        {% if p.enabled %}<span class="admin-status admin-status--delivered">продаётся</span>
+        {% else %}<span class="admin-status admin-status--created">выключен («скоро»)</span>{% endif %}
+      </h3>
+      <div class="field"><label>Цена до скидки (зачёркнутая), ₽</label>
+        <div class="ctl"><input class="input" name="{{ code }}_old_price_rub" type="number" min="2"
+                                value="{{ p.old_price_rub or '' }}" data-price-old placeholder="пусто — без зачёркнутой цены"></div></div>
+      <div class="field"><label>Цена к оплате (после скидки), ₽</label>
+        <div class="ctl"><input class="input" name="{{ code }}_price_rub" type="number" min="1"
+                                value="{{ p.price_rub }}" data-price-new required></div></div>
+      <p class="hint" data-discount-note>
+        {% if p.old_price_rub %}Скидка на сайте: −{{ ((p.old_price_rub - p.price_rub) * 100 / p.old_price_rub) | round | int }}%{% else %}Зачёркнутая цена не показывается.{% endif %}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+  <button class="btn btn--primary" type="submit">Сохранить цены</button>
+</form>
+
+<p class="hint" style="margin-top: 24px">Промокоды (дополнительная скидка при оплате) — в разделе
+<a href="/admin/coupons">Промокоды</a>. Названия и описания продуктов — в
+<a href="/admin/settings">Настройках сайта</a>.</p>
+
+<script>
+// Живой пересчёт скидки при вводе — чтобы видеть процент до сохранения.
+document.querySelectorAll('.form-card[data-product]').forEach(function (card) {
+  var oldIn = card.querySelector('[data-price-old]');
+  var newIn = card.querySelector('[data-price-new]');
+  var note = card.querySelector('[data-discount-note]');
+  function update() {
+    var o = parseInt(oldIn.value, 10), n = parseInt(newIn.value, 10);
+    if (!o) { note.textContent = 'Зачёркнутая цена не показывается.'; return; }
+    if (!n || o <= n) { note.textContent = 'Цена до скидки должна быть выше цены к оплате.'; return; }
+    note.textContent = 'Скидка на сайте: −' + Math.round((o - n) * 100 / o) + '%';
+  }
+  oldIn.addEventListener('input', update);
+  newIn.addEventListener('input', update);
+});
+</script>
+{% endblock %}
