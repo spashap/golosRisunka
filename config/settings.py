@@ -45,27 +45,32 @@ DB_PATH = DATA_DIR / "golosrisunka.sqlite3"
 # Модель продукта (решение заказчика, override spec §1):
 #   snapshot    — до 3 рисунков -> ОДИН сводный отчёт, цена не зависит от числа рисунков;
 #   development — 2 набора рисунков с интервалом >= 6 мес. (может не войти в MVP).
-# ВСЕ цифры управляются из будущей админки; до неё — config/products.json.
-# Никогда не хардкодить цены в шаблонах/коде.
-_PRODUCTS_FILE = BASE_DIR / "config" / "products.json"
-_products_cache: tuple[float, dict] | None = None
+# ВСЕ цифры управляются из админки; никогда не хардкодить цены в шаблонах/коде.
+# Два файла: config/products.json — заводской дефолт в git (на проде принадлежит root),
+# data/products.json — правки из админки (data/ пишет www-data; git pull его не трогает).
+PRODUCTS_DEFAULT_FILE = BASE_DIR / "config" / "products.json"
+PRODUCTS_RUNTIME_FILE = DATA_DIR / "products.json"
+_products_cache: tuple[tuple[str, float], dict] | None = None
 
 
 def get_products() -> dict:
-    """Читает products.json с кэшем по mtime — правки видны без рестарта."""
+    """Читает products.json с кэшем по mtime — правки видны без рестарта.
+    Приоритет: data/products.json (админка) -> config/products.json (дефолт)."""
     global _products_cache
     import json
-    mtime = _PRODUCTS_FILE.stat().st_mtime
-    if _products_cache is None or _products_cache[0] != mtime:
-        _products_cache = (mtime, json.loads(_PRODUCTS_FILE.read_text(encoding="utf-8")))
+    path = PRODUCTS_RUNTIME_FILE if PRODUCTS_RUNTIME_FILE.exists() else PRODUCTS_DEFAULT_FILE
+    key = (str(path), path.stat().st_mtime)
+    if _products_cache is None or _products_cache[0] != key:
+        _products_cache = (key, json.loads(path.read_text(encoding="utf-8")))
     return _products_cache[1]
 
 
 # Управляемые из админки тексты, которые пайплайн дописывает в КОНЕЦ отчёта при
 # генерации (апсейл по числу рисунков + дисклеймеры + свободный блок). Pass-through,
 # без логики; принцип «меняется в одном месте, без кода». Читается воркером при рендере.
-_REPORT_TEXTS_FILE = BASE_DIR / "config" / "report_texts.json"
-_report_texts_cache: tuple[float, dict] | None = None
+REPORT_TEXTS_DEFAULT_FILE = BASE_DIR / "config" / "report_texts.json"
+REPORT_TEXTS_RUNTIME_FILE = DATA_DIR / "report_texts.json"   # правки из админки
+_report_texts_cache: tuple[tuple[str, float], dict] | None = None
 
 # дефолты на случай отсутствия/повреждения файла — отчёт всё равно отрендерится
 _REPORT_TEXTS_DEFAULT = {
@@ -81,16 +86,18 @@ def get_report_texts() -> dict:
     При отсутствии/ошибке файла возвращает безопасные пустые дефолты."""
     global _report_texts_cache
     import json
+    path = REPORT_TEXTS_RUNTIME_FILE if REPORT_TEXTS_RUNTIME_FILE.exists() \
+        else REPORT_TEXTS_DEFAULT_FILE
     try:
-        mtime = _REPORT_TEXTS_FILE.stat().st_mtime
+        key = (str(path), path.stat().st_mtime)
     except OSError:
         return dict(_REPORT_TEXTS_DEFAULT)
-    if _report_texts_cache is None or _report_texts_cache[0] != mtime:
+    if _report_texts_cache is None or _report_texts_cache[0] != key:
         try:
-            data = json.loads(_REPORT_TEXTS_FILE.read_text(encoding="utf-8"))
+            data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return dict(_REPORT_TEXTS_DEFAULT)
-        _report_texts_cache = (mtime, data)
+        _report_texts_cache = (key, data)
     return _report_texts_cache[1]
 
 # --- Site ---

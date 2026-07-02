@@ -1,8 +1,9 @@
 """Админка /admin: левый сайдбар, раздел = один экран.
 
 Разделы: analytics (KPI/воронка/источники/события), orders, clients,
-coupons (создание/вкл-выкл), prices (цены до/после скидки -> config/products.json),
-settings (тексты продуктов -> config/products.json), emails (исходящие из data/outbox/).
+coupons (создание/вкл-выкл), prices (цены до/после скидки -> data/products.json),
+settings (тексты продуктов -> data/products.json), emails (исходящие из data/outbox/).
+Редактируемые json пишутся в data/ (владелец www-data), config/*.json — только дефолт.
 
 Доступ ОТДЕЛЬНЫЙ от клиентского /login: пароль из .env (ADMIN_PASS).
 Кука gr_a = HMAC от пароля (stateless; смена пароля разлогинивает).
@@ -580,6 +581,22 @@ def coupons_toggle(code: str):
     return redirect(url_for("admin.coupons"))
 
 
+# Редактируемые из админки json живут в data/ (пишет www-data, git pull не трогает);
+# config/*.json — read-only дефолт из репозитория (на проде принадлежит root).
+
+def _load_products_for_edit() -> dict:
+    src = settings.PRODUCTS_RUNTIME_FILE if settings.PRODUCTS_RUNTIME_FILE.exists() \
+        else settings.PRODUCTS_DEFAULT_FILE
+    return json.loads(src.read_text(encoding="utf-8"))
+
+
+def _atomic_write_json(path, data: dict):
+    """Пишем во временный файл + rename: читатель никогда не увидит пол-JSON."""
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
 @bp_admin.get("/prices")
 def prices():
     """Цены продуктов: до скидки (зачёркнутая) и после скидки (к оплате).
@@ -596,8 +613,7 @@ def prices_save():
     """Правка ТОЛЬКО ценовых полей поверх текущего products.json:
     остальные ключи (тексты, фичи, enabled) не трогаем."""
     _guard()
-    path = settings.BASE_DIR / "config" / "products.json"
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = _load_products_for_edit()
     for code, p in data.items():
         f = lambda k: request.form.get(f"{code}_{k}", "").strip()
         try:
@@ -620,7 +636,7 @@ def prices_save():
         else:
             p.pop("old_price_rub", None)
         p["price_rub"] = price
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _atomic_write_json(settings.PRODUCTS_RUNTIME_FILE, data)
     return redirect(url_for("admin.prices", saved="ok"))
 
 
@@ -641,8 +657,7 @@ def settings_products_save():
     """Правка продуктов поверх текущего products.json: меняем только
     редактируемые поля, незнакомые ключи сохраняются как есть."""
     _guard()
-    path = settings.BASE_DIR / "config" / "products.json"
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = _load_products_for_edit()
     for code, p in data.items():
         f = lambda k: request.form.get(f"{code}_{k}", "").strip()
         p["enabled"] = bool(request.form.get(f"{code}_enabled"))
@@ -654,7 +669,7 @@ def settings_products_save():
                          request.form.get(f"{code}_features", "").splitlines() if ln.strip()]
     if not any(p["enabled"] for p in data.values()):
         return redirect(url_for("admin.site_settings", saved="err"))  # сайт без продуктов нельзя
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _atomic_write_json(settings.PRODUCTS_RUNTIME_FILE, data)
     return redirect(url_for("admin.site_settings", saved="ok"))
 
 
@@ -670,9 +685,8 @@ def report_texts():
 
 @bp_admin.post("/report-texts/save")
 def report_texts_save():
-    """Перезапись config/report_texts.json. Пусто = блок не выводится в отчёте."""
+    """Перезапись data/report_texts.json. Пусто = блок не выводится в отчёте."""
     _guard()
-    path = settings.BASE_DIR / "config" / "report_texts.json"
     g = lambda k: request.form.get(k, "").strip()
     data = {
         "upsell": {n: g(f"upsell_{n}") for n in ("1", "2", "3")},
@@ -680,7 +694,7 @@ def report_texts_save():
         "disclaimer_by_count": {n: g(f"disclaimer_by_count_{n}") for n in ("1", "2", "3")},
         "free_text": g("free_text"),
     }
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _atomic_write_json(settings.REPORT_TEXTS_RUNTIME_FILE, data)
     return redirect(url_for("admin.report_texts", saved="ok"))
 
 

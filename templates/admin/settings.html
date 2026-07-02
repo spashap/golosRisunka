@@ -7,7 +7,7 @@
 {% if saved == "err" %}<p class="admin-flash admin-flash--err">Не сохранено: должен быть включён хотя бы один продукт.</p>{% endif %}
 
 <h2>Продукты</h2>
-<p class="hint">Источник — <code>config/products.json</code>. Лендинг, форма заказа и schema.org
+<p class="hint">Правки сохраняются в <code>data/products.json</code>. Лендинг, форма заказа и schema.org
 обновляются сразу после сохранения. Цены редактируются на странице <a href="/admin/prices">Цены</a>.</p>
 
 <form method="post" action="/admin/settings/products">
