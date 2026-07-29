@@ -19,4 +19,38 @@
     </p>
   </div>
 </div>
+
+<script>
+// Цель «purchase» + выручка в электронную коммерцию Метрики.
+// Страница отдаётся только для ОПЛАЧЕННОГО заказа (см. order_success в routes.py),
+// поэтому цель не может сработать на неоплаченном/угаданном order_id.
+// sessionStorage — чтобы перезагрузка страницы не засчиталась второй покупкой.
+(function () {
+  var orderId = "{{ order_id }}";
+  var rub = {{ price_rub }};
+  var key = "gr_purchase_sent_" + orderId;
+  try {
+    if (sessionStorage.getItem(key)) { return; }
+    sessionStorage.setItem(key, "1");
+  } catch (e) { /* приватный режим — считаем один раз за загрузку */ }
+
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    ecommerce: {
+      currencyCode: "RUB",
+      purchase: {
+        actionField: { id: orderId, revenue: rub },
+        products: [{
+          id: "{{ product_code }}",
+          name: {{ product_title | tojson }},
+          price: rub,
+          quantity: 1
+        }]
+      }
+    }
+  });
+
+  if (window.ymGoal) { window.ymGoal("purchase", { order_id: orderId, rub: rub }); }
+})();
+</script>
 {% endblock %}

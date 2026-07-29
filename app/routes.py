@@ -604,7 +604,18 @@ def order_success(order_id: int):
     order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     if order is None:
         abort(404)
-    return render_template("order_success.html", email=order["email"])
+    if order["status"] == "created":
+        # Не оплачен: webhook мог опоздать (ведём на поллинг), либо это чужой/
+        # угаданный order_id. В обоих случаях цель Метрики срабатывать не должна.
+        return render_template("pay_wait.html", order_id=order_id)
+    return render_template(
+        "order_success.html",
+        email=order["email"],
+        order_id=order_id,
+        product_code=order["product_code"],
+        product_title=settings.get_products().get(order["product_code"], {}).get("title", order["product_code"]),
+        price_rub=order["price_kopecks"] // 100,
+    )
 
 
 # --- Блог (скелет, spec §4.3) ---
