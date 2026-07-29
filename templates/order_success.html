@@ -50,7 +50,11 @@
     }
   });
 
-  if (window.ymGoal) { window.ymGoal("purchase", { order_id: orderId, rub: rub }); }
+  // order_price + currency — зарезервированные ключи Метрики: только из них
+  // берётся ценность цели. Произвольные имена (rub и т.п.) игнорируются.
+  if (window.ymGoal) {
+    window.ymGoal("purchase", { order_id: orderId, order_price: rub, currency: "RUB" });
+  }
 })();
 </script>
 {% endblock %}
