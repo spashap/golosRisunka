@@ -858,3 +858,70 @@ html.dk .btn { color: #241A12; }
   background: color-mix(in srgb, var(--badge) 7%, transparent);
   font-size: 14px; line-height: 1.55; color: var(--muted);
 }
+
+/* --- Фремиум-мастер (/free). Только токены и шкала --fs-*, как требует бренд-бук. --- */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* Выбор одного варианта. В проекте не было ни одного radio — строим на <label> со
+   скрытым input: корректно с клавиатуры и скринридером и работает без JS.
+   Подсветка через input:checked + сиблинг, НЕ через :has() (старый мобильный Safari). */
+.choice { display: grid; gap: 8px; margin: 6px 0 2px; }
+.choice--grid { grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); }
+.choice__opt { display: block; position: relative; cursor: pointer; }
+.choice__opt > span {
+  display: block; padding: 13px 16px; border-radius: var(--radius-sm);
+  border: 2px solid var(--line); background: var(--paper);
+  font-size: var(--fs-body); line-height: 1.4; color: var(--ink);
+  transition: border-color .12s, background .12s;
+}
+.choice--grid .choice__opt > span { text-align: center; padding: 13px 6px; }
+.choice__opt > input:focus-visible + span { outline: 3px solid var(--accent-2); }
+.choice__opt > input:checked + span {
+  border-color: var(--accent); background: color-mix(in srgb, var(--badge) 12%, var(--paper));
+  font-weight: 600;
+}
+.choice__opt:hover > span { border-color: var(--accent-2); }
+
+/* Шаги мастера: показываем по одному. Индикатор прогресса переиспользует .car-dots. */
+.wizard__step { display: none; }
+.wizard__step.is-on { display: block; }
+
+/* Экран ожидания: честные стадии из поля stage, а не поддельный прогресс. */
+.wait-card { text-align: center; }
+.wait-photo {
+  max-width: 100%; max-height: 46vh; border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card); margin: 0 auto 14px; display: block;
+}
+.wait-bar { height: 6px; border-radius: 99px; background: var(--alt); overflow: hidden; }
+.wait-bar > i {
+  display: block; height: 100%; width: 10%; border-radius: 99px;
+  background: var(--accent); transition: width .6s ease;
+}
+.wait-stage { margin-top: 10px; color: var(--muted); font-size: var(--fs-small); }
+.dots-wait > i {
+  display: inline-block; width: 6px; height: 6px; margin: 0 2px; border-radius: 50%;
+  background: var(--accent); animation: dotpulse 1.2s infinite ease-in-out;
+}
+.dots-wait > i:nth-child(2) { animation-delay: .2s; }
+.dots-wait > i:nth-child(3) { animation-delay: .4s; }
+@keyframes dotpulse { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .dots-wait > i { animation: none; opacity: .6; }
+  .wait-bar > i { transition: none; }
+}
+
+/* Готовый разбор: читается как продолжение кабинета, а не как отдельный лендинг. */
+.free-report { max-width: 640px; margin: 0 auto; }
+.free-report p { font-size: var(--fs-body); line-height: 1.62; margin: 0 0 15px; }
+.free-report__lead { font-size: var(--fs-lead); line-height: 1.5; }
+.free-note {
+  padding: 12px 16px; border-radius: var(--radius-sm); margin: 0 0 15px;
+  background: var(--alt); border-left: 3px solid var(--accent2);
+}
+.free-sell {
+  margin-top: 22px; padding: 18px 20px; border-radius: var(--radius-card);
+  background: var(--bg-soft); border: 1px solid var(--line);
+}
+.free-vote { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 0; }

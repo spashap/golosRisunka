@@ -68,6 +68,7 @@
     {% endif %}
 
     <form method="post" enctype="multipart/form-data" id="order-form" data-ym-goal-submit="order_submit_form">
+      {% if reused %}<input type="hidden" name="free_token" value="{{ reused.token }}">{% endif %}
       <input type="hidden" name="product" value="{{ product_code }}">
 
       <div class="form-card">
@@ -84,6 +85,17 @@
           <h3><span class="db-num">{{ i }}</span> · Рисунок</h3>
           <div class="field">
             <label>Фото рисунка *</label>
+            {# Пришли из бесплатного разбора: рисунок уже у нас, загружать заново не надо.
+               Без reused форма работает байт-в-байт как раньше. #}
+            {% if reused and i == 1 %}
+            <div class="file-drop" style="cursor:default">
+              <img class="preview" src="{{ reused.thumb }}" alt="Уже добавленный рисунок"
+                   style="max-height:180px">
+              <div class="fd-text">Этот рисунок уже у нас — загружать заново не нужно</div>
+            </div>
+            <div class="hint" style="margin-top:6px">
+              Хотите другой? <a href="/order">начните заказ заново</a>.</div>
+            {% else %}
             <label class="file-drop" for="d{{ i }}_file">
               <img class="preview" hidden alt="">
               <div class="fd-icon">🖼️</div>
@@ -91,6 +103,7 @@
               <input type="file" id="d{{ i }}_file" name="d{{ i }}_file"
                      accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*">
             </label>
+            {% endif %}
             {% if errors.get("d" ~ i ~ "_file") %}<div class="err">{{ errors["d" ~ i ~ "_file"] }}</div>{% endif %}
             <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа — мы не публикуем работы и не передаём их третьим лицам.</div>
           </div>

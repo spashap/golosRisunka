@@ -22,14 +22,24 @@ venv/bin/pip install -q -r requirements.txt
 venv/bin/pip install -q 'gunicorn>=21'
 
 echo "== data dirs / ownership =="
-mkdir -p data/drawings data/reports data/outbox
+mkdir -p data/drawings data/reports data/outbox data/free
 chown -R "$SVC_USER:$SVC_USER" data
 # keep runtime-generated sample thumbnails writable by the web user
 [ -d static/img ] && chown -R "$SVC_USER:$SVC_USER" static/img || true
 
 echo "== restart services =="
 systemctl restart golosrisunka-web.service golosrisunka-worker.service
+# Фремиум-воркер: перезапускаем, только если юнит уже установлен. Первый раз его
+# ставят руками (systemctl enable --now golosrisunka-free) — deploy.sh сам юниты
+# не создаёт, и молча пропустить это нельзя: без воркера разборы не генерируются.
+if systemctl list-unit-files | grep -q '^golosrisunka-free\.service'; then
+  systemctl restart golosrisunka-free.service
+else
+  echo "WARNING: golosrisunka-free.service НЕ УСТАНОВЛЕН — бесплатные разборы"
+  echo "         не будут генерироваться. Установка описана в scripts/deploy/go_live.sh"
+fi
 sleep 1
 echo "web:    $(systemctl is-active golosrisunka-web.service)"
 echo "worker: $(systemctl is-active golosrisunka-worker.service)"
+echo "free:   $(systemctl is-active golosrisunka-free.service 2>/dev/null || echo 'not installed')"
 echo "deployed."

@@ -30,6 +30,8 @@ def create_app() -> Flask:
     app.register_blueprint(bp)
     from app.admin import bp_admin
     app.register_blueprint(bp_admin)
+    from app.free import bp_free
+    app.register_blueprint(bp_free)
 
     @app.errorhandler(404)
     def not_found(e):

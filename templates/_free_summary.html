@@ -1,0 +1,40 @@
+{# Вывод после вопросов. Собран НА СЕРВЕРЕ по границам абзацев (§5): склейка внутри
+   предложения — единственное, что здесь абсолютно запрещено, и в JS её было бы не видно. #}
+{% if limit_token %}
+<div class="form-card">
+  <h2 class="h2">{{ texts.LIMIT_TITLE.format(name=name) }}</h2>
+  <p>{{ texts.LIMIT_BODY }}</p>
+  <a class="btn btn--primary" style="width:100%" href="/free/r/{{ limit_token }}"
+     data-ym-goal="free_limit_open">{{ texts.LIMIT_CTA.format(name=texts.genitive(name)) }}</a>
+</div>
+{% else %}
+<div class="free-report">
+  {% for p in paragraphs %}
+  <p{% if loop.first %} class="free-report__lead"{% endif %}>{{ p }}</p>
+  {% endfor %}
+</div>
+
+<div class="form-card" id="f-upload" data-token="{{ token }}"
+     data-wait-hint="{{ wait_hint }}">
+  <label class="file-drop" for="f-file">
+    <img class="preview" hidden alt="">
+    <span class="fd-icon">＋</span>
+    <span class="fd-text">Добавить рисунок</span>
+    <input type="file" id="f-file" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*"
+           data-ym-goal="free_add_drawing">
+  </label>
+  <p class="hint">{{ texts.STORAGE_NOTICE }}</p>
+  <p class="err" id="f-uperr" hidden></p>
+</div>
+
+<details class="form-card">
+  <summary><b>{{ texts.NO_DRAWING_TITLE }}</b></summary>
+  <p>{{ texts.NO_DRAWING_BODY }}</p>
+  <p>{{ texts.NO_DRAWING_BONUS.format(band=band) }}</p>
+  <div class="field"><div class="ctl">
+    <input class="input" id="f-nodraw-email" type="email" placeholder="you@example.com"></div></div>
+  <button class="btn btn--ghost" id="f-nodraw-btn" data-token="{{ token }}"
+          data-ym-goal="free_no_drawing">Сохранить место</button>
+  <p class="hint" id="f-nodraw-ok" hidden>Сохранили. Ссылка придёт на почту.</p>
+</details>
+{% endif %}

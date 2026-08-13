@@ -1,0 +1,21 @@
+{% extends "_base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}Разбор готовится — {{ site_name }}{% endblock %}
+{% block body %}
+{# Отдельная страница ожидания — для случая, когда родитель вернулся по ссылке, пока
+   разбор ещё делается. Штатный путь остаётся в одном документе с мастером. #}
+<section class="section">
+  <div class="wrap" style="max-width:640px">
+    <div class="form-card wait-card" id="free-wait-page" data-token="{{ token }}">
+      <img class="wait-photo" src="/free/img/{{ token }}" alt="" onerror="this.hidden=true">
+      <p class="free-report__lead">{{ wait_hint }}</p>
+      <div class="wait-bar"><i id="w-bar"></i></div>
+      <p class="wait-stage" id="w-stage">Смотрим на рисунок…
+        <span class="dots-wait"><i></i><i></i><i></i></span></p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block footer %}{{ super() }}
+<script src="{{ static }}/js/free_result.js" defer></script>
+{% endblock %}

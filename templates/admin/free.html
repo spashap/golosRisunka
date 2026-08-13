@@ -1,0 +1,126 @@
+{% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
+{% block title %}Бета{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Бета фремиума</h1>
+  {{ period_filter(periods, days, url_for("admin.free")) }}
+</div>
+{% if msg %}<p class="admin-flash admin-flash--ok">{{ msg }}</p>{% endif %}
+
+{# Живость фоновых юнитов. deploy.sh новый юнит не поднимает, мониторинга в проекте
+   нет — без этой строки после перезагрузки бокса разборы молча не генерируются. #}
+<p>
+  {% for h in heartbeats %}
+    <span class="status-pill status-pill--{{ 'ready' if h.ok else 'warn' }}">
+      {{ h.label }}:
+      {% if h.ago is none %}не отмечался{% else %}{{ h.ago }} c назад{% endif %}
+    </span>
+  {% endfor %}
+  {% if stuck %}
+    <span class="status-pill status-pill--warn">висит дольше {{ stuck_minutes }} мин: {{ stuck }}</span>
+  {% endif %}
+</p>
+{% if heartbeats | rejectattr('ok') | list %}
+<p class="hint">Если юнит молчит — на сервере:
+  <code>systemctl status golosrisunka-free</code> ·
+  <code>systemctl restart golosrisunka-free</code></p>
+{% endif %}
+
+<h2 class="h3">Воронка</h2>
+<table>
+  <thead><tr>{% for f in funnel %}<th>{{ f.label }}</th>{% endfor %}<th>оценили</th><th>оставили email</th></tr></thead>
+  <tbody><tr>{% for f in funnel %}<td>{{ f.n }}</td>{% endfor %}<td>{{ voted }}</td><td>{{ with_email }}</td></tr></tbody>
+</table>
+
+<h2 class="h3">Библиотека трактовок</h2>
+<p class="hint">Главный результат беты. Ключ приходит из закрытого словаря
+  (<code>config/free_keys.py</code>); <code>new</code> — трактовка вне словаря, её надо
+  либо добавить в словарь, либо отклонить.</p>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>ключ</th><th>раз</th><th>это про него</th><th>не про него</th>
+    <th>примеры фраз</th><th>разметка</th></tr></thead>
+  <tbody>
+  {% for k in library %}
+  <tr>
+    <td><code>{{ k.key }}</code>
+      {% if k.verdict %}<br><span class="status-pill status-pill--ready">{{ k.verdict }}</span>{% endif %}
+      {% if k.note %}<br><span class="hint">{{ k.note }}</span>{% endif %}
+    </td>
+    <td>{{ k.n }}</td><td>{{ k.yes_n or 0 }}</td><td>{{ k.no_n or 0 }}</td>
+    <td>
+      <details><summary>показать</summary>
+        {% for e in k.examples %}
+          <p class="hint">{{ e.phrase }}
+          {% if e.new_key_description %}<br><b>новая трактовка:</b> {{ e.new_key_description }}{% endif %}
+          {% if e.age_scope %}<br>возраст: {{ e.age_scope }}{% endif %}</p>
+        {% endfor %}
+      </details>
+    </td>
+    <td>
+      <form method="post" action="{{ url_for('admin.free_key_verdict', key=k.key) }}">
+        <select name="verdict" class="input">
+          {% for v, label in verdicts %}
+          <option value="{{ v }}" {% if k.verdict == v %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <input class="input" type="text" name="note" placeholder="заметка" value="{{ k.note or '' }}">
+        <button class="status-pill status-pill--wait" type="submit">сохранить</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6">Трактовок пока нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2 class="h3">Разборы</h2>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>№</th><th>Создан</th><th>Ребёнок</th><th>Тревога</th><th>Статус</th>
+    <th>Флаги</th><th>Совпал</th><th>Просьба</th><th>c</th><th>Токены</th><th>Email</th><th></th></tr></thead>
+  <tbody>
+  {% for it in items %}
+  <tr>
+    <td>{{ it.id }}</td>
+    <td style="white-space:nowrap">{{ it.created }}</td>
+    <td>{{ it.child }}{% if it.age %}, {{ it.age }}{% endif %}</td>
+    <td>{{ it.concern }}{% if it.duration %}<br><span class="hint">{{ it.duration }}</span>{% endif %}</td>
+    <td><span class="admin-status admin-status--{{ it.status }}">{{ it.status }}</span>
+      {% if it.reject %}<br><span class="hint">{{ it.reject }}</span>{% endif %}</td>
+    <td>{{ it.flags }}{% if it.dropped %}<br><span class="hint">гипотеза снята</span>{% endif %}</td>
+    <td>{% if it.correlate is none %}—{% elif it.correlate %}да{% else %}нет{% endif %}</td>
+    <td>{{ it.ask_variant or '' }}</td>
+    <td>{{ it.seconds or '' }}</td>
+    <td class="hint">{{ it.tok_in }}/{{ it.tok_out }}</td>
+    <td>{{ it.email }}</td>
+    <td>
+      {% if it.token %}<a href="/free/r/{{ it.token }}" target="_blank">разбор</a><br>{% endif %}
+      <details>
+        <summary>подробно</summary>
+        {% if it.parent_text %}<p class="hint"><b>Словами родителя:</b> {{ it.parent_text }}</p>{% endif %}
+        {% for i in it.interps %}
+          <p class="hint"><b>{{ i.key }}</b>{% if i.parent_vote %} · оценка: {{ i.parent_vote }}{% endif %}<br>{{ i.phrase }}</p>
+        {% endfor %}
+        {% if not it.image_deleted %}
+        <form method="post" action="/admin/free/{{ it.id }}/delete-image"
+              onsubmit="return confirm('Удалить фото рисунка? Текст разбора останется.')">
+          <button class="status-pill status-pill--warn" type="submit">удалить фото</button>
+        </form>
+        {% else %}<span class="hint">фото удалено</span>{% endif %}
+        <form method="post" action="/admin/free/{{ it.id }}/allow-replace" style="margin-top:6px">
+          <button class="status-pill status-pill--wait" type="submit">разрешить повтор</button>
+        </form>
+      </details>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="12">Разборов за период нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

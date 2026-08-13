@@ -115,6 +115,84 @@ CREATE TABLE IF NOT EXISTS events (
     geo_city TEXT,                        -- город (если есть в базе)
     created_at TEXT NOT NULL
 );
+-- === Фремиум-бета (projectSpec/fremium) ==========================================
+-- Строка создаётся УЖЕ на шаге вывода после вопросов, до всякой загрузки: так видны
+-- и оборванные воронки, а не только дошедшие до разбора.
+CREATE TABLE IF NOT EXISTS free_analyses (
+    id INTEGER PRIMARY KEY,
+    token TEXT UNIQUE NOT NULL,           -- публичная ссылка /free/r/<token>, вход без логина
+    visitor_id TEXT,
+    limit_key TEXT,                       -- ключ мягкого лимита (cookie gr_f или customer)
+    child_name TEXT,
+    child_name_norm TEXT,                 -- нормализация в Python: SQLite lower() не сворачивает кириллицу
+    child_age INTEGER,
+    address_form TEXT,                    -- 'он' / 'она' (грамматика, не анкетный пол)
+    concern_key TEXT,
+    duration_key TEXT,
+    parent_text TEXT,
+    ask_variant TEXT,                     -- какой из трёх вариантов просьбы о рисунке показан
+    status TEXT NOT NULL DEFAULT 'answers',
+        -- answers / queued / running / done / rejected / failed
+    stage TEXT,                           -- стадия для экрана ожидания
+    reject_reason TEXT,                   -- photo_poor / not_a_drawing / blank / other
+    flags_json TEXT,                      -- sparse / coloring / thin (НЕ mismatch, см. ниже)
+    correlate INTEGER,                    -- 1/0/NULL — ЕДИНСТВЕННЫЙ источник правды про несовпадение
+    correlate_note TEXT,
+    file_path TEXT,                       -- относительный к BASE_DIR, as_posix()
+    analysis_json_path TEXT,
+    model TEXT,
+    prompt_version TEXT,
+    attempts INTEGER DEFAULT 0,
+    repair_rounds INTEGER DEFAULT 0,
+    hypothesis_dropped INTEGER DEFAULT 0,
+    prompt_tokens INTEGER DEFAULT 0,
+    output_tokens INTEGER DEFAULT 0,
+    gen_seconds REAL,
+    allow_replace INTEGER DEFAULT 0,      -- ставит АДМИН: разрешить повтор в спорном случае
+    replaces_id INTEGER REFERENCES free_analyses(id),  -- автозамена после mismatch (одна)
+    customer_id INTEGER REFERENCES customers(id),
+    child_id INTEGER REFERENCES children(id),  -- только если ребёнок УЖЕ существует
+    email TEXT,
+    created_at TEXT NOT NULL,
+    started_at TEXT,
+    delivered_at TEXT,
+    deleted_at TEXT                       -- срок хранения фото (FREE_IMAGE_TTL_DAYS)
+);
+CREATE INDEX IF NOT EXISTS idx_free_status ON free_analyses(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_free_limit ON free_analyses(limit_key, child_name_norm);
+CREATE INDEX IF NOT EXISTS idx_free_customer ON free_analyses(customer_id);
+-- Наблюдённая фраза этого разбора + оценка родителя «это про него / не про него».
+-- Оценка привязана к КОНКРЕТНОЙ интерпретации, а не к разбору целиком: иначе непонятно,
+-- что именно не понравилось.
+CREATE TABLE IF NOT EXISTS free_interpretations (
+    id INTEGER PRIMARY KEY,
+    analysis_id INTEGER NOT NULL REFERENCES free_analyses(id),
+    phrase TEXT NOT NULL,
+    attribution TEXT,
+    key TEXT NOT NULL,                    -- из закрытого словаря config/free_keys.py либо 'new'
+    new_key_description TEXT,             -- только при key='new'
+    age_scope TEXT,
+    parent_vote TEXT,                     -- 'yes' / 'no' / NULL
+    voted_at TEXT,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_free_interp_key ON free_interpretations(key);
+CREATE INDEX IF NOT EXISTS idx_free_interp_analysis ON free_interpretations(analysis_id);
+-- Разметка заказчика ПО КЛЮЧУ, а не по строке: иначе один вердикт означал бы UPDATE N строк.
+CREATE TABLE IF NOT EXISTS free_interpretation_keys (
+    key TEXT PRIMARY KEY,
+    verdict TEXT,                         -- confirmed / narrow / folklore
+    note TEXT,
+    first_seen_at TEXT,
+    verdict_at TEXT
+);
+-- Признак живости фоновых юнитов: deploy.sh новый юнит не поднимает, мониторинга нет,
+-- и после перезагрузки бокса разборы молча перестали бы генерироваться.
+CREATE TABLE IF NOT EXISTS service_heartbeat (
+    name TEXT PRIMARY KEY,
+    last_seen_at TEXT NOT NULL
+);
+-- =================================================================================
 CREATE INDEX IF NOT EXISTS idx_events_type ON events(type, created_at);
 CREATE INDEX IF NOT EXISTS idx_events_visitor ON events(visitor_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);

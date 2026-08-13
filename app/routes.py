@@ -20,7 +20,7 @@ from app.payments import create_payment, mark_paid
 from app.yookassa import YuKassaError
 from app.samples import get_sample_by_token, get_samples
 from app.track import parse_device, track_event
-from config import settings
+from config import free_names, settings
 from config.form_fields import CHILD_FIELDS, COUPON_FIELD, DRAWING_FIELDS, EMAIL_FIELD
 
 bp = Blueprint("main", __name__)
@@ -307,10 +307,23 @@ def cabinet():
         " ORDER BY o.id DESC", (customer["id"],)).fetchall()
     products = settings.get_products()
     groups: dict[str, dict] = {}    # имя ребёнка -> {name, orders[], delivered_n}
+
+    def _group(display_name: str) -> dict:
+        """Группируем по НОРМАЛИЗОВАННОМУ имени: SQLite lower() не сворачивает
+        кириллицу, и «Миша»/«миша» дали бы две группы."""
+        key = free_names.normalize_name(display_name)
+        grp = groups.get(key)
+        if grp is None:
+            grp = groups[key] = {"name": display_name, "orders": [], "free": [],
+                                 "delivered_n": 0}
+        return grp
+
     for o in orders:
         child = json.loads(o["child_json"] or "{}")
         name = o["child_name"] or child.get("name") or "Без имени"
-        g = groups.setdefault(name, {"name": name, "orders": [], "delivered_n": 0})
+        # NB: локальную переменную здесь НЕЛЬЗЯ называть g — это затенило бы flask.g
+        # для всей функции (старая мина, убрана вместе с этой правкой).
+        grp = _group(name)
         drawings = db.execute(
             "SELECT id FROM drawings WHERE order_id = ? ORDER BY id",
             (o["id"],)).fetchall()
@@ -318,8 +331,8 @@ def cabinet():
         product = products.get(o["product_code"], {})
         ready = bool(o["status"] == "delivered" and o["public_token"])
         if ready:
-            g["delivered_n"] += 1
-        g["orders"].append({
+            grp["delivered_n"] += 1
+        grp["orders"].append({
             "id": o["id"],
             "date": (o["paid_at"] or o["created_at"])[:10],
             "product_title": product.get("title", o["product_code"]),
@@ -328,10 +341,25 @@ def cabinet():
             "report_url": f"/r/{o['public_token']}" if o["public_token"] else None,
             "drawing_ids": [d["id"] for d in drawings],
         })
+    # Бесплатные разборы — в те же группы по ребёнку. До покупки это и есть
+    # «недоделанная корзина», которая продаёт сама.
+    free_rows = db.execute(
+        "SELECT * FROM free_analyses WHERE customer_id = ? AND status = 'done'"
+        " ORDER BY id DESC", (customer["id"],)).fetchall()
+    for f in free_rows:
+        grp = _group(f["child_name"] or "Без имени")
+        grp["free"].append({
+            "token": f["token"],
+            "date": (f["delivered_at"] or f["created_at"] or "")[:10],
+            "age": f["child_age"],
+            "image_deleted": bool(f["deleted_at"]),
+            "order_url": f"/order?free={f['token']}",
+        })
+
     track_event("cabinet_view", customer_id=customer["id"])
     return render_template("cabinet.html", customer=customer,
                            groups=list(groups.values()),
-                           has_orders=bool(orders))
+                           has_orders=bool(orders) or bool(free_rows))
 
 
 @bp.get("/cabinet/drawing/<int:drawing_id>")
@@ -377,7 +405,8 @@ def cabinet_report_pdf(order_id: int):
 
 # --- Заказ (Phase 5) ---
 
-def _render_order_form(values: dict, errors: dict, status: int = 200):
+def _render_order_form(values: dict, errors: dict, status: int = 200,
+                       reused=None):
     products = settings.get_products()
     code = request.args.get("product", values.get("product", "snapshot"))
     if code not in products or not products[code]["enabled"]:
@@ -393,12 +422,37 @@ def _render_order_form(values: dict, errors: dict, status: int = 200):
         values=values,
         errors=errors,
         current_year=datetime.date.today().year,
+        reused=reused,
     ), status
+
+
+def _free_prefill(token: str):
+    """Данные бесплатного разбора для предзаполнения формы заказа.
+
+    ЧЕСТНАЯ ОГОВОРКА: «без повторной загрузки» не равно «без повторного заполнения».
+    birth_ym, drawn_at и theme обязательны в платной форме и во фремиуме не собираются,
+    поэтому предзаполняем только имя и обращение.
+    """
+    from app.free import free_row_for_order
+    row = free_row_for_order(token)
+    if row is None:
+        return None, {}
+    values = {"child_name": row["child_name"]}
+    if row["address_form"] in ("он", "она"):
+        values["child_gender"] = "м" if row["address_form"] == "он" else "ж"
+    return ({"token": token, "name": row["child_name"],
+             "thumb": f"/free/img/{token}"}, values)
 
 
 @bp.get("/order")
 def order_form():
     track_event("order_form_view", {"product": request.args.get("product", "snapshot")})
+    free_token = request.args.get("free")
+    if free_token:
+        reused, values = _free_prefill(free_token)
+        if reused:
+            track_event("order_form_from_free")
+            return _render_order_form(values=values, errors={}, reused=reused)
     return _render_order_form(values={}, errors={})
 
 
@@ -406,7 +460,21 @@ def order_form():
 def order_submit():
     files = [request.files[f"d{i}_file"] for i in (1, 2, 3)
              if request.files.get(f"d{i}_file") and request.files[f"d{i}_file"].filename]
-    try:
+    # Переиспользование бесплатного рисунка: собираем FileStorage из сохранённого файла
+    # и ставим его первым. app/orders.py при этом НЕ меняется вообще.
+    free_token = (request.form.get("free_token") or "").strip()
+    reused = None
+    if free_token:
+        from app.free import materialize_free_drawing
+        fs = materialize_free_drawing(free_token)
+        if fs is not None:
+            files.insert(0, fs)
+            reused, _ = _free_prefill(free_token)
+    products = settings.get_products()
+    code = request.form.get("product", "snapshot")
+    max_n = products.get(code, products["snapshot"])["drawings_max"]
+    files = files[:max_n]     # обрезаем ПОСЛЕ подстановки, иначе родитель получит
+    try:                      # «не больше N» без указания, какой лишний
         order_id = validate_and_create_order(
             request.form, files,
             visitor_id=getattr(g, "visitor_id", None),
@@ -415,7 +483,8 @@ def order_submit():
     except FormError as e:
         track_event("order_form_errors", {"fields": list(e.errors)})
         # to_dict(), не dict(): werkzeug MultiDict при dict() даёт списки значений
-        return _render_order_form(values=request.form.to_dict(), errors=e.errors, status=400)
+        return _render_order_form(values=request.form.to_dict(), errors=e.errors,
+                                  status=400, reused=reused)
     track_event("order_created", {"order_id": order_id, "drawings": len(files)})
     db = get_db()
     order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()

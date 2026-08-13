@@ -21,7 +21,7 @@ from flask import (Blueprint, abort, redirect, render_template, request,
                    Response, url_for)
 
 from app import geoip, jobs
-from app.db import get_db
+from app.db import get_db, now
 from config import settings
 
 bp_admin = Blueprint("admin", __name__, url_prefix="/admin")
@@ -40,6 +40,7 @@ SECTIONS = [
     ("admin.site_settings", "Настройки сайта"),
     ("admin.report_texts", "Тексты отчёта"),
     ("admin.emails", "Письма"),
+    ("admin.free", "Бета"),
 ]
 
 FUNNEL_STEPS = [
@@ -446,6 +447,153 @@ def actions():
     return _render("admin.actions", "admin/actions.html",
                    days=days, periods=PERIODS, q=q,
                    summary=summary_view, total=total, recent=recent_view, bots=bots)
+
+
+# --- Бета фремиума: разборы, библиотека трактовок, воронка ------------------------
+
+# Сколько минут в очереди считаем зависанием: free_worker опрашивает раз в секунду,
+# генерация ~минута. Пять минут в 'queued' означают, что воркер не работает.
+FREE_STUCK_MINUTES = 5
+
+FREE_VERDICTS = [("confirmed", "подтверждено источником"),
+                 ("narrow", "только в узком контексте"),
+                 ("folklore", "фольклор")]
+
+
+def _heartbeats(db) -> list[dict]:
+    """Живы ли фоновые юниты. deploy.sh новый юнит не поднимает, мониторинга нет —
+    без этой строки после перезагрузки бокса разборы молча перестали бы делаться."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    out = []
+    seen = {r["name"]: r["last_seen_at"] for r in
+            db.execute("SELECT name, last_seen_at FROM service_heartbeat")}
+    for name, label in (("free_worker", "free_worker (бесплатные разборы)"),
+                        ("worker", "worker (платные отчёты)")):
+        ts = seen.get(name)
+        ago = None
+        if ts:
+            try:
+                ago = int((now - datetime.datetime.fromisoformat(ts)).total_seconds())
+            except ValueError:
+                ago = None
+        out.append({"name": name, "label": label, "ago": ago,
+                    "ok": ago is not None and ago < 120})
+    return out
+
+
+@bp_admin.get("/free")
+def free():
+    _guard()
+    days, since = _period()
+    db = get_db()
+
+    rows = db.execute(
+        "SELECT * FROM free_analyses WHERE created_at >= ?"
+        " ORDER BY id DESC LIMIT 300", (since,)).fetchall()
+    items = []
+    for r in rows:
+        interps = db.execute(
+            "SELECT * FROM free_interpretations WHERE analysis_id = ? ORDER BY id",
+            (r["id"],)).fetchall()
+        items.append({
+            "id": r["id"], "token": r["token"],
+            "created": (r["created_at"] or "")[:16].replace("T", " "),
+            "child": r["child_name"], "age": r["child_age"],
+            "concern": r["concern_key"], "duration": r["duration_key"],
+            "status": r["status"], "reject": r["reject_reason"],
+            "flags": r["flags_json"] or "", "correlate": r["correlate"],
+            "ask_variant": r["ask_variant"], "email": r["email"] or "",
+            "seconds": r["gen_seconds"], "tok_in": r["prompt_tokens"],
+            "tok_out": r["output_tokens"], "repairs": r["repair_rounds"],
+            "dropped": r["hypothesis_dropped"],
+            "image_deleted": bool(r["deleted_at"]),
+            "parent_text": r["parent_text"] or "",
+            "interps": [dict(i) for i in interps],
+        })
+
+    # Библиотека: группировка по ключу + голоса родителей + текущая разметка.
+    lib = db.execute(
+        "SELECT i.key, COUNT(*) AS n,"
+        " SUM(CASE WHEN i.parent_vote = 'yes' THEN 1 ELSE 0 END) AS yes_n,"
+        " SUM(CASE WHEN i.parent_vote = 'no' THEN 1 ELSE 0 END) AS no_n,"
+        " MIN(i.created_at) AS first_at, k.verdict, k.note"
+        " FROM free_interpretations i"
+        " LEFT JOIN free_interpretation_keys k ON k.key = i.key"
+        " GROUP BY i.key ORDER BY n DESC").fetchall()
+    library = []
+    for k in lib:
+        examples = db.execute(
+            "SELECT phrase, new_key_description, age_scope FROM free_interpretations"
+            " WHERE key = ? ORDER BY id DESC LIMIT 3", (k["key"],)).fetchall()
+        library.append({**dict(k), "examples": [dict(e) for e in examples]})
+
+    funnel = []
+    for status, label in (("answers", "дошли до вывода"), ("queued", "загрузили рисунок"),
+                          ("running", "в работе"), ("done", "получили разбор"),
+                          ("rejected", "отказ (непригодно)"), ("failed", "сбой")):
+        n = db.execute("SELECT COUNT(*) c FROM free_analyses"
+                       " WHERE status = ? AND created_at >= ?",
+                       (status, since)).fetchone()["c"]
+        funnel.append({"status": status, "label": label, "n": n})
+    voted = db.execute(
+        "SELECT COUNT(*) c FROM free_interpretations WHERE parent_vote IS NOT NULL"
+    ).fetchone()["c"]
+    with_email = db.execute(
+        "SELECT COUNT(*) c FROM free_analyses WHERE email IS NOT NULL"
+        " AND created_at >= ?", (since,)).fetchone()["c"]
+
+    stuck = db.execute(
+        "SELECT COUNT(*) c FROM free_analyses WHERE status IN ('queued','running')"
+        " AND created_at < ?",
+        ((datetime.datetime.now(datetime.timezone.utc)
+          - datetime.timedelta(minutes=FREE_STUCK_MINUTES)).isoformat(timespec="seconds"),
+         )).fetchone()["c"]
+
+    return _render("admin.free", "admin/free.html", days=days, periods=PERIODS,
+                   items=items, library=library, funnel=funnel, voted=voted,
+                   with_email=with_email, stuck=stuck, verdicts=FREE_VERDICTS,
+                   heartbeats=_heartbeats(db), stuck_minutes=FREE_STUCK_MINUTES,
+                   msg=request.args.get("msg"))
+
+
+@bp_admin.post("/free/key/<path:key>")
+def free_key_verdict(key: str):
+    """Разметка трактовки ПО КЛЮЧУ — это и есть главный результат беты."""
+    _guard()
+    verdict = (request.form.get("verdict") or "").strip()
+    note = (request.form.get("note") or "").strip()
+    if verdict not in {v[0] for v in FREE_VERDICTS}:
+        return redirect(url_for("admin.free", msg="Неизвестный вердикт"))
+    db = get_db()
+    db.execute(
+        "INSERT INTO free_interpretation_keys (key, verdict, note, first_seen_at,"
+        " verdict_at) VALUES (?, ?, ?, ?, ?)"
+        " ON CONFLICT(key) DO UPDATE SET verdict = excluded.verdict,"
+        " note = excluded.note, verdict_at = excluded.verdict_at",
+        (key, verdict, note, now(), now()))
+    db.commit()
+    return redirect(url_for("admin.free", msg=f"Ключ {key}: {verdict}"))
+
+
+@bp_admin.post("/free/<int:analysis_id>/delete-image")
+def free_delete_image(analysis_id: int):
+    """Удалить фото по просьбе родителя. В проекте не было НИ ОДНОГО пути удаления,
+    а первый такой запрос неизбежен: мы храним рисунки чужих детей."""
+    _guard()
+    from app.free_retention import delete_image
+    ok = delete_image(get_db(), analysis_id)
+    return redirect(url_for("admin.free",
+                            msg="Фото удалено" if ok else "Файла уже нет"))
+
+
+@bp_admin.post("/free/<int:analysis_id>/allow-replace")
+def free_allow_replace(analysis_id: int):
+    """Разрешить ещё одну бесплатную попытку в спорном случае (§9)."""
+    _guard()
+    db = get_db()
+    db.execute("UPDATE free_analyses SET allow_replace = 1 WHERE id = ?", (analysis_id,))
+    db.commit()
+    return redirect(url_for("admin.free", msg="Разрешена повторная загрузка"))
 
 
 @bp_admin.get("/orders")

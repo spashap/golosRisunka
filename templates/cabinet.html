@@ -62,6 +62,31 @@
       </div>
       {% endfor %}
 
+      {# Бесплатные разборы этого ребёнка. Отсюда платный отчёт заказывается по тому же
+         рисунку, без повторной загрузки, — это и есть «недоделанная корзина». #}
+      {% for f in g.free %}
+      <div class="order-card">
+        <div class="order-card__head">
+          <div>
+            <b>Бесплатный разбор одного рисунка</b>
+            <div class="hint">от {{ f.date }}{% if f.age %}, {{ f.age }} лет{% endif %}</div>
+          </div>
+          <span class="status-pill status-pill--ready">готов</span>
+        </div>
+        {% if not f.image_deleted %}
+        <div class="order-card__thumbs">
+          <img class="thumb" src="/free/img/{{ f.token }}" loading="lazy" alt="">
+        </div>
+        {% endif %}
+        <div class="order-card__actions">
+          <a class="btn btn--ghost" href="/free/r/{{ f.token }}"
+             data-ym-goal="cabinet_open_free">Открыть разбор</a>
+          <a class="btn btn--primary" href="{{ f.order_url }}"
+             data-ym-goal="cabinet_free_to_order">Собрать портрет {{ g.name }}</a>
+        </div>
+      </div>
+      {% endfor %}
+
       {# подсказка-тизер Development-отчёта: место уже зарезервировано в дизайне #}
       {% if g.delivered_n >= 2 %}
       <div class="cab-dev-teaser">

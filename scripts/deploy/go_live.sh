@@ -84,9 +84,29 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+line "2b SYSTEMD: golosrisunka-free (freemium beta worker)"
+cat > /etc/systemd/system/golosrisunka-free.service <<EOF
+[Unit]
+Description=golosrisunka freemium worker
+After=network.target
+
+[Service]
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$APP_DIR
+Environment=PYTHONUNBUFFERED=1
+ExecStart=$APP_DIR/venv/bin/python free_worker.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
 systemctl enable --now golosrisunka-web.service
 systemctl enable --now golosrisunka-worker.service
+systemctl enable --now golosrisunka-free.service
 sleep 2
 systemctl --no-pager --lines=0 status golosrisunka-web.service  | head -4 || true
 systemctl --no-pager --lines=0 status golosrisunka-worker.service | head -4 || true

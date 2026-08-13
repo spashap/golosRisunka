@@ -1,0 +1,125 @@
+{% extends "_base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}Разбор рисунка — {{ site_name }}{% endblock %}
+{% block description %}Разбор одного детского рисунка.{% endblock %}
+{% block body %}
+<section class="section">
+  <div class="wrap" style="max-width:640px">
+
+    <div id="free-wizard">
+      <div class="car-dots" id="free-dots" aria-hidden="true">
+        <span class="car-dot is-active"></span><span class="car-dot"></span>
+        <span class="car-dot"></span><span class="car-dot"></span>
+      </div>
+
+      {# --- Шаг 0: ребёнок. Минимум полей: каждое лишнее здесь стоит нам человека. --- #}
+      <div class="wizard__step is-on" data-step="0">
+        <h1 class="h2">Разбор рисунка</h1>
+        <p class="sub">Несколько вопросов — и вы сразу увидите, на что стоит посмотреть
+          в рисунке. Рисунок можно добавить потом.</p>
+        <div class="form-card">
+          <div class="field">
+            <label for="f-name">Как зовут ребёнка</label>
+            <div class="hint">Так мы будем называть его в разборе</div>
+            <div class="ctl"><input class="input" id="f-name" type="text"
+                 autocomplete="off" maxlength="40" placeholder="Имя"></div>
+          </div>
+          <div class="field">
+            <label>Сколько лет</label>
+            <div class="hint">Точный возраст — чтобы говорить о вашем ребёнке, а не о полосе</div>
+            <div class="choice choice--grid" id="f-age">
+              {% for a in ages %}
+              <label class="choice__opt"><input class="visually-hidden" type="radio"
+                     name="age" value="{{ a }}"><span>{{ a }}</span></label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="field" id="f-address-field" hidden>
+            <label id="f-address-label">{{ texts.ADDRESS_QUESTION }}</label>
+            <div class="choice choice--grid" id="f-address">
+              <label class="choice__opt"><input class="visually-hidden" type="radio"
+                     name="address" value="он"><span>он</span></label>
+              <label class="choice__opt"><input class="visually-hidden" type="radio"
+                     name="address" value="она"><span>она</span></label>
+            </div>
+          </div>
+          <p class="err" id="f-err0" hidden></p>
+          <button class="btn btn--primary" style="width:100%" data-next="0"
+                  data-ym-goal="free_step0">Дальше</button>
+        </div>
+      </div>
+
+      {# --- Шаг 1: что зацепило. Один выбор, описательные формулировки. --- #}
+      <div class="wizard__step" data-step="1">
+        <h2 class="h2">Что вас зацепило?</h2>
+        <div class="form-card">
+          <div class="choice" id="f-concern">
+            {% for c in concerns %}
+            <label class="choice__opt"><input class="visually-hidden" type="radio"
+                   name="concern" value="{{ c.key }}"
+                   data-ym-goal="free_concern_{{ c.key }}"><span>{{ c.label }}</span></label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      {# --- Шаг 2: длительность. Для «перестал рисовать» своя формулировка,
+             для нейтрального шаг пропускается целиком. --- #}
+      <div class="wizard__step" data-step="2">
+        <h2 class="h2" id="f-dur-q">{{ texts.DURATION_QUESTION }}</h2>
+        <div class="form-card">
+          <div class="choice" id="f-duration">
+            {% for d in durations %}
+            <label class="choice__opt"><input class="visually-hidden" type="radio"
+                   name="duration" value="{{ d.key }}"><span data-raw="{{ d.label }}"></span></label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      {# --- Шаг 3: свободный текст, необязательный. --- #}
+      <div class="wizard__step" data-step="3">
+        <h2 class="h2" id="f-text-q">{{ texts.FREE_TEXT_QUESTION }}</h2>
+        <div class="form-card">
+          <div class="field">
+            <div class="ctl"><textarea class="input input--optional" id="f-text" rows="3"
+                 maxlength="2000" placeholder="{{ texts.FREE_TEXT_PLACEHOLDER }}"></textarea></div>
+          </div>
+          <button class="btn btn--primary" style="width:100%" data-next="3"
+                  data-ym-goal="free_summary">Посмотреть, что можно увидеть</button>
+          <p class="hint" style="text-align:center;margin-top:8px">
+            <a href="#" data-skip="3" data-ym-goal="free_skip_text">Пропустить</a></p>
+        </div>
+      </div>
+
+      {# --- Шаг 4: вывод после вопросов (приходит с сервера) --- #}
+      <div class="wizard__step" data-step="4" id="f-summary"></div>
+    </div>
+
+    {# --- Экран ожидания: её фото и её собственный вопрос, стадии из поля stage. --- #}
+    <div id="free-wait" hidden>
+      <div class="form-card wait-card">
+        <img class="wait-photo" id="w-photo" alt="Загруженный рисунок">
+        <p class="free-report__lead" id="w-hint"></p>
+        <div class="wait-bar" id="w-barwrap"><i id="w-bar"></i></div>
+        <p class="wait-stage" id="w-stage">Готовим фотографию…
+          <span class="dots-wait"><i></i><i></i><i></i></span></p>
+        <div id="w-late" hidden>
+          <p class="sub">Дольше обычного. Можем прислать на почту, когда будет готово.</p>
+          <div class="field"><div class="ctl">
+            <input class="input" id="w-email" type="email" placeholder="you@example.com"></div></div>
+          <button class="btn btn--primary" id="w-email-btn" style="width:100%"
+                  data-ym-goal="free_wait_email">Прислать на почту</button>
+          <p class="hint" style="margin-top:10px">Или сохраните ссылку — разбор будет здесь:<br>
+            <a id="w-link" href="#"></a></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+{% block footer %}{{ super() }}
+<script>window.FREE_CONCERN_STOPPED_Q = {{ texts.DURATION_QUESTION_STOPPED | tojson }};</script>
+<script src="{{ static }}/js/free.js" defer></script>
+{% endblock %}

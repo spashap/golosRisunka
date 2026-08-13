@@ -16,6 +16,9 @@ static/img/samples/
 # приватные материалы (детские рисунки с ФИО, старые сэмплы заказчика, базовый промпт)
 projectSpec/testDrawings/
 projectSpec/reportSamples/
+# Реальные детские рисунки для фремиум-беты. Репозиторий ПУБЛИЧНЫЙ — чужие детские
+# работы в него попадать не должны (та же причина, что у testDrawings выше).
+projectSpec/fremium/testDraw/
 
 # окружение
 venv/
