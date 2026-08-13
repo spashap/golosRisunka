@@ -31,18 +31,18 @@
       {# 3. деталь, портрет (кроме раскраски), вопрос, зазор #}
       <p>{{ a.detail }}</p>
       {% if a.portrait_hint %}<p>{{ a.portrait_hint }}</p>{% endif %}
-      <p><b>Спросите {{ name_gen }} сегодня:</b> <i>{{ a.question_to_child }}</i></p>
+      <p><b>Спросите {{ name_acc }} сегодня:</b> <i>{{ a.question_to_child }}</i></p>
       <p><b>Чего этот лист не показывает.</b> {{ a.unknown_next }}</p>
 
       {# Оценка привязана к конкретной интерпретации, а не к разбору целиком #}
       {% for i in interps %}
       <div class="free-note" data-interp="{{ i.id }}">
-        <p class="hint" style="margin:0 0 6px">Это про {{ name }}?</p>
+        <p class="hint" style="margin:0 0 6px">Это про {{ name_acc }}?</p>
         <div class="free-vote">
           <button class="btn btn--ghost" data-vote="yes" data-id="{{ i.id }}"
-                  data-ym-goal="free_vote_yes">Это про {{ name_gen }}</button>
+                  data-ym-goal="free_vote_yes">Да, это про {{ name_acc }}</button>
           <button class="btn btn--ghost" data-vote="no" data-id="{{ i.id }}"
-                  data-ym-goal="free_vote_no">Не про {{ name_gen }}</button>
+                  data-ym-goal="free_vote_no">Не про {{ name_acc }}</button>
         </div>
         <p class="hint" hidden data-thanks>Спасибо — это и есть самое ценное для нас.</p>
       </div>

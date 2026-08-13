@@ -258,7 +258,8 @@ def result(token: str):
     track_event("free_result_view", {"concern": row["concern_key"]})
     return render_template(
         "free_result.html", r=row, a=data, token=token, name=name,
-        name_gen=T.genitive(name), flags=flags, interps=interps,
+        name_gen=T.genitive(name, address), name_acc=T.accusative(name, address),
+        flags=flags, interps=interps,
         coloring_par=T.g(T.COLORING_PARAGRAPH, address) if "coloring" in flags else None,
         mismatch_par=(T.MISMATCH_PARAGRAPH if row["correlate"] == 0
                       and "coloring" not in flags else None),

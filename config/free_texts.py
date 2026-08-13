@@ -47,7 +47,7 @@ def g(text: str, address_form: str = "он") -> str:
 _HUSH = "жшчщгкх"   # после шипящих и заднеязычных «-а» переходит в «-и», а не в «-ы»
 
 
-def genitive(name: str) -> str:
+def genitive(name: str, address_form: str = "он") -> str:
     """Имя в родительном падеже: «портрет Софии», а не «портрет София».
 
     Покрывает подавляющее большинство русских имён и уменьшительных. Незнакомую
@@ -60,13 +60,40 @@ def genitive(name: str) -> str:
     low = n.lower()
     if low.endswith("а"):
         return n[:-1] + ("и" if len(n) > 1 and low[-2] in _HUSH else "ы")
-    if low.endswith(("я", "ь")):
-        return n[:-1] + "и" if low.endswith("я") else n[:-1] + "я"
+    if low.endswith("я"):
+        return n[:-1] + "и"
+    if low.endswith("ь"):
+        # Игорь -> Игоря, но Любовь -> Любови. Различаем по обращению, как в accusative.
+        return n[:-1] + ("я" if address_form == "он" else "и")
     if low.endswith("й"):
         return n[:-1] + "я"
     if low[-1] in "оеиуыэю":     # Данко, Мэри — не склоняем
         return n
     return n + "а"               # Алекс -> Алекса, Артём -> Артёма
+
+
+def accusative(name: str, address_form: str = "он") -> str:
+    """Имя в винительном падеже: «спросите Дашу», «это про Дашу».
+
+    Родительный тут не годится: «спросите Даши» и «это про Даша» — обе формы неверны,
+    и обе успели попасть в интерфейс. Падеж разный у разных мест, поэтому функции две.
+    """
+    n = (name or "").strip()
+    if not n:
+        return n
+    low = n.lower()
+    if low.endswith("а"):
+        return n[:-1] + "у"
+    if low.endswith("я"):
+        return n[:-1] + "ю"
+    if low.endswith("й"):
+        return n[:-1] + "я"
+    if low.endswith("ь"):
+        # Игорь -> Игоря, но Любовь -> Любовь. Различаем по обращению.
+        return n[:-1] + "я" if address_form == "он" else n
+    if low[-1] in "оеиуыэю":
+        return n
+    return n + "а"
 
 
 def years(n: int) -> str:
@@ -346,7 +373,7 @@ def selling_block(name: str, address_form: str = "он") -> dict:
         directions=" · ".join(SEVEN_DIRECTIONS), name=name,
         ego=_FORMS.get(address_form, _FORMS["он"])["ego"], **f)
     return {"title": SELLING_TITLE, "body": body,
-            "button": RESULT_CTA_BUTTON.format(name=genitive(name), price=price),
+            "button": RESULT_CTA_BUTTON.format(name=genitive(name, address_form), price=price),
             "price": price}
 
 # --- Особые случаи §9: авторские абзацы. Их эмитит СЕРВЕР по флагу модели, а не сама

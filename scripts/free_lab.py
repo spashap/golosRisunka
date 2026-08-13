@@ -321,7 +321,7 @@ def write_index(recs: list[dict], out_dir: Path) -> None:
         p.append(f"<p>{e(r['detail'])}</p>")
         if r.get("portrait_hint"):
             p.append(f"<p>{e(r['portrait_hint'])}</p>")
-        p.append(f"<p><b>Спросите {e(T.genitive(r.get('name','')))} сегодня:</b> "
+        p.append(f"<p><b>Спросите {e(T.accusative(r.get('name',''), r.get('address','он')))} сегодня:</b> "
                  f"<i>{e(r['question'])}</i></p>")
         p.append(f"<p><b>Чего этот лист не показывает.</b> {e(r['unknown'])}</p>")
         # 5. финал. На раскраске — перенаправление, а не продажа: родитель в одном шаге
