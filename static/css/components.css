@@ -859,7 +859,9 @@ html.dk .btn { color: #241A12; }
   font-size: 14px; line-height: 1.55; color: var(--muted);
 }
 
-/* --- Фремиум-мастер (/free). Только токены и шкала --fs-*, как требует бренд-бук. --- */
+/* --- Мастер бесплатного разбора. Только токены и шкала --fs-*, как требует бренд-бук.
+   NB: этот файл целиком инлайнится в лендинг, поэтому URL страницы здесь не пишем —
+   она не должна упоминаться в исходнике публичных страниц. --- */
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
