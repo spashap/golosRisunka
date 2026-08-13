@@ -27,9 +27,11 @@
     {% for b in offer.bullets %}<li>{{ b }}</li>{% endfor %}
   </ul>
 
-  {# Авторская просьба о рисунке — дословно, но теперь под своим заголовком. #}
+  {# Просим ЛЮБОЙ рисунок: требование конкретного добавляло трение на самом дорогом
+     шаге. Подсказка про нужный рисунок осталась, но как необязательная. #}
   <h3 class="h3 offer__how">{{ offer.how }}</h3>
   <p class="offer__ask">{{ ask }}</p>
+  {% if ask_note %}<p class="offer__asknote">{{ ask_note }}</p>{% endif %}
 
   <label class="file-drop offer__drop" for="f-file">
     <img class="preview" hidden alt="">

@@ -175,6 +175,27 @@ OFFER_BULLETS = [
 ]
 
 
+OFFER_HOW = "Какой рисунок подойдёт"
+
+# ⚠️ DRAFT + СМЕНА КОНЦЕПЦИИ (решение заказчика). Раньше мы просили КОНКРЕТНЫЙ рисунок:
+# «обычный, не самый пугающий и не самый необычный» — это было антисмещение данных
+# (§8 первого брифа: иначе оценка родителя мерит его выбор рисунка, а не нашу трактовку).
+# Теперь просим ЛЮБОЙ: требование добавляло трение на самом дорогом шаге. Подсказка про
+# рисунок с названным признаком осталась, но как necessary-nice, а не как условие.
+# Прежние авторские абзацы-просьбы сохранены ниже (ACTION_STANDARD, последние абзацы
+# NEUTRAL_PATH и STOPPED_PATH) — они больше не показываются.
+ASK_ANY = ("Подойдёт любой недавний рисунок. Сфотографируйте его целиком, "
+           "при обычном свете.")
+ASK_NOTES = {
+    "standard": "Если под рукой есть рисунок, где заметно то, что вы отметили, — "
+                "лучше взять его. Но это не обязательно.",
+    "neutral": "Лучше тот, который {on} придумал {sam}, а не срисовал с образца. "
+               "Но это не обязательно.",
+    "stopped": "Если сохранился рисунок с того времени, когда {on} ещё {risoval} {sam}, — "
+               "лучше он. Но подойдёт любой.",
+}
+
+
 def offer_block(name: str, address_form: str = "он") -> dict:
     """Продающий блок экрана вывода. Тексты служебные (DRAFT), авторская просьба о
     рисунке приходит отдельно из assemble_summary()['ask'] и не меняется."""
@@ -186,7 +207,6 @@ def offer_block(name: str, address_form: str = "он") -> dict:
         "how": OFFER_HOW,
         "free_note": OFFER_FREE_NOTE,
     }
-OFFER_HOW = "Как сфотографировать"
 OFFER_FREE_NOTE = "Бесплатно, без карты и без регистрации."
 # Не отдельной стеной после сорока секунд ожидания, а как «куда прислать». Это же
 # закрывает старую дыру: резервный выход обещал письмо, которого у нас не было.
@@ -538,7 +558,8 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
             # Это следствие решения о полосах, а не правка авторского текста.
             paragraphs.append(g(p, address_form)
                               .replace("{age} {years}", BAND_LABELS[band]))
-        return {"paragraphs": paragraphs[:-1], "ask": paragraphs[-1],
+        return {"paragraphs": paragraphs[:-1], "ask": ASK_ANY,
+                "ask_note": g(ASK_NOTES["neutral"], address_form),
                 "ask_variant": "neutral", "override_used": False}
 
     # 1. Зеркало: тревога простыми словами + фраза про длительность.
@@ -560,7 +581,8 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
     if concern_key == "stopped":
         for p in STOPPED_PATH:
             paragraphs.append(g(p, address_form))
-        return {"paragraphs": paragraphs[:-1], "ask": paragraphs[-1],
+        return {"paragraphs": paragraphs[:-1], "ask": ASK_ANY,
+                "ask_note": g(ASK_NOTES["stopped"], address_form),
                 "ask_variant": "stopped", "override_used": override_used}
 
     # 4-5. Переход и действие.
@@ -568,7 +590,8 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
     # Просьбу о рисунке отдаём ОТДЕЛЬНО: на экране она уходит под заголовок продающего
     # блока. Сам текст не меняется — меняется только его место (§5 требует, чтобы
     # строка про «обычный, не самый пугающий» стояла везде, где мы просим рисунок).
-    return {"paragraphs": paragraphs, "ask": ACTION_STANDARD,
+    return {"paragraphs": paragraphs, "ask": ASK_ANY,
+            "ask_note": g(ASK_NOTES["standard"], address_form),
             "ask_variant": "standard", "override_used": override_used}
 
 

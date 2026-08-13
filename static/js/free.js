@@ -9,7 +9,7 @@
   var steps = Array.prototype.slice.call(wiz.querySelectorAll(".wizard__step"));
   var dots = document.getElementById("free-dots");
   var state = { name: "", band: "", address: "", concern: "", duration: "", text: "" };
-  var token = null, objUrl = null;
+  var token = null, objUrl = null, current = 0;
 
   function saveDraft() {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ s: state, _ts: Date.now() })); } catch (e) {}
@@ -30,13 +30,36 @@
     if (state.name) addressUI();
   }
 
-  function show(i) {
+  // У каждого шага свой адрес: «Назад» в браузере возвращает на предыдущий ШАГ,
+  // а не выбрасывает со страницы. Именно так это ведёт себя на телефоне, где кнопка
+  // «назад» — основной способ исправить ответ.
+  var STEP_IDS = ["name", "concern", "when", "result", "wait"];
+
+  function show(i, push) {
+    current = i;
     steps.forEach(function (s) { s.classList.toggle("is-on", +s.dataset.step === i); });
     if (dots) Array.prototype.forEach.call(dots.children, function (d, n) {
       d.classList.toggle("is-active", n <= Math.min(i, 2));
     });
+    var hash = "#" + (STEP_IDS[i] || "name");
+    if (push !== false && location.hash !== hash) {
+      history.pushState({ step: i }, "", hash);
+    }
     window.scrollTo(0, 0);
   }
+
+  window.addEventListener("popstate", function (e) {
+    // Возврат с экрана ожидания к мастеру тоже должен работать.
+    var wait = document.getElementById("free-wait");
+    if (wait && !wait.hidden) {
+      wait.hidden = true;
+      document.getElementById("free-wizard").hidden = false;
+    }
+    var i = (e.state && typeof e.state.step === "number")
+      ? e.state.step : STEP_IDS.indexOf((location.hash || "#name").slice(1));
+    if (i === 4) return;                 // на экран ожидания «вперёд» не возвращаем
+    show(i < 0 ? 0 : i, false);
+  });
 
   // ---------- обращение: однозначные имена предвыбираем, спорные спрашиваем ----------
   var MALE_A = ["никита","илья","кузьма","лёва","лева","гоша","фома","савва","данила",
@@ -235,6 +258,9 @@
   function startWait() {
     document.getElementById("free-wizard").hidden = true;
     document.getElementById("free-wait").hidden = false;
+    // Своя запись истории и здесь: «назад» с ожидания возвращает к выводу, а не
+    // проматывает через два шага.
+    history.pushState({ step: 4 }, "", "#wait");
     var photo = document.getElementById("w-photo");
     photo.src = objUrl || ("/free/img/" + token);
     document.getElementById("w-hint").textContent =
@@ -267,4 +293,7 @@
     var el = document.getElementById(id); if (el) el.dataset.def = el.textContent;
   });
   restoreDraft();
+  // Заменяем текущую запись истории, чтобы первый «назад» с шага 2 вёл на шаг 1,
+  // а не на страницу, с которой человек пришёл.
+  history.replaceState({ step: 0 }, "", "#name");
 })();
