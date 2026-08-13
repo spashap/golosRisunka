@@ -39,9 +39,10 @@
 <link rel="preload" href="/static/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/css/fonts.css">
-<link rel="stylesheet" href="/static/css/tokens.css">
-<link rel="stylesheet" href="/static/css/components.css">
+
+<link rel="stylesheet" href="/static/css/fonts.css?v=1.064">
+<link rel="stylesheet" href="/static/css/tokens.css?v=1.064">
+<link rel="stylesheet" href="/static/css/components.css?v=1.064">
 
 
 
@@ -150,6 +151,7 @@
     
 
     <form method="post" enctype="multipart/form-data" id="order-form" data-ym-goal-submit="order_submit_form">
+      
       <input type="hidden" name="product" value="snapshot">
 
       <div class="form-card">
@@ -284,6 +286,8 @@
           <h3><span class="db-num">1</span> · Рисунок</h3>
           <div class="field">
             <label>Фото рисунка *</label>
+            
+            
             <label class="file-drop" for="d1_file">
               <img class="preview" hidden alt="">
               <div class="fd-icon">🖼️</div>
@@ -291,6 +295,7 @@
               <input type="file" id="d1_file" name="d1_file"
                      accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*">
             </label>
+            
             
             <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа — мы не публикуем работы и не передаём их третьим лицам.</div>
           </div>
@@ -466,6 +471,8 @@
           <h3><span class="db-num">2</span> · Рисунок</h3>
           <div class="field">
             <label>Фото рисунка *</label>
+            
+            
             <label class="file-drop" for="d2_file">
               <img class="preview" hidden alt="">
               <div class="fd-icon">🖼️</div>
@@ -473,6 +480,7 @@
               <input type="file" id="d2_file" name="d2_file"
                      accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*">
             </label>
+            
             
             <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа — мы не публикуем работы и не передаём их третьим лицам.</div>
           </div>
@@ -648,6 +656,8 @@
           <h3><span class="db-num">3</span> · Рисунок</h3>
           <div class="field">
             <label>Фото рисунка *</label>
+            
+            
             <label class="file-drop" for="d3_file">
               <img class="preview" hidden alt="">
               <div class="fd-icon">🖼️</div>
@@ -655,6 +665,7 @@
               <input type="file" id="d3_file" name="d3_file"
                      accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*">
             </label>
+            
             
             <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа — мы не публикуем работы и не передаём их третьим лицам.</div>
           </div>
@@ -888,7 +899,7 @@
     <span class="foot__brand">Голос рисунка</span>
     Образовательное наблюдение, не медицинская диагностика · golosrisunka.ru
     
-    <span class="foot-ver">V1.048</span>
+    <span class="foot-ver">V1.064</span>
   </div>
 </footer>
 </body>

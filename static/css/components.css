@@ -496,8 +496,6 @@ html.dk .btn { color: #241A12; }
                                      color: var(--accent2); font-weight: 700; }
 .price-card .btn { margin-top: auto; }       /* кнопка прижата к низу карточки */
 .price-card--soon { opacity: .82; }
-/* Бесплатная карточка ведёт взгляд: акцентная рамка вместо тонкой линии. */
-.price-card--free { border: 2px solid var(--accent); box-shadow: var(--shadow-hard); }
 .price-card .p-note { margin-top: 10px; text-align: center; color: var(--muted);
                       font-size: var(--fs-micro); }
 
@@ -514,10 +512,32 @@ html.dk .btn { color: #241A12; }
 .free-band .btn { flex: 0 0 auto; }
 @media (max-width: 560px) { .free-band .btn { width: 100%; } }
 
-/* Второй вход в герое — бесплатный, рядом с платным. */
-.hero__free { margin-left: 12px; }
+/* Тревожная дверь после цены. Намеренно НЕ карточка тарифа: другая форма, другой фон,
+   без цены — иначе читалась бы третьим тарифом и снова конкурировала бы с платным. */
+.worry-band {
+  max-width: 720px; margin: 0 auto; text-align: center;
+  padding: 30px 28px 26px; border-radius: var(--radius-card);
+  background: var(--alt); border: 1px dashed var(--accent);
+}
+.worry-band__title { font-family: var(--font-head); font-weight: 900;
+                     font-size: var(--fs-h3); margin-bottom: 10px; }
+.worry-band__text { font-size: var(--fs-body); line-height: 1.6; color: var(--muted);
+                    margin: 0 auto 18px; max-width: 56ch; }
+.worry-band__note { margin-top: 10px; font-size: var(--fs-micro); color: var(--soft); }
+
+/* Прайс из одной карточки — не растягиваем её на всю ширину. */
+.price-grid--single { grid-template-columns: minmax(0, 420px); justify-content: center; }
+
+/* Второй вход в герое: тихая текстовая ссылка. Называет состояние, а не продукт,
+   и намеренно тише платной кнопки — тот, кто пришёл покупать, её не заметит. */
+.hero__worry {
+  display: inline-block; margin-left: 16px; vertical-align: middle;
+  font-size: var(--fs-small); font-weight: 600; color: var(--accent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.hero__worry:hover { color: var(--accent-2); }
 @media (max-width: 560px) {
-  .hero__free { display: block; margin: 12px 0 0; width: 100%; }
+  .hero__worry { display: block; margin: 14px 0 0; }
 }
 .price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: var(--fs-small);
                            font-family: var(--font-body); }

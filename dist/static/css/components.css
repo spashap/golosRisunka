@@ -288,6 +288,11 @@ html.dk .btn { color: #241A12; }
 
 /* загрузка рисунка */
 .file-drop {
+  /* display:block ОБЯЗАТЕЛЕН: класс висит на <label>, а label по умолчанию инлайновый.
+     Инлайновый элемент с блочными детьми (.fd-icon/.fd-text) рвёт рамку на фрагменты,
+     а содержимое вываливается наружу. Баг был и в платной форме заказа — этот
+     компонент с самого начала задумывался блочным. */
+  display: block;
   border: 2px dashed var(--badge); border-radius: 12px; padding: 22px;
   text-align: center; cursor: pointer; background: var(--bg); transition: .15s;
 }
@@ -491,6 +496,49 @@ html.dk .btn { color: #241A12; }
                                      color: var(--accent2); font-weight: 700; }
 .price-card .btn { margin-top: auto; }       /* кнопка прижата к низу карточки */
 .price-card--soon { opacity: .82; }
+.price-card .p-note { margin-top: 10px; text-align: center; color: var(--muted);
+                      font-size: var(--fs-micro); }
+
+/* Полоса «проверьте бесплатно» внутри текстовых секций лендинга. */
+.free-band {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  margin-top: 26px; padding: 20px 24px; border-radius: var(--radius-card);
+  background: var(--bg-soft); border: 2px solid var(--accent);
+}
+.free-band--wide { margin-top: 0; }
+.free-band__text { flex: 1 1 260px; font-size: var(--fs-body); line-height: 1.5; }
+.free-band__text b { display: block; font-family: var(--font-head); font-weight: 800;
+                     font-size: var(--fs-h3); margin-bottom: 4px; }
+.free-band .btn { flex: 0 0 auto; }
+@media (max-width: 560px) { .free-band .btn { width: 100%; } }
+
+/* Тревожная дверь после цены. Намеренно НЕ карточка тарифа: другая форма, другой фон,
+   без цены — иначе читалась бы третьим тарифом и снова конкурировала бы с платным. */
+.worry-band {
+  max-width: 720px; margin: 0 auto; text-align: center;
+  padding: 30px 28px 26px; border-radius: var(--radius-card);
+  background: var(--alt); border: 1px dashed var(--accent);
+}
+.worry-band__title { font-family: var(--font-head); font-weight: 900;
+                     font-size: var(--fs-h3); margin-bottom: 10px; }
+.worry-band__text { font-size: var(--fs-body); line-height: 1.6; color: var(--muted);
+                    margin: 0 auto 18px; max-width: 56ch; }
+.worry-band__note { margin-top: 10px; font-size: var(--fs-micro); color: var(--soft); }
+
+/* Прайс из одной карточки — не растягиваем её на всю ширину. */
+.price-grid--single { grid-template-columns: minmax(0, 420px); justify-content: center; }
+
+/* Второй вход в герое: тихая текстовая ссылка. Называет состояние, а не продукт,
+   и намеренно тише платной кнопки — тот, кто пришёл покупать, её не заметит. */
+.hero__worry {
+  display: inline-block; margin-left: 16px; vertical-align: middle;
+  font-size: var(--fs-small); font-weight: 600; color: var(--accent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.hero__worry:hover { color: var(--accent-2); }
+@media (max-width: 560px) {
+  .hero__worry { display: block; margin: 14px 0 0; }
+}
 .price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: var(--fs-small);
                            font-family: var(--font-body); }
 
@@ -858,3 +906,190 @@ html.dk .btn { color: #241A12; }
   background: color-mix(in srgb, var(--badge) 7%, transparent);
   font-size: 14px; line-height: 1.55; color: var(--muted);
 }
+
+/* --- Мастер бесплатного разбора. Только токены и шкала --fs-*, как требует бренд-бук.
+   NB: этот файл целиком инлайнится в лендинг, поэтому URL страницы здесь не пишем —
+   она не должна упоминаться в исходнике публичных страниц. --- */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* Выбор одного варианта. В проекте не было ни одного radio — строим на <label> со
+   скрытым input: корректно с клавиатуры и скринридером и работает без JS.
+   Подсветка через input:checked + сиблинг, НЕ через :has() (старый мобильный Safari). */
+.choice { display: grid; gap: 8px; margin: 6px 0 2px; }
+.choice--grid { grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); }
+.choice__opt { display: block; position: relative; cursor: pointer; }
+.choice__opt > span {
+  display: block; padding: 13px 16px; border-radius: var(--radius-sm);
+  border: 2px solid var(--line); background: var(--paper);
+  font-size: var(--fs-body); line-height: 1.4; color: var(--ink);
+  transition: border-color .12s, background .12s;
+}
+.choice--grid .choice__opt > span { text-align: center; padding: 13px 6px; }
+/* Восемь длинных фраз тревог должны поместиться в экран телефона без прокрутки:
+   плотнее вертикаль и на шаг мельче кегль — но кегль всё равно из шкалы токенов. */
+.choice--tight { gap: 6px; }
+.choice--tight .choice__opt > span {
+  padding: 10px 13px; font-size: var(--fs-small); line-height: 1.35;
+}
+.choice--wide { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.choice--wide .choice__opt > span {
+  text-align: left; padding: 11px 13px; font-size: var(--fs-small);
+}
+/* Строка обращения «Миша · он · изменить» — не отдельный шаг мастера. */
+.addr-line {
+  margin: -4px 0 14px; font-size: var(--fs-small); color: var(--muted);
+}
+.addr-line a { color: var(--accent); }
+.choice__opt > input:focus-visible + span { outline: 3px solid var(--accent-2); }
+.choice__opt > input:checked + span {
+  border-color: var(--accent); background: color-mix(in srgb, var(--badge) 12%, var(--paper));
+  font-weight: 600;
+}
+.choice__opt:hover > span { border-color: var(--accent-2); }
+
+/* Кнопка «назад» внутри шага: на телефоне это основной способ исправить ответ,
+   и полагаться только на системную кнопку браузера нельзя. */
+.wiz-back {
+  display: inline-block; margin-bottom: 10px; padding: 6px 0;
+  color: var(--muted); font-size: var(--fs-small); font-weight: 600;
+}
+.wiz-back:hover { color: var(--accent); }
+
+/* Шаги мастера: показываем по одному. Индикатор прогресса переиспользует .car-dots. */
+.wizard__step { display: none; }
+.wizard__step.is-on { display: block; }
+
+/* Экран ожидания: честные стадии из поля stage, а не поддельный прогресс. */
+.wait-card { text-align: center; }
+.wait-photo {
+  max-width: 100%; max-height: 46vh; border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card); margin: 0 auto 14px; display: block;
+}
+.wait-bar { height: 6px; border-radius: 99px; background: var(--alt); overflow: hidden; }
+.wait-bar > i {
+  display: block; height: 100%; width: 10%; border-radius: 99px;
+  background: var(--accent); transition: width .6s ease;
+}
+.wait-stage { margin-top: 10px; color: var(--muted); font-size: var(--fs-small); }
+.dots-wait > i {
+  display: inline-block; width: 6px; height: 6px; margin: 0 2px; border-radius: 50%;
+  background: var(--accent); animation: dotpulse 1.2s infinite ease-in-out;
+}
+.dots-wait > i:nth-child(2) { animation-delay: .2s; }
+.dots-wait > i:nth-child(3) { animation-delay: .4s; }
+@keyframes dotpulse { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .dots-wait > i { animation: none; opacity: .6; }
+  .wait-bar > i { transition: none; }
+}
+
+/* Готовый разбор: читается как продолжение кабинета, а не как отдельный лендинг. */
+.free-report { max-width: 640px; margin: 0 auto; }
+.free-report p { font-size: var(--fs-body); line-height: 1.62; margin: 0 0 15px; }
+.free-report__lead { font-size: var(--fs-lead); line-height: 1.5; }
+.free-note {
+  padding: 12px 16px; border-radius: var(--radius-sm); margin: 0 0 15px;
+  background: var(--alt); border-left: 3px solid var(--accent2);
+}
+/* Финал разбора — САМЫЙ заметный блок страницы, а не самый тихий: это единственное
+   место, где мы просим денег. Оформление то же, что у оффера на экране вывода. */
+.free-sell {
+  margin: 30px 0 10px; padding: 26px 24px 22px;
+  background: var(--paper); border: 2px solid var(--accent);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-hard);
+}
+.free-sell__title { margin: 12px 0 12px; }
+.free-sell__lead { font-size: var(--fs-lead); line-height: 1.5; margin: 0 0 14px; }
+.free-sell .btn--primary { margin-top: 6px; }
+.free-sell__price {
+  text-align: center; margin: 14px 0 4px;
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-h3); color: var(--ink);
+}
+.free-sell__old { color: var(--soft); text-decoration: line-through; font-weight: 600;
+                  font-size: var(--fs-body); margin-left: 8px; }
+.free-sell__guarantee {
+  text-align: center; margin: 12px 0 0; font-size: var(--fs-small);
+  color: var(--muted);
+}
+.free-sell__guarantee b { color: var(--sage); }
+.free-vote { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 0; }
+
+/* Трактовка — отдельный блок, а не абзац прозы: родитель должен видеть, где
+   наблюдение, а где интерпретация, и на чём она основана. */
+.interp {
+  margin: 18px 0; padding: 18px 20px; border-radius: var(--radius-card);
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-left: 4px solid var(--accent2);
+}
+.interp__label {
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-micro);
+  letter-spacing: .4px; text-transform: uppercase; color: var(--accent2);
+  margin-bottom: 8px;
+}
+.interp__text { font-size: var(--fs-body); line-height: 1.6; margin: 0 0 10px; }
+.interp__hedge { font-size: var(--fs-small); color: var(--muted); margin: 0 0 10px; }
+.interp__src {
+  font-size: var(--fs-micro); color: var(--muted); margin: 0;
+  padding-top: 10px; border-top: 1px solid var(--line);
+}
+.interp__srcnote { font-style: normal; }
+
+/* Вывод после вопросов: у каждого абзаца своя роль, и она должна быть видна.
+   Зеркало ведёт, возрастной якорь — спокойный фон, линза — врезка с действием. */
+.summary {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--radius-card); padding: 24px 22px 20px;
+  box-shadow: var(--shadow-card); margin-bottom: 8px;
+}
+.summary__label {
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-micro);
+  letter-spacing: .5px; text-transform: uppercase; color: var(--accent2);
+  margin-bottom: 8px;
+}
+.summary__title { margin: 0 0 10px; }
+.summary__explainer {
+  font-size: var(--fs-small); line-height: 1.55; color: var(--muted);
+  padding-bottom: 16px; margin: 0 0 16px; border-bottom: 1px solid var(--line);
+}
+.summary__p { font-size: var(--fs-body); line-height: 1.62; margin: 0 0 15px; }
+.summary__p--lead { font-size: var(--fs-lead); line-height: 1.5; }
+.summary__lens {
+  margin: 18px 0; padding: 16px 18px; border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--badge) 10%, var(--paper));
+  border-left: 4px solid var(--accent);
+}
+.summary__lens-label {
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-micro);
+  letter-spacing: .4px; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 6px;
+}
+.summary__lens-q { font-size: var(--fs-body); line-height: 1.55; margin: 0; }
+.summary__transition {
+  font-size: var(--fs-body); line-height: 1.6; margin: 16px 0 0;
+  padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted);
+}
+
+/* Экран вывода — точка продажи бесплатного предложения, а не форма загрузки.
+   Поэтому карточка с акцентной рамкой, заголовком, списком выгод и крупным CTA. */
+.offer {
+  margin: 26px 0 20px; padding: 26px 24px 22px;
+  background: var(--paper); border: 2px solid var(--accent);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-hard);
+}
+.offer__title { margin: 12px 0 10px; }
+.offer__lead { font-size: var(--fs-lead); line-height: 1.5; color: var(--ink); margin: 0 0 16px; }
+.offer__list { margin: 0 0 20px; }
+.offer__how { margin: 20px 0 8px; color: var(--accent); }
+.offer__ask {
+  font-size: var(--fs-small); line-height: 1.55; color: var(--muted);
+  background: var(--alt); border-radius: var(--radius-sm); padding: 12px 15px; margin: 0 0 16px;
+}
+.offer__drop { margin-bottom: 20px; }
+.offer__cta { width: 100%; margin-top: 4px; }
+.offer__note {
+  text-align: center; margin: 10px 0 6px;
+  font-size: var(--fs-small); font-weight: 600; color: var(--accent);
+}
+@media (max-width: 480px) { .offer { padding: 22px 17px 18px; } }
