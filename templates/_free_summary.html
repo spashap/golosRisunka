@@ -12,9 +12,26 @@
      data-ym-goal="free_limit_open">{{ texts.LIMIT_CTA.format(name=texts.genitive(name)) }}</a>
 </div>
 {% else %}
-<div class="free-report">
+{# Абзацы §5 рендерятся ПО РОЛЯМ: зеркало ведёт, возрастной якорь — фон, линза —
+   выделенная врезка с действием, переход — мостик к офферу. Текст не меняется,
+   меняется только подача. #}
+<div class="summary">
+  <div class="summary__label">{{ texts.SUMMARY_LABEL }}</div>
+  <h2 class="h2 summary__title">{{ texts.SUMMARY_TITLE.format(name_gen=texts.genitive(name)) }}</h2>
+  <p class="summary__explainer">{{ texts.SUMMARY_EXPLAINER }}</p>
+
   {% for p in paragraphs %}
-  <p{% if loop.first %} class="free-report__lead"{% endif %}>{{ p }}</p>
+    {% set kind = kinds[loop.index0] if kinds and loop.index0 < kinds|length else 'path' %}
+    {% if kind == 'lens' and lens_question %}
+      <div class="summary__lens">
+        <div class="summary__lens-label">{{ texts.SUMMARY_LENS_LABEL }}</div>
+        <p class="summary__lens-q">{{ lens_question }}</p>
+      </div>
+    {% elif kind == 'transition' %}
+      <p class="summary__transition">{{ p }}</p>
+    {% else %}
+      <p class="summary__p{% if kind == 'mirror' %} summary__p--lead{% endif %}">{{ p }}</p>
+    {% endif %}
   {% endfor %}
 </div>
 

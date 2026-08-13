@@ -158,7 +158,8 @@ def summary():
 
     limit_row = _existing_free(db, _limit_key(), _norm_name(name), age)
     html = render_template("_free_summary.html", paragraphs=s["paragraphs"],
-                           ask=s["ask"], ask_note=s["ask_note"],
+                           ask=s["ask"], ask_note=s["ask_note"], kinds=s["kinds"],
+                           lens_question=s["lens_question"],
                            offer=T.offer_block(name, address),
                            token=token, name=name, age=age,
                            wait_hint=T.wait_hint(concern, address),

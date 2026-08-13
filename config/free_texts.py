@@ -158,6 +158,17 @@ def band_age(key: str) -> int:
     return BAND_BY_KEY.get(key, AGE_BANDS[1])["age"]
 
 
+# --- Заголовок блока вывода (DRAFT, служебный текст) ------------------------------
+# Абзацы §5 шли сплошной простынёй, хотя у каждого своя функция: зеркало, возрастной
+# якорь, линза «на что посмотреть», переход. Заголовок и пояснение делают видимым и то,
+# ЧТО это, и главное правило блока: рисунка мы ещё не видели, поэтому не гадаем.
+SUMMARY_LABEL = "По вашему описанию"
+SUMMARY_TITLE = "На что посмотреть в рисунках {name_gen}"
+SUMMARY_EXPLAINER = ("Рисунок мы пока не видели, поэтому здесь нет догадок о том, что "
+                     "он значит. Только то, что можно сказать по вашим ответам и по "
+                     "возрасту — и куда имеет смысл посмотреть самим.")
+SUMMARY_LENS_LABEL = "Одна вещь, на которую стоит посмотреть"
+
 # --- Продающий блок на экране вывода ----------------------------------------------
 # ⚠️ DRAFT: это служебный текст интерфейса (мой, не авторский). Экран вывода — точка
 # продажи бесплатного предложения, и до этого он выглядел как форма: авторский абзац
@@ -553,6 +564,8 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
     """
     band = age_band(age)
     paragraphs: list[str] = []
+    kinds: list[str] = []
+    lens_q = None
     override_used = False
 
     if concern_key == "neutral":
@@ -561,7 +574,9 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
             # Это следствие решения о полосах, а не правка авторского текста.
             paragraphs.append(g(p, address_form)
                               .replace("{age} {years}", BAND_LABELS[band]))
-        return {"paragraphs": paragraphs[:-1], "ask": ASK_ANY,
+        return {"paragraphs": paragraphs[:-1],
+                "kinds": ["path"] * (len(paragraphs) - 1),
+                "lens_question": None, "ask": ASK_ANY,
                 "ask_note": g(ASK_NOTES["neutral"], address_form),
                 "ask_variant": "neutral", "override_used": False}
 
@@ -571,30 +586,37 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
                                            address_form)
     first = f"Вы заметили, что {mirror}."
     paragraphs.append(f"{first} {mod}".strip() if mod else first)
+    kinds.append("mirror")
 
     # 2. Возрастной якорь — факт о возрастном этапе, единственное, что здесь разрешено.
     paragraphs.append(g(AGE_ANCHORS[band], address_form))
+    kinds.append("anchor")
 
     # 3. Линза — ровно ОДИН вопрос. Три пункта — это домашнее задание, и поздним
     #    вечером его никто делать не будет.
     lens = LENSES.get(concern_key)
+    lens_q = g(lens, address_form) if lens else None
     if lens:
-        paragraphs.append(f"{LENS_PREFIX} {g(lens, address_form)}")
+        paragraphs.append(f"{LENS_PREFIX} {lens_q}")
+        kinds.append("lens")
 
     if concern_key == "stopped":
         for p in STOPPED_PATH:
             paragraphs.append(g(p, address_form))
-        return {"paragraphs": paragraphs[:-1], "ask": ASK_ANY,
+        return {"paragraphs": paragraphs[:-1],
+                "kinds": (kinds + ["path"] * len(STOPPED_PATH))[:len(paragraphs) - 1],
+                "lens_question": lens_q, "ask": ASK_ANY,
                 "ask_note": g(ASK_NOTES["stopped"], address_form),
                 "ask_variant": "stopped", "override_used": override_used}
 
     # 4-5. Переход и действие.
     paragraphs.append(TRANSITION)
+    kinds.append("transition")
     # Просьбу о рисунке отдаём ОТДЕЛЬНО: на экране она уходит под заголовок продающего
     # блока. Сам текст не меняется — меняется только его место (§5 требует, чтобы
     # строка про «обычный, не самый пугающий» стояла везде, где мы просим рисунок).
-    return {"paragraphs": paragraphs, "ask": ASK_ANY,
-            "ask_note": g(ASK_NOTES["standard"], address_form),
+    return {"paragraphs": paragraphs, "kinds": kinds, "lens_question": lens_q,
+            "ask": ASK_ANY, "ask_note": g(ASK_NOTES["standard"], address_form),
             "ask_variant": "standard", "override_used": override_used}
 
 

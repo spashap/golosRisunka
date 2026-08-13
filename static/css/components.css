@@ -993,6 +993,41 @@ html.dk .btn { color: #241A12; }
 }
 .interp__srcnote { font-style: normal; }
 
+/* Вывод после вопросов: у каждого абзаца своя роль, и она должна быть видна.
+   Зеркало ведёт, возрастной якорь — спокойный фон, линза — врезка с действием. */
+.summary {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--radius-card); padding: 24px 22px 20px;
+  box-shadow: var(--shadow-card); margin-bottom: 8px;
+}
+.summary__label {
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-micro);
+  letter-spacing: .5px; text-transform: uppercase; color: var(--accent2);
+  margin-bottom: 8px;
+}
+.summary__title { margin: 0 0 10px; }
+.summary__explainer {
+  font-size: var(--fs-small); line-height: 1.55; color: var(--muted);
+  padding-bottom: 16px; margin: 0 0 16px; border-bottom: 1px solid var(--line);
+}
+.summary__p { font-size: var(--fs-body); line-height: 1.62; margin: 0 0 15px; }
+.summary__p--lead { font-size: var(--fs-lead); line-height: 1.5; }
+.summary__lens {
+  margin: 18px 0; padding: 16px 18px; border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--badge) 10%, var(--paper));
+  border-left: 4px solid var(--accent);
+}
+.summary__lens-label {
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-micro);
+  letter-spacing: .4px; text-transform: uppercase; color: var(--accent);
+  margin-bottom: 6px;
+}
+.summary__lens-q { font-size: var(--fs-body); line-height: 1.55; margin: 0; }
+.summary__transition {
+  font-size: var(--fs-body); line-height: 1.6; margin: 16px 0 0;
+  padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted);
+}
+
 /* Экран вывода — точка продажи бесплатного предложения, а не форма загрузки.
    Поэтому карточка с акцентной рамкой, заголовком, списком выгод и крупным CTA. */
 .offer {
