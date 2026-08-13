@@ -879,6 +879,21 @@ html.dk .btn { color: #241A12; }
   transition: border-color .12s, background .12s;
 }
 .choice--grid .choice__opt > span { text-align: center; padding: 13px 6px; }
+/* Восемь длинных фраз тревог должны поместиться в экран телефона без прокрутки:
+   плотнее вертикаль и на шаг мельче кегль — но кегль всё равно из шкалы токенов. */
+.choice--tight { gap: 6px; }
+.choice--tight .choice__opt > span {
+  padding: 10px 13px; font-size: var(--fs-small); line-height: 1.35;
+}
+.choice--wide { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.choice--wide .choice__opt > span {
+  text-align: left; padding: 11px 13px; font-size: var(--fs-small);
+}
+/* Строка обращения «Миша · он · изменить» — не отдельный шаг мастера. */
+.addr-line {
+  margin: -4px 0 14px; font-size: var(--fs-small); color: var(--muted);
+}
+.addr-line a { color: var(--accent); }
 .choice__opt > input:focus-visible + span { outline: 3px solid var(--accent-2); }
 .choice__opt > input:checked + span {
   border-color: var(--accent); background: color-mix(in srgb, var(--badge) 12%, var(--paper));

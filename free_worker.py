@@ -81,12 +81,14 @@ def process(conn, row) -> str:
     dur_label = ("" if row["concern_key"] == "neutral"
                  else T.duration_label(row["concern_key"], row["duration_key"] or "",
                                        row["address_form"] or "он"))
+    band_label = T.BAND_LABELS[T.age_band(row["child_age"] or 6)]
     try:
         _stage(conn, aid, "looking")
         res = generate_free_analysis(
             img, child_name=row["child_name"], age=row["child_age"],
             address_form=row["address_form"] or "он",
             concern_key=row["concern_key"], duration_label=dur_label,
+            age_band_label=band_label.replace(" лет", ""),
             parent_text=row["parent_text"] or "",
             raw_dump_dir=out_dir / "raw")
     except FreeGenerationError as e:
@@ -116,6 +118,11 @@ def process(conn, row) -> str:
                         "insufficient_reason": a.insufficient_reason},
                        ensure_ascii=False, indent=2), encoding="utf-8")
         conn.commit()
+        try:
+            from app.free import send_free_reject_email
+            send_free_reject_email(conn, aid, a.insufficient_reason)
+        except Exception as e:                               # noqa: BLE001
+            log.warning("free #%s: reject email failed: %s", aid, e)
         track("free_rejected", payload={"id": aid, "reason": a.reason_key}, conn=conn)
         return "rejected"
 
@@ -149,6 +156,13 @@ def process(conn, row) -> str:
             "INSERT INTO free_interpretation_keys (key, first_seen_at)"
             " VALUES (?, ?) ON CONFLICT(key) DO NOTHING", (h.key, now()))
     conn.commit()
+    # Копия на почту: адрес собран вместе с фотографией, поэтому обещание «копия придёт
+    # на почту» надо выполнить здесь, а не ждать, что родитель попросит сам.
+    try:
+        from app.free import send_free_email
+        send_free_email(conn, aid)
+    except Exception as e:                                   # noqa: BLE001
+        log.warning("free #%s: email failed: %s", aid, e)
     track("free_delivered", payload={"id": aid, "key":
                                      a.hypothesis.key if a.hypothesis else None},
           conn=conn)

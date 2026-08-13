@@ -114,6 +114,7 @@ def _repair(client: "genai.Client", data: dict, violations: list[dict]) -> tuple
 
 def generate_free_analysis(image_path: Path, *, child_name: str, age: int,
                            address_form: str, concern_key: str,
+                           age_band_label: str = "",
                            duration_label: str = "", parent_text: str = "",
                            max_attempts: int = settings.FREE_MAX_ATTEMPTS,
                            raw_dump_dir: Path | None = None,
@@ -125,6 +126,7 @@ def generate_free_analysis(image_path: Path, *, child_name: str, age: int,
     jpeg = prepare_image(image_path)
     user_prompt = build_free_user_prompt(
         child_name=child_name, age=age, address_form=address_form,
+        age_band_label=age_band_label,
         concern_key=concern_key, duration_label=duration_label,
         parent_text=parent_text)
     parts = [types.Part.from_bytes(data=jpeg, mime_type="image/jpeg"), user_prompt]

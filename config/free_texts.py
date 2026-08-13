@@ -121,6 +121,35 @@ def age_band(age: int) -> str:
 BAND_LABELS = {"3-4": "3–4 лет", "5-6": "5–6 лет",
                "7-9": "7–9 лет", "10-12": "10–12 лет"}
 
+# Возраст спрашиваем ПОЛОСАМИ, а не точными годами: десять кнопок — это лишний ряд на
+# экране 375 px, а внутри всё равно всё сводится к четырём полосам, под которые уже
+# написаны возрастные якоря. Тепло даёт имя ребёнка, а не число.
+# Каждой полосе сопоставлен представительный возраст: он идёт в БД и в предикат лимита,
+# и age_band() от него возвращает ровно ту же полосу — данные не разъезжаются.
+AGE_BANDS: list[dict] = [
+    {"key": "3-4", "label": "3–4", "age": 4},
+    {"key": "5-6", "label": "5–6", "age": 6},
+    {"key": "7-9", "label": "7–9", "age": 8},
+    {"key": "10-12", "label": "10–12+", "age": 11},
+]
+BAND_BY_KEY = {b["key"]: b for b in AGE_BANDS}
+
+
+def band_age(key: str) -> int:
+    return BAND_BY_KEY.get(key, AGE_BANDS[1])["age"]
+
+
+# --- Экран загрузки: почта собирается ВМЕСТЕ с фотографией ------------------------
+# Не отдельной стеной после сорока секунд ожидания, а как «куда прислать». Это же
+# закрывает старую дыру: резервный выход обещал письмо, которого у нас не было.
+UPLOAD_TITLE = "Куда прислать разбор?"
+UPLOAD_BODY = ("Разбор появится прямо здесь через минуту, а копия придёт на почту — "
+               "чтобы не потерялся и чтобы было что показать мужу или бабушке. "
+               "В том же письме — вход в личный кабинет: если захотите полный отчёт, "
+               "рисунок уже будет на месте, загружать заново не придётся.")
+UPLOAD_BUTTON = "Разобрать рисунок"
+UPLOAD_NOSPAM = "Никакой рассылки. Только ваш разбор и то, что закажете сами."
+
 
 # --- Шаг 1: что зацепило (§4). Подписи кнопок — дословно. ------------------------
 CONCERNS: list[dict] = [
@@ -324,12 +353,21 @@ SEVEN_DIRECTIONS = [
     "Техника и владение материалом", "Моторика и детализация",
 ]
 # «Около восьми страниц» — проверено по реальным отчётам: 8–9 страниц.
-SELLING_TITLE = "Полный отчёт складывает это в портрет."
-SELLING_BODY = ("Мы смотрим 1–3 рисунка сразу и разбираем их по семи направлениям: "
-                "{directions}. С оценками и объяснением каждой — и с отдельной главой "
-                "о том, {kakoy} {name}: что {ego} влечёт, какой у {nego} темперамент, "
-                "что для {nego} важно. Плюс что спросить и как поддержать именно "
-                "{ego_vin}. Около восьми страниц, PDF на почту.")
+SELLING_TITLE = "Это был разбор одного рисунка. Полный отчёт — это портрет {name_gen}."
+# «Так будет не всегда» — правда, а не искусственная срочность: сервис действительно
+# на запуске. Никаких таймеров и обратного отсчёта здесь быть не должно.
+SELLING_LAUNCH = ("Сейчас разбор одного рисунка бесплатный: мы только запускаем сервис "
+                  "и хотим, чтобы его попробовало как можно больше родителей. "
+                  "Так будет не всегда.")
+SELLING_BODY = ("Полный отчёт устроен иначе. Мы смотрим 1–3 рисунка сразу и разбираем "
+                "их по семи направлениям: {directions}. С оценками и объяснением каждой.")
+SELLING_MAIN = ("И главное — с отдельной главой о том, {kakoy} {name}: что {ego} влечёт, "
+                "какой у {nego} темперамент, что для {nego} важно и как {ego_vin} "
+                "поддержать. Около восьми страниц, PDF на почту в течение часа.")
+SELLING_READY = "Рисунок уже загружен — заново добавлять не нужно."
+# Гарантия возврата есть на лендинге и должна быть под кнопкой: это самый дешёвый
+# элемент доверия, который у нас есть.
+SELLING_GUARANTEE = "Не понравится — вернём деньги в течение 7 дней."
 RESULT_CTA_BUTTON = "Собрать портрет {name} — {price} ₽"
 
 # дополнительные формы для продающего блока
@@ -369,12 +407,17 @@ def selling_block(name: str, address_form: str = "он") -> dict:
     from config import settings
     price = settings.get_products().get("snapshot", {}).get("price_rub", 0)
     f = _SELLING_FORMS.get(address_form, _SELLING_FORMS["он"])
-    body = SELLING_BODY.format(
-        directions=" · ".join(SEVEN_DIRECTIONS), name=name,
-        ego=_FORMS.get(address_form, _FORMS["он"])["ego"], **f)
-    return {"title": SELLING_TITLE, "body": body,
-            "button": RESULT_CTA_BUTTON.format(name=genitive(name, address_form), price=price),
-            "price": price}
+    forms = _FORMS.get(address_form, _FORMS["он"])
+    return {
+        "title": SELLING_TITLE.format(name_gen=genitive(name, address_form)),
+        "launch": SELLING_LAUNCH,
+        "body": SELLING_BODY.format(directions=" · ".join(SEVEN_DIRECTIONS)),
+        "main": SELLING_MAIN.format(name=name, ego=forms["ego"], **f),
+        "ready": SELLING_READY,
+        "guarantee": SELLING_GUARANTEE,
+        "button": RESULT_CTA_BUTTON.format(name=genitive(name, address_form), price=price),
+        "price": price,
+    }
 
 # --- Особые случаи §9: авторские абзацы. Их эмитит СЕРВЕР по флагу модели, а не сама
 # модель — фиксированный текст во рту модели дрейфует от прогона к прогону. --------
@@ -443,8 +486,10 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
 
     if concern_key == "neutral":
         for p in NEUTRAL_PATH:
-            paragraphs.append(g(p, address_form).replace("{age}", str(age))
-                              .replace("{years}", years(age)))
+            # Возраст спрашиваем полосой, поэтому и звучит полоса: «В 5–6 лет рисунки…».
+            # Это следствие решения о полосах, а не правка авторского текста.
+            paragraphs.append(g(p, address_form)
+                              .replace("{age} {years}", BAND_LABELS[band]))
         return {"paragraphs": paragraphs, "ask_variant": "neutral",
                 "override_used": False}
 

@@ -14,15 +14,27 @@
   {% endfor %}
 </div>
 
+{# Загрузка и почта — ОДИН шаг. Почта собирается как «куда прислать», а не стеной
+   после сорока секунд ожидания; заодно письмо становится честным обещанием. #}
 <div class="form-card" id="f-upload" data-token="{{ token }}"
      data-wait-hint="{{ wait_hint }}">
   <label class="file-drop" for="f-file">
     <img class="preview" hidden alt="">
     <span class="fd-icon">＋</span>
-    <span class="fd-text">Добавить рисунок</span>
+    <span class="fd-text">Добавить фото рисунка</span>
     <input type="file" id="f-file" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*"
            data-ym-goal="free_add_drawing">
   </label>
+
+  <h3 class="h3" style="margin-top:18px">{{ texts.UPLOAD_TITLE }}</h3>
+  <p>{{ texts.UPLOAD_BODY }}</p>
+  <div class="field">
+    <div class="ctl"><input class="input" id="f-email" type="email"
+         inputmode="email" autocomplete="email" placeholder="you@example.com"></div>
+  </div>
+  <button class="btn btn--primary" style="width:100%" id="f-go"
+          data-ym-goal="free_upload_submit">{{ texts.UPLOAD_BUTTON }}</button>
+  <p class="hint" style="margin-top:8px">{{ texts.UPLOAD_NOSPAM }}</p>
   <p class="hint">{{ texts.STORAGE_NOTICE }}</p>
   <p class="err" id="f-uperr" hidden></p>
 </div>
@@ -30,12 +42,15 @@
 <details class="form-card">
   <summary><b>{{ texts.NO_DRAWING_TITLE }}</b></summary>
   <p>{{ texts.NO_DRAWING_BODY }}</p>
-  {# NO_DRAWING_BONUS (памятка по возрастной полосе) не показываем: текстов
-     памятки ещё нет, а обещать и не прислать хуже, чем не обещать. #}
+  {# Памятка теперь настоящая: в письме уходит возрастной якорь этой полосы,
+     то есть обещание выполняется, а не остаётся обещанием. #}
+  <p>{{ texts.NO_DRAWING_BONUS.format(band=band) }}</p>
   <div class="field"><div class="ctl">
-    <input class="input" id="f-nodraw-email" type="email" placeholder="you@example.com"></div></div>
+    <input class="input" id="f-nodraw-email" type="email" inputmode="email"
+           placeholder="you@example.com"></div></div>
   <button class="btn btn--ghost" id="f-nodraw-btn" data-token="{{ token }}"
-          data-ym-goal="free_no_drawing">Сохранить место</button>
-  <p class="hint" id="f-nodraw-ok" hidden>Сохранили. Ссылка придёт на почту.</p>
+          data-ym-goal="free_no_drawing">Сохранить и вернуться позже</button>
+  <p class="hint" id="f-nodraw-ok" hidden>Готово. Ссылку отправили на почту —
+    вернётесь, когда найдёте рисунок.</p>
 </details>
 {% endif %}

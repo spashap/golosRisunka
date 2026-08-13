@@ -68,6 +68,27 @@ def _norm_name(name: str) -> str:
     return free_names.normalize_name(name)
 
 
+def _link_customer(db, addr: str, name_norm: str) -> tuple[int, int | None]:
+    """Находит/создаёт клиента по email и привязывает существующего ребёнка.
+
+    Строку children фремиум НЕ создаёт: у нас полоса возраста, а не birth_ym, и
+    ребёнок без даты рождения испортил бы будущий платный заказ (mark_paid берёт
+    существующего по имени и ничего не обновляет).
+    """
+    cust = db.execute("SELECT id FROM customers WHERE email = ?", (addr,)).fetchone()
+    if cust is None:
+        db.execute("INSERT INTO customers (email, created_at) VALUES (?, ?)",
+                   (addr, now()))
+        cust = db.execute("SELECT id FROM customers WHERE email = ?", (addr,)).fetchone()
+    child_id = None
+    for c in db.execute("SELECT id, name FROM children WHERE customer_id = ?",
+                        (cust["id"],)).fetchall():
+        if _norm_name(c["name"]) == name_norm:
+            child_id = c["id"]
+            break
+    return cust["id"], child_id
+
+
 def _existing_free(db, limit_key: str, name_norm: str, age: int):
     """Предикат лимита §9. Расходует лимит ТОЛЬКО status='done'.
 
@@ -104,12 +125,14 @@ def summary():
     ровно тот артефакт, против которого написан весь продукт."""
     f = request.form
     name = (f.get("name") or "").strip()[:40]
-    try:
-        age = int(f.get("age") or 0)
-    except ValueError:
-        age = 0
+    # Возраст приходит ПОЛОСОЙ. В БД пишем представительный возраст полосы: age_band()
+    # от него возвращает ту же полосу, поэтому предикат лимита и тексты не разъезжаются.
+    band_key = f.get("band") or ""
+    if band_key not in T.BAND_BY_KEY:
+        return jsonify({"error": "bad_input"}), 400
+    age = T.band_age(band_key)
     concern = f.get("concern") or ""
-    if not name or not (3 <= age <= 12) or concern not in T.CONCERN_KEYS:
+    if not name or concern not in T.CONCERN_KEYS:
         return jsonify({"error": "bad_input"}), 400
     address = f.get("address") if f.get("address") in ("он", "она") else \
         free_names.address_form_or_ask(name)[0]
@@ -171,6 +194,13 @@ def upload(token: str):
             track_event("free_cap_hit")
             return jsonify({"error": "cap"}), 429
 
+    # Почта собирается ВМЕСТЕ с фотографией — как «куда прислать», а не стеной после
+    # сорока секунд ожидания. Заодно закрывает старую дыру: резервный выход обещал
+    # письмо, которого у нас не было.
+    addr = (request.form.get("email") or "").strip().lower()
+    if not EMAIL_RE.match(addr):
+        return jsonify({"error": "email"}), 400
+
     fs = request.files.get("file")
     if fs is None or not fs.filename:
         return jsonify({"error": "no_file"}), 400
@@ -189,10 +219,13 @@ def upload(token: str):
     d.mkdir(parents=True, exist_ok=True)
     path = d / f"drawing{ext}"
     path.write_bytes(blob)
+    cust_id, child_id = _link_customer(db, addr, row["child_name_norm"])
     db.execute(
         "UPDATE free_analyses SET file_path = ?, status = 'queued', stage = 'prepare',"
-        " reject_reason = NULL, started_at = NULL WHERE id = ?",
-        (path.relative_to(settings.BASE_DIR).as_posix(), row["id"]))
+        " reject_reason = NULL, started_at = NULL, email = ?, customer_id = ?,"
+        " child_id = ? WHERE id = ?",
+        (path.relative_to(settings.BASE_DIR).as_posix(), addr, cust_id, child_id,
+         row["id"]))
     db.commit()
     track_event("free_upload", {"concern": row["concern_key"]})
 
@@ -210,7 +243,7 @@ def upload(token: str):
 STAGE_LABELS = {
     "prepare": "Готовим фотографию…",
     "looking": "Смотрим на рисунок…",
-    "detail": "Ищем деталь, за которую можно зацепиться…",
+    "detail": "Ищем деталь, за которую стоит зацепиться…",
     "lint": "Перечитываем формулировки…",
     "almost": "Почти готово…",
 }
@@ -259,6 +292,7 @@ def result(token: str):
     return render_template(
         "free_result.html", r=row, a=data, token=token, name=name,
         name_gen=T.genitive(name, address), name_acc=T.accusative(name, address),
+        band_label=T.BAND_LABELS[T.age_band(row["child_age"] or 6)],
         flags=flags, interps=interps,
         coloring_par=T.g(T.COLORING_PARAGRAPH, address) if "coloring" in flags else None,
         mismatch_par=(T.MISMATCH_PARAGRAPH if row["correlate"] == 0
@@ -311,11 +345,12 @@ def vote(interp_id: int):
 
 @bp_free.post("/email/<token>")
 def email(token: str):
-    """§8, с исправлением: email НЕ выдаёт сессию покупателя.
+    """Ветка «нет рисунка под рукой»: сохранить место и прислать ссылку.
 
-    Введя чужой адрес, человек получил бы доступ к чужим платным отчётам — у mark_paid
-    та же форма, но там проверкой служит сам факт оплаты. Поэтому здесь: скоуп-cookie
-    на свой разбор (он и так открыт по ссылке) + magic-link письмом для кабинета.
+    Основной путь почту больше здесь не собирает — она берётся на экране загрузки
+    вместе с фотографией. Сессию покупателя это по-прежнему НЕ выдаёт: введя чужой
+    адрес, человек получил бы доступ к чужим платным отчётам. Скоуп-cookie на свой
+    разбор + magic-link письмом.
     """
     addr = (request.form.get("email") or "").strip().lower()
     if not EMAIL_RE.match(addr):
@@ -325,38 +360,12 @@ def email(token: str):
     if row is None:
         return jsonify({"error": "not_found"}), 404
 
-    cust = db.execute("SELECT * FROM customers WHERE email = ?", (addr,)).fetchone()
-    if cust is None:
-        db.execute("INSERT INTO customers (email, created_at) VALUES (?, ?)",
-                   (addr, now()))
-        cust = db.execute("SELECT * FROM customers WHERE email = ?", (addr,)).fetchone()
-    # child_id проставляем ТОЛЬКО если такой ребёнок уже есть: у нас целый возраст, а не
-    # birth_ym, и созданный здесь ребёнок испортил бы будущий платный заказ.
-    child = None
-    for c in db.execute("SELECT id, name FROM children WHERE customer_id = ?",
-                        (cust["id"],)).fetchall():
-        if _norm_name(c["name"]) == row["child_name_norm"]:
-            child = c
-            break
+    cust_id, child_id = _link_customer(db, addr, row["child_name_norm"])
     db.execute("UPDATE free_analyses SET email = ?, customer_id = ?, child_id = ?"
-               " WHERE id = ?",
-               (addr, cust["id"], child["id"] if child else None, row["id"]))
+               " WHERE id = ?", (addr, cust_id, child_id, row["id"]))
     db.commit()
-
     try:
-        link = f"{settings.PUBLIC_BASE_URL}/free/r/{token}"
-        cabinet = login_link_for(db, customer_id=cust["id"])
-        if row["status"] == "done":
-            html = render_email("free_ready.html", child_name=row["child_name"],
-                                result_url=link, cabinet_link=cabinet)
-            subject = f"Разбор рисунка — {settings.SITE_NAME}"
-        else:
-            # Ветка «нет рисунка под рукой» и уход с экрана ожидания: разбора ещё нет,
-            # и письмо «ваш разбор готов» здесь было бы враньём.
-            html = render_email("free_saved.html", child_name=row["child_name"],
-                                result_url=link, cabinet_link=cabinet)
-            subject = f"Сохранили ваше место — {settings.SITE_NAME}"
-        send_email(addr, subject, html, kind="free_saved")
+        send_free_email(db, row["id"])
     except Exception as e:                       # письмо не должно ломать поток
         log.warning("free: email send failed: %s", e)
     track_event("free_email")
@@ -368,6 +377,49 @@ def email(token: str):
         resp.set_cookie(FREE_SCOPE_COOKIE, json.dumps(scope[-20:]),
                         max_age=365 * 24 * 3600, httponly=True, samesite="Lax")
     return resp
+
+
+def send_free_email(db, analysis_id: int) -> bool:
+    """Письмо родителю. Вызывается и из веба (ветка «нет рисунка»), и из free_worker
+    (когда разбор готов), поэтому живёт здесь и берёт всё из строки БД."""
+    row = db.execute("SELECT * FROM free_analyses WHERE id = ?",
+                     (analysis_id,)).fetchone()
+    if row is None or not row["email"]:
+        return False
+    link = f"{settings.PUBLIC_BASE_URL}/free/r/{row['token']}"
+    cabinet = login_link_for(db, email=row["email"])
+    if row["status"] == "done":
+        html = render_email("free_ready.html", child_name=row["child_name"],
+                            result_url=link, cabinet_link=cabinet)
+        subject = f"Разбор рисунка — {settings.SITE_NAME}"
+    else:
+        # Разбора ещё нет — письмо «ваш разбор готов» здесь было бы враньём.
+        # Памятку про возрастную полосу берём из уже написанного возрастного якоря:
+        # так обещание «расскажем, что меняется» выполняется, а не остаётся обещанием.
+        band = T.age_band(row["child_age"] or 6)
+        html = render_email("free_saved.html", child_name=row["child_name"],
+                            result_url=link, cabinet_link=cabinet,
+                            band_label=T.BAND_LABELS[band],
+                            band_note=T.g(T.AGE_ANCHORS[band],
+                                          row["address_form"] or "он"))
+        subject = f"Сохранили ваше место — {settings.SITE_NAME}"
+    send_email(row["email"], subject, html, kind="free_mail")
+    return True
+
+
+def send_free_reject_email(db, analysis_id: int, reason: str) -> bool:
+    """Отказ по непригодному фото. Почта у нас уже есть, значит родитель ЖДЁТ письма —
+    промолчать здесь хуже, чем прислать честное «нужно другое фото»."""
+    row = db.execute("SELECT * FROM free_analyses WHERE id = ?",
+                     (analysis_id,)).fetchone()
+    if row is None or not row["email"]:
+        return False
+    html = render_email("free_reject.html", child_name=row["child_name"],
+                        reason=reason,
+                        retry_url=f"{settings.PUBLIC_BASE_URL}/free")
+    send_email(row["email"], f"Нужно другое фото — {settings.SITE_NAME}", html,
+               kind="free_reject")
+    return True
 
 
 # --- Переиспользование рисунка в платном заказе -------------------------------------

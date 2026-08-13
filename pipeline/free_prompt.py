@@ -201,6 +201,7 @@ FREE_SYSTEM_PROMPT = FREE_SYSTEM_PROMPT.replace("{KEYS_BLOCK}", prompt_block())
 
 
 def build_free_user_prompt(*, child_name: str, age: int, address_form: str,
+                           age_band_label: str = "",
                            concern_key: str, duration_label: str = "",
                            parent_text: str = "") -> str:
     """Пользовательская часть: данные ребёнка + КУДА смотреть + слова родителя.
@@ -216,7 +217,7 @@ def build_free_user_prompt(*, child_name: str, age: int, address_form: str,
     lines = [
         "Данные о ребёнке:",
         f"- Имя: {child_name}",
-        f"- Возраст: {age}",
+        f"- Возраст: {age_band_label or age} лет",
         f"- Обращение в тексте: {pronoun}",
         "",
         "КУДА СМОТРЕТЬ ВНИМАТЕЛЬНЕЕ (указание на осмотр, НЕ вопрос и НЕ гипотеза):",

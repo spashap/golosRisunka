@@ -6,13 +6,13 @@
   <div class="wrap" style="max-width:640px">
   {% if r.status == 'rejected' %}
     <div class="form-card">
-      <h1 class="h2">Нужна другая фотография</h1>
+      <h1 class="h2">Нужно другое фото</h1>
       <p>{{ a.insufficient_reason }}</p>
-      <a class="btn btn--primary" href="/free" data-ym-goal="free_retry">Попробовать снова</a>
+      <a class="btn btn--primary" href="/free" data-ym-goal="free_retry">Загрузить другое фото</a>
     </div>
   {% else %}
     <div class="free-report">
-      <h1 class="h2">Рисунок {{ name_gen }}, {{ r.child_age }}</h1>
+      <h1 class="h2">Рисунок {{ name_gen }}, {{ band_label }}</h1>
       {% if not image_deleted %}
       <p><img src="/free/img/{{ token }}" alt="Рисунок {{ name_gen }}"
               style="max-width:100%;border-radius:12px;box-shadow:var(--shadow-card)"></p>
@@ -44,32 +44,28 @@
           <button class="btn btn--ghost" data-vote="no" data-id="{{ i.id }}"
                   data-ym-goal="free_vote_no">Не про {{ name_acc }}</button>
         </div>
-        <p class="hint" hidden data-thanks>Спасибо — это и есть самое ценное для нас.</p>
+        <p class="hint" hidden data-thanks>Спасибо. Это помогает нам стать точнее.</p>
       </div>
       {% endfor %}
 
       {# 4. финал: продажа, а на раскраске — перенаправление за нормальным рисунком #}
       <div class="free-sell">
-        <p><b>{{ cta.title }}</b> {{ cta.body }}</p>
         {% if is_coloring %}
+        <p><b>{{ cta.title }}</b> {{ cta.body }}</p>
         <a class="btn btn--primary" style="width:100%" href="/free"
            data-ym-goal="free_coloring_again">{{ cta.button }}</a>
         {% else %}
+        <p class="free-report__lead"><b>{{ cta.title }}</b></p>
+        <p>{{ cta.launch }}</p>
+        <p>{{ cta.body }}</p>
+        <p>{{ cta.main }}</p>
+        <p class="hint">{{ cta.ready }}</p>
         <a class="btn btn--primary" style="width:100%" href="/order?free={{ token }}"
            data-ym-goal="free_to_order">{{ cta.button }}</a>
+        <p class="hint" style="text-align:center;margin-top:10px">{{ cta.guarantee }}</p>
         {% endif %}
       </div>
 
-      {# 5. email ПОСЛЕ разбора, не до #}
-      {% if not has_email %}
-      <div class="form-card" id="f-mail" data-token="{{ token }}">
-        <p><b>Прислать копию и сохранить разбор?</b></p>
-        <div class="field"><div class="ctl">
-          <input class="input" id="f-mail-input" type="email" placeholder="you@example.com"></div></div>
-        <button class="btn btn--ghost" id="f-mail-btn" data-ym-goal="free_email_submit">Прислать</button>
-        <p class="hint" id="f-mail-ok" hidden>Отправили. В письме — ссылка на разбор и вход в кабинет.</p>
-      </div>
-      {% endif %}
     </div>
   {% endif %}
   </div>
