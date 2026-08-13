@@ -345,11 +345,18 @@ def email(token: str):
 
     try:
         link = f"{settings.PUBLIC_BASE_URL}/free/r/{token}"
-        html = render_email("free_ready.html", child_name=row["child_name"],
-                            result_url=link,
-                            cabinet_link=login_link_for(db, customer_id=cust["id"]))
-        send_email(addr, f"Разбор рисунка — {settings.SITE_NAME}", html,
-                   kind="free_ready")
+        cabinet = login_link_for(db, customer_id=cust["id"])
+        if row["status"] == "done":
+            html = render_email("free_ready.html", child_name=row["child_name"],
+                                result_url=link, cabinet_link=cabinet)
+            subject = f"Разбор рисунка — {settings.SITE_NAME}"
+        else:
+            # Ветка «нет рисунка под рукой» и уход с экрана ожидания: разбора ещё нет,
+            # и письмо «ваш разбор готов» здесь было бы враньём.
+            html = render_email("free_saved.html", child_name=row["child_name"],
+                                result_url=link, cabinet_link=cabinet)
+            subject = f"Сохранили ваше место — {settings.SITE_NAME}"
+        send_email(addr, subject, html, kind="free_saved")
     except Exception as e:                       # письмо не должно ломать поток
         log.warning("free: email send failed: %s", e)
     track_event("free_email")

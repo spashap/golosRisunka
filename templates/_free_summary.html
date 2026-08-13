@@ -30,7 +30,8 @@
 <details class="form-card">
   <summary><b>{{ texts.NO_DRAWING_TITLE }}</b></summary>
   <p>{{ texts.NO_DRAWING_BODY }}</p>
-  <p>{{ texts.NO_DRAWING_BONUS.format(band=band) }}</p>
+  {# NO_DRAWING_BONUS (памятка по возрастной полосе) не показываем: текстов
+     памятки ещё нет, а обещать и не прислать хуже, чем не обещать. #}
   <div class="field"><div class="ctl">
     <input class="input" id="f-nodraw-email" type="email" placeholder="you@example.com"></div></div>
   <button class="btn btn--ghost" id="f-nodraw-btn" data-token="{{ token }}"
