@@ -96,6 +96,25 @@ def accusative(name: str, address_form: str = "он") -> str:
     return n + "а"
 
 
+def dative(name: str, address_form: str = "он") -> str:
+    """Имя в дательном падеже: «задать Даше», «задать Алексу»."""
+    n = (name or "").strip()
+    if not n:
+        return n
+    low = n.lower()
+    if low.endswith("ия"):        # София -> Софии, Мария -> Марии
+        return n[:-1] + "и"
+    if low.endswith(("а", "я")):  # Даша -> Даше, Соня -> Соне
+        return n[:-1] + "е"
+    if low.endswith("й"):
+        return n[:-1] + "ю"
+    if low.endswith("ь"):
+        return n[:-1] + ("ю" if address_form == "он" else "и")
+    if low[-1] in "оеиуыэю":
+        return n
+    return n + "у"                # Алекс -> Алексу, Артём -> Артёму
+
+
 def years(n: int) -> str:
     """3 года / 5 лет. Модель арифметике и склонению не доверяем (правило проекта)."""
     if 11 <= n % 100 <= 14:
@@ -139,7 +158,36 @@ def band_age(key: str) -> int:
     return BAND_BY_KEY.get(key, AGE_BANDS[1])["age"]
 
 
-# --- Экран загрузки: почта собирается ВМЕСТЕ с фотографией ------------------------
+# --- Продающий блок на экране вывода ----------------------------------------------
+# ⚠️ DRAFT: это служебный текст интерфейса (мой, не авторский). Экран вывода — точка
+# продажи бесплатного предложения, и до этого он выглядел как форма: авторский абзац
+# «возьмите один обычный недавний рисунок…» висел без заголовка и без призыва.
+OFFER_TITLE = "Пришлите этот рисунок — разберём бесплатно"
+OFFER_LEAD = ("Сейчас разбор одного рисунка бесплатный: мы только запускаем сервис. "
+              "Через минуту вы получите разбор этого листа — прямо здесь и копией "
+              "на почту.")
+OFFER_BULLETS = [
+    "что на листе видно на самом деле — материал, масштаб, детали, которые легко пропустить",
+    "одну деталь, за которую стоит зацепиться, и что о ней говорит традиция прочтения "
+    "детского рисунка",
+    "вопрос, который стоит задать {name_dat} сегодня — и почему {ego} ответ точнее "
+    "любой догадки взрослого",
+]
+
+
+def offer_block(name: str, address_form: str = "он") -> dict:
+    """Продающий блок экрана вывода. Тексты служебные (DRAFT), авторская просьба о
+    рисунке приходит отдельно из assemble_summary()['ask'] и не меняется."""
+    return {
+        "title": OFFER_TITLE,
+        "lead": OFFER_LEAD,
+        "bullets": [g(b, address_form).replace("{name_dat}", dative(name, address_form))
+                    for b in OFFER_BULLETS],
+        "how": OFFER_HOW,
+        "free_note": OFFER_FREE_NOTE,
+    }
+OFFER_HOW = "Как сфотографировать"
+OFFER_FREE_NOTE = "Бесплатно, без карты и без регистрации."
 # Не отдельной стеной после сорока секунд ожидания, а как «куда прислать». Это же
 # закрывает старую дыру: резервный выход обещал письмо, которого у нас не было.
 UPLOAD_TITLE = "Куда прислать разбор?"
@@ -490,8 +538,8 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
             # Это следствие решения о полосах, а не правка авторского текста.
             paragraphs.append(g(p, address_form)
                               .replace("{age} {years}", BAND_LABELS[band]))
-        return {"paragraphs": paragraphs, "ask_variant": "neutral",
-                "override_used": False}
+        return {"paragraphs": paragraphs[:-1], "ask": paragraphs[-1],
+                "ask_variant": "neutral", "override_used": False}
 
     # 1. Зеркало: тревога простыми словами + фраза про длительность.
     mirror = MIRROR.get(concern_key, "")
@@ -512,14 +560,16 @@ def assemble_summary(*, concern_key: str, duration_key: str | None, age: int,
     if concern_key == "stopped":
         for p in STOPPED_PATH:
             paragraphs.append(g(p, address_form))
-        return {"paragraphs": paragraphs, "ask_variant": "stopped",
-                "override_used": override_used}
+        return {"paragraphs": paragraphs[:-1], "ask": paragraphs[-1],
+                "ask_variant": "stopped", "override_used": override_used}
 
     # 4-5. Переход и действие.
     paragraphs.append(TRANSITION)
-    paragraphs.append(ACTION_STANDARD)
-    return {"paragraphs": paragraphs, "ask_variant": "standard",
-            "override_used": override_used}
+    # Просьбу о рисунке отдаём ОТДЕЛЬНО: на экране она уходит под заголовок продающего
+    # блока. Сам текст не меняется — меняется только его место (§5 требует, чтобы
+    # строка про «обычный, не самый пугающий» стояла везде, где мы просим рисунок).
+    return {"paragraphs": paragraphs, "ask": ACTION_STANDARD,
+            "ask_variant": "standard", "override_used": override_used}
 
 
 def wait_hint(concern_key: str, address_form: str = "он") -> str:

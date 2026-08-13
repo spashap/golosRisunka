@@ -1,5 +1,9 @@
 {# Вывод после вопросов. Собран НА СЕРВЕРЕ по границам абзацев (§5): склейка внутри
-   предложения — единственное, что здесь абсолютно запрещено, и в JS её было бы не видно. #}
+   предложения — единственное, что здесь абсолютно запрещено, и в JS её было бы не видно.
+
+   Это не форма, а точка продажи бесплатного предложения: сначала авторский вывод,
+   затем заголовок оффера, что человек получит, авторская просьба о рисунке под своим
+   заголовком, загрузка и почта одним шагом, призыв. #}
 {% if limit_token %}
 <div class="form-card">
   <h2 class="h2">{{ texts.LIMIT_TITLE.format(name=name) }}</h2>
@@ -14,36 +18,45 @@
   {% endfor %}
 </div>
 
-{# Загрузка и почта — ОДИН шаг. Почта собирается как «куда прислать», а не стеной
-   после сорока секунд ожидания; заодно письмо становится честным обещанием. #}
-<div class="form-card" id="f-upload" data-token="{{ token }}"
-     data-wait-hint="{{ wait_hint }}">
-  <label class="file-drop" for="f-file">
+<div class="offer" id="f-upload" data-token="{{ token }}" data-wait-hint="{{ wait_hint }}">
+  <span class="badge">Бесплатно на запуске</span>
+  <h2 class="h2 offer__title">{{ offer.title }}</h2>
+  <p class="offer__lead">{{ offer.lead }}</p>
+
+  <ul class="check-list offer__list">
+    {% for b in offer.bullets %}<li>{{ b }}</li>{% endfor %}
+  </ul>
+
+  {# Авторская просьба о рисунке — дословно, но теперь под своим заголовком. #}
+  <h3 class="h3 offer__how">{{ offer.how }}</h3>
+  <p class="offer__ask">{{ ask }}</p>
+
+  <label class="file-drop offer__drop" for="f-file">
     <img class="preview" hidden alt="">
-    <span class="fd-icon">＋</span>
-    <span class="fd-text">Добавить фото рисунка</span>
+    <div class="fd-icon">📷</div>
+    <div class="fd-text">Нажмите и выберите фото рисунка — JPG, PNG или HEIC, до 15 МБ</div>
     <input type="file" id="f-file" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*"
            data-ym-goal="free_add_drawing">
   </label>
 
-  <h3 class="h3" style="margin-top:18px">{{ texts.UPLOAD_TITLE }}</h3>
+  <h3 class="h3 offer__how">{{ texts.UPLOAD_TITLE }}</h3>
   <p>{{ texts.UPLOAD_BODY }}</p>
   <div class="field">
     <div class="ctl"><input class="input" id="f-email" type="email"
          inputmode="email" autocomplete="email" placeholder="you@example.com"></div>
   </div>
-  <button class="btn btn--primary" style="width:100%" id="f-go"
+
+  <button class="btn btn--primary offer__cta" id="f-go"
           data-ym-goal="free_upload_submit">{{ texts.UPLOAD_BUTTON }}</button>
-  <p class="hint" style="margin-top:8px">{{ texts.UPLOAD_NOSPAM }}</p>
-  <p class="hint">{{ texts.STORAGE_NOTICE }}</p>
+  <p class="offer__note">{{ offer.free_note }}</p>
+  <p class="hint">{{ texts.UPLOAD_NOSPAM }} {{ texts.STORAGE_NOTICE }}</p>
   <p class="err" id="f-uperr" hidden></p>
 </div>
 
 <details class="form-card">
   <summary><b>{{ texts.NO_DRAWING_TITLE }}</b></summary>
   <p>{{ texts.NO_DRAWING_BODY }}</p>
-  {# Памятка теперь настоящая: в письме уходит возрастной якорь этой полосы,
-     то есть обещание выполняется, а не остаётся обещанием. #}
+  {# Памятка настоящая: в письмо уходит возрастной якорь полосы. #}
   <p>{{ texts.NO_DRAWING_BONUS.format(band=band) }}</p>
   <div class="field"><div class="ctl">
     <input class="input" id="f-nodraw-email" type="email" inputmode="email"
