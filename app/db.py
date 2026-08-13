@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS orders (
     child_json TEXT,                      -- данные ребёнка из формы (до создания child)
     visitor_id TEXT,                      -- аналитика: кто купил
     utm_json TEXT,                        -- first-touch UTM на момент заказа
+    free_token TEXT,                      -- из какого бесплатного разбора пришёл заказ (атрибуция)
     retry_count INTEGER DEFAULT 0,        -- сколько авто-перезапусков уже было (транзитные сбои)
     next_retry_at TEXT,                   -- когда воркеру забрать 'failed'-заказ снова (UTC ISO); NULL = не перезапускать
     created_at TEXT NOT NULL,
@@ -248,6 +249,11 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE orders ADD COLUMN retry_count INTEGER DEFAULT 0")
     if "next_retry_at" not in ocols:
         conn.execute("ALTER TABLE orders ADD COLUMN next_retry_at TEXT")
+    # Атрибуция «фремиум -> покупка»: токен бесплатного разбора, из которого пришёл заказ.
+    # Косвенная склейка (email/visitor_id) остаётся, но она гадательная; прямой переход
+    # из разбора — единственный точный источник, и без колонки он терялся.
+    if "free_token" not in ocols:
+        conn.execute("ALTER TABLE orders ADD COLUMN free_token TEXT")
 
 
 def get_db() -> sqlite3.Connection:

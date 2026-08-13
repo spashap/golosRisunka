@@ -487,6 +487,11 @@ def order_submit():
                                   status=400, reused=reused)
     track_event("order_created", {"order_id": order_id, "drawings": len(files)})
     db = get_db()
+    if free_token:
+        # Точная атрибуция «фремиум -> покупка». Пишем ПОСЛЕ создания заказа, чтобы
+        # app/orders.py (валидация формы) не пришлось трогать вообще.
+        db.execute("UPDATE orders SET free_token = ? WHERE id = ?", (free_token, order_id))
+        db.commit()
     order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     return redirect(create_payment(order_id, order["price_kopecks"]))
 

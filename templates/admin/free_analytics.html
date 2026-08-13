@@ -1,0 +1,178 @@
+{% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
+{% block title %}Фремиум{% endblock %}
+
+{# Шаг воронки: одинаково для обеих таблиц (посетители / анкеты) #}
+{% macro steps_table(steps, unit) %}
+<table>
+  <thead><tr><th>Шаг</th><th>{{ unit }}</th><th>От пред.</th><th>От начала</th><th>Что считаем</th></tr></thead>
+  <tbody>
+  {% for s in steps %}
+  <tr>
+    <td>{{ s.label }}</td>
+    <td><b>{{ s.n }}</b></td>
+    <td>{{ s.pct_prev }}</td>
+    <td>{{ s.pct_top }}</td>
+    <td class="hint">{{ s.note }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Фремиум</h1>
+  {{ period_filter(periods, days, url_for("admin.free_analytics")) }}
+</div>
+<p class="hint">Период — дата <b>анкеты</b> (когорта). Покупки этой когорты считаются
+  без ограничения по дате: важно, купил ли человек вообще, а не в тот же ли день.
+  Качество текстов и библиотека трактовок — в разделе
+  <a href="{{ url_for('admin.free') }}">Бета</a>.</p>
+
+<div class="admin-kpis">
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ total }}</div><div class="admin-kpi__l">прошли анкету</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ uploaded }}</div><div class="admin-kpi__l">загрузили рисунок</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ done }}</div><div class="admin-kpi__l">получили разбор</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ paid }}</div><div class="admin-kpi__l">оплатили отчёт</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ revenue }} ₽</div><div class="admin-kpi__l">выручка с фремиума</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ conv_done_paid }}</div><div class="admin-kpi__l">разбор → оплата</div></div>
+</div>
+
+<h2 class="h3" style="margin-top:26px">Глубина: путь по странице</h2>
+<p class="hint">Считаем <b>уникальных посетителей</b>: шаги мастера строк в базе не
+  оставляют, они видны только по кликам (маяк <code>/t/e</code>). Один человек может
+  пройти мастер дважды — в этой таблице он один. Шаги здесь не строго вложены: к
+  готовому разбору возвращаются по ссылке из письма, минуя мастер, поэтому доля от
+  предыдущего шага может быть и больше 100%.</p>
+{{ steps_table(page_steps, "посетителей") }}
+
+<h2 class="h3" style="margin-top:26px">Глубина: путь по анкетам</h2>
+<p class="hint">Считаем <b>анкеты</b> (строки <code>free_analyses</code>): одна строка =
+  один пройденный опрос. Это та единица, в которой мы платим за разбор.</p>
+{{ steps_table(form_steps, "анкет") }}
+
+<p class="hint">Оценка трактовки в цепочку не входит: она необязательна, купить можно
+  и не оценив. «Создали заказ» может оказаться больше «получили разбор» — заказ
+  засчитывается и тому, кто бросил фремиум на полпути, а потом всё равно купил.</p>
+
+<h2 class="h3" style="margin-top:26px">Что делают с готовым разбором</h2>
+<table>
+  <thead><tr><th>Оценили трактовку</th><th>из готовых разборов</th>
+    <th>Нажали «заказать отчёт»</th><th>Просили разобрать ещё рисунок</th>
+    <th>Упёрлись в лимит</th></tr></thead>
+  <tbody><tr>
+    <td><b>{{ engagement.voted }}</b></td>
+    <td>{{ engagement.voted_pct }}</td>
+    <td>{{ engagement.to_order_clicks }}</td>
+    <td>{{ engagement.retry_clicks }}</td>
+    <td>{{ engagement.limit_hits }}</td>
+  </tr></tbody>
+</table>
+<p class="hint">Три правых столбца — уникальные посетители (клики), два левых — анкеты.</p>
+
+<h2 class="h3" style="margin-top:26px">Кто остановился на анкете</h2>
+<table>
+  <thead><tr><th>Всего не принесли рисунок</th><th>Оставили почту («сохранить место»)</th><th>Ушли молча</th></tr></thead>
+  <tbody><tr>
+    <td><b>{{ stalled.total }}</b></td>
+    <td>{{ stalled.email }}</td>
+    <td>{{ stalled.silent }}</td>
+  </tr></tbody>
+</table>
+<p class="hint">Оставившие почту — это адреса, которым письмо «сохранили ваше место» уже
+  ушло; ушедшие молча не оставили о себе ничего, кроме ответов.</p>
+
+{% if rejects or flags %}
+<h2 class="h3" style="margin-top:26px">Дошли, но разбора не получили</h2>
+<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+  <table style="max-width:340px">
+    <thead><tr><th>Причина отказа / сбоя</th><th>раз</th></tr></thead>
+    <tbody>
+      {% for k, n in rejects %}<tr><td><code>{{ k }}</code></td><td>{{ n }}</td></tr>
+      {% else %}<tr><td colspan="2" class="hint">Отказов нет</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <table style="max-width:340px">
+    <thead><tr><th>Флаг рисунка</th><th>раз</th></tr></thead>
+    <tbody>
+      {% for k, n in flags %}<tr><td><code>{{ k }}</code></td><td>{{ n }}</td></tr>
+      {% else %}<tr><td colspan="2" class="hint">Флагов нет</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<h2 class="h3" style="margin-top:26px">Покупки после фремиума</h2>
+<p class="hint">Прямой переход из разбора — точная атрибуция (токен разбора уезжает
+  в заказ). Совпадение по email и по посетителю — догадка: общий компьютер или чужая
+  почта дают ложную склейку, поэтому они показаны отдельно, а не в общей куче.</p>
+<table>
+  <thead><tr><th>Как связали</th><th>Заказов</th><th>Оплачено</th><th>Выручка</th></tr></thead>
+  <tbody>
+  {% for k in by_kind %}
+  <tr><td>{{ k.label }}</td><td>{{ k.orders }}</td><td>{{ k.paid }}</td><td>{{ k.rub }} ₽</td></tr>
+  {% else %}
+  <tr><td colspan="4" class="hint">Покупок из фремиума за период нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="hint" style="margin-top:8px">Анкета → оплата: <b>{{ conv_total_paid }}</b> ·
+  готовый разбор → оплата: <b>{{ conv_done_paid }}</b></p>
+
+{% if pairs %}
+<div class="admin-scroll" style="margin-top:14px">
+<table>
+  <thead><tr><th>Разбор</th><th>Ребёнок</th><th>Тревога</th><th>Анкета</th>
+    <th>Заказ</th><th>Когда</th><th>Через</th><th>Статус</th><th>₽</th><th>Связь</th></tr></thead>
+  <tbody>
+  {% for p in pairs %}
+  <tr>
+    <td>#{{ p.analysis_id }}</td>
+    <td>{{ p.child }}</td>
+    <td class="hint">{{ p.concern }}</td>
+    <td style="white-space:nowrap">{{ p.free_at }}</td>
+    <td>#{{ p.order_id }} <span class="hint">{{ p.product }}</span></td>
+    <td style="white-space:nowrap">{{ p.order_at }}</td>
+    <td style="white-space:nowrap">{{ p.lag_days }}</td>
+    <td><span class="admin-status admin-status--{{ p.status }}">{{ p.status }}</span></td>
+    <td>{% if p.paid %}{{ p.rub }}{% else %}—{% endif %}</td>
+    <td class="hint">{{ p.kind_label }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+<h2 class="h3" style="margin-top:26px">Что выбирают в анкете</h2>
+<p class="hint">У каждого варианта — не только «сколько раз выбрали», но и куда эти люди
+  дошли. Вариант, который выбирают часто, но после которого не приносят рисунок, —
+  это проблема текста, а не проблема спроса.</p>
+{% for s in surveys %}
+<h3 style="margin-top:18px">{{ s.title }}</h3>
+{% if s.hint %}<p class="hint">{{ s.hint }}</p>{% endif %}
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>{{ s.unit }}</th><th>выбрали</th><th>доля</th><th>загрузили рисунок</th>
+    <th>дошли до загрузки</th><th>получили разбор</th><th>заказали</th><th>оплатили</th></tr></thead>
+  <tbody>
+  {% for r in s.rows %}
+  <tr>
+    <td>{{ r.label }}</td>
+    <td><b>{{ r.n }}</b></td>
+    <td>{{ r.share }}</td>
+    <td>{{ r.uploaded }}</td>
+    <td>{{ r.to_upload }}</td>
+    <td>{{ r.done }}</td>
+    <td>{{ r.orders }}</td>
+    <td>{{ r.paid }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8" class="hint">Данных нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endfor %}
+{% endblock %}

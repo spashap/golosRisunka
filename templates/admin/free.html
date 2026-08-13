@@ -28,6 +28,8 @@
 {% endif %}
 
 <h2 class="h3">Воронка</h2>
+<p class="hint">Глубина прохождения, выбор в анкете и покупки после разбора —
+  в разделе <a href="{{ url_for('admin.free_analytics') }}?days={{ days }}">Фремиум</a>.</p>
 <table>
   <thead><tr>{% for f in funnel %}<th>{{ f.label }}</th>{% endfor %}<th>оценили</th><th>оставили email</th></tr></thead>
   <tbody><tr>{% for f in funnel %}<td>{{ f.n }}</td>{% endfor %}<td>{{ voted }}</td><td>{{ with_email }}</td></tr></tbody>

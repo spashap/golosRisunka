@@ -20,6 +20,7 @@ import re
 from flask import (Blueprint, abort, redirect, render_template, request,
                    Response, url_for)
 
+from app import admin_free_analytics as fa
 from app import geoip, jobs
 from app.db import get_db, now
 from config import settings
@@ -40,6 +41,7 @@ SECTIONS = [
     ("admin.site_settings", "Настройки сайта"),
     ("admin.report_texts", "Тексты отчёта"),
     ("admin.emails", "Письма"),
+    ("admin.free_analytics", "Фремиум"),
     ("admin.free", "Бета"),
 ]
 
@@ -273,9 +275,12 @@ def analytics():
 
     sources_view = [(name, s, src_members.get(name, []))
                     for name, s in sorted(sources.items(), key=lambda kv: -kv[1]["visitors"])]
+    # Фремиум на главной вкладке: сколько прошли анкету и чем это кончилось.
+    # Фильтр «вовлечённых» сюда не применяем — анкета сама по себе и есть вовлечение.
     return _render("admin.analytics", "admin/analytics.html",
                    days=days, periods=PERIODS, show=request.args.get("show"),
                    kpi=kpi, funnel=funnel, sources=sources_view,
+                   free=fa.dashboard_counters(db, since),
                    events=events_view, bots=bots,
                    humans=humans, engaged=engaged, landing_only=landing_only,
                    metrika_configured=bool(settings.YANDEX_METRIKA_ID))
@@ -479,6 +484,17 @@ def _heartbeats(db) -> list[dict]:
         out.append({"name": name, "label": label, "ago": ago,
                     "ok": ago is not None and ago < 120})
     return out
+
+
+@bp_admin.get("/free-analytics")
+def free_analytics():
+    """Отдельная страница аналитики фремиума: глубина прохождения, выбор в анкете,
+    покупки после разбора. «Бета» рядом — про КАЧЕСТВО текстов (библиотека трактовок),
+    здесь — про ПОВЕДЕНИЕ; смешивать их в одном экране означало бы не читать ни одно."""
+    _guard()
+    days, since = _period()
+    return _render("admin.free_analytics", "admin/free_analytics.html",
+                   days=days, periods=PERIODS, **fa.page_data(get_db(), since))
 
 
 @bp_admin.get("/free")

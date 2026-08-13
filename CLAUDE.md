@@ -23,6 +23,10 @@
 ```
 venv\Scripts\python.exe run.py                                  # dev-сервер :5000
 venv\Scripts\python.exe worker.py [--once]                      # воркер отчётов (paid -> delivered)
+venv\Scripts\python.exe free_worker.py [--once]                 # воркер БЕСПЛАТНЫХ разборов (/free)
+venv\Scripts\python.exe scripts\free_lab.py --matrix             # офлайн-прогон фремиум-разборов + замер цены
+venv\Scripts\python.exe scripts\free_lab.py --texts              # все сборки §5 фремиума + пары с оверрайдом
+venv\Scripts\python.exe scripts\free_retention_check.py          # проверка удаления фото по сроку хранения
 venv\Scripts\python.exe scripts\regenerate_report.py ORDER_ID   # ручной перезапуск заказа
 venv\Scripts\python.exe scripts\generate_report.py IMG [IMG2] --context C1.txt [C2.txt] [--common X.txt] [-o DIR]
 venv\Scripts\python.exe scripts\render_sample.py                # отчёт из fake JSON (шаблон)
@@ -49,6 +53,9 @@ release.bat "msg"                                               # релиз о�
   `install_cert.sh` — устаревший CF-Origin, в .gitignore из-за приватного ключа).
 - Обновление прода: на сервере `cd /var/www/golosrisunka && ./deploy.sh` (git pull + deps + restart);
   только перезапуск — `./restart.sh`. Оба в корне репо (eol=lf, +x в git).
+- Три systemd-юнита: `golosrisunka-web`, `golosrisunka-worker`, **`golosrisunka-free`** (фремиум).
+  `deploy.sh` их только перезапускает и предупреждает, если юнит не установлен — НЕ создаёт.
+  Первичная установка юнита — `scripts/deploy/go_live.sh` или руками `systemctl enable --now`.
 - ЮKassa встроена (TEST-стадия, см. «Состояние на 22.06»). Stub удалён. Перед боем добавить
   `YUKASSA_MODE`/`YUKASSA_SHOP_ID_LIVE`/`YUKASSA_SECRET_KEY_LIVE` в СЕРВЕРНЫЙ `.env`, затем `./deploy.sh`.
 
@@ -102,12 +109,47 @@ release.bat "msg"                                               # релиз о�
   `python scripts\bump_version.py` (V1.001 → V1.002) и включать `VERSION` в тот же коммит.
   Мажор (`--major`, сброс минора в 000) — ТОЛЬКО по явной команде заказчика. Источник истины —
   файл `VERSION`; показывается в футере сайта (`config.settings.APP_VERSION` → `inject_globals`).
+- **КЭШ СТАТИКИ (обязательно)**: nginx отдаёт `/static/*` с `max-age=30 дней`, поэтому ВСЕ ссылки
+  на css/js идут с `?v={{ version }}` (`_base.html`). Без версии правка дизайна НЕ доезжает до тех,
+  кто уже был на сайте, и выглядит как «сломанная вёрстка». Если пользователь описывает вёрстку,
+  которой не может быть по коду, — СНАЧАЛА сверить, что реально отдаётся браузеру.
+- **ФРЕМИУМ `/free` (см. память [[freemium-beta]])**: своя схема/промпт/линтер (`pipeline/free_*`),
+  платный путь ими НЕ затрагивается. Не переоткрывать: email НЕ выдаёт сессию покупателя (скоуп-cookie
+  + magic-link); фремиум НЕ создаёт строк `children`; генерация — в отдельном юните
+  `golosrisunka-free`; ключи трактовок — закрытый словарь `config/free_keys.py`, источники там же
+  как ДАННЫЕ (модель их не называет); страница noindex и вне robots/sitemap (иначе конкурирует
+  с лендингом по коммерческим запросам). На лендинге «бесплатно» — свойство действия, НЕ имя
+  продукта: слов «бесплатный отчёт», «0 ₽», «начните с бесплатного» быть не должно.
 - **АНАЛИТИКА / Я.Метрика (обязательно)**: счётчик стоит на ВСЕХ страницах сайта, кроме `/admin*`
   (`templates/_metrika.html`, гейт `metrika_id and not request.path.startswith('/admin')`;
   ID из `YANDEX_METRIKA_ID` в `.env`). КАЖДАЯ новая кнопка/CTA/ссылка-действие получает уникальный
   `data-ym-goal="page_action"` (форма — `data-ym-goal-submit="..."`); делегированный трекер в
   `_metrika.html` сам шлёт `reachGoal` — JS дописывать не нужно. Имя цели уникальное, по схеме
   `<страница>_<действие>` (напр. `order_submit`, `cabinet_download_pdf`). Админку НЕ трекать.
+
+## Состояние на 13.08.2026 — ФРЕМИУМ `/free` В ПРОДЕ (V1.049→V1.064)
+- **Бесплатный разбор одного рисунка живёт на `/free`**, вход с главной тремя тихими точками.
+  Полный контекст, решения и открытые вопросы — память [[freemium-beta]] и `projectSpec/fremium/`
+  (задачи `task-fremium-*.md`, отчёты по гейтам `gate-report*.md`).
+- **North star фремиума — покупка, а не корректность.** Критерий приёмки текста не автоматический:
+  в каждом разборе есть фраза, которую мама перескажет мужу.
+- Пайплайн: `pipeline/free_{prompt,schema,lint,gemini}.py` + `app/free.py` + `free_worker.py` +
+  `config/free_{texts,keys,names}.py`. Вывод после вопросов (§5) собирается НА СЕРВЕРЕ из авторских
+  блоков — без вызова модели и без единой интерпретации: рисунка ещё нет.
+- Данные беты: `free_analyses` / `free_interpretations` / `free_interpretation_keys` /
+  `service_heartbeat`; раздел админки **«Бета»** (`/admin/free`) — воронка, библиотека трактовок с
+  разметкой по ключу, разборы, живость воркеров.
+- **Аналитика фремиума (V1.065)**: блок «Фремиум» на дашборде (прошли анкету / только email /
+  запросили разбор) + раздел **«Фремиум»** (`/admin/free-analytics`, счёт в `app/admin_free_analytics.py`):
+  две воронки — по ПОСЕТИТЕЛЯМ (шаги мастера видны только по кликам `click:<goal>` из маяка `/t/e`)
+  и по АНКЕТАМ (строки `free_analyses`); их НЕ смешивать в одной колонке. Покупка связывается с
+  фремиумом точно через `orders.free_token` (пишется в `routes.order_submit`), косвенные склейки
+  (email/visitor) показываются отдельно как догадка. «Бета» = качество текстов, «Фремиум» = поведение.
+- Хранение фото — 90 дней (`app/free_retention.py`, суточный проход внутри `free_worker`,
+  проверка `scripts/free_retention_check.py`). `FREE_DAILY_CAP=200` в серверном `.env`.
+- Стоимость разбора ~1.4–2 ₽, время 25–60 с (замер `scripts/free_lab.py`).
+- ⏳ Открыто: заказчик подтверждает список источников в блоке трактовки; флаг `sparse` (каляка)
+  недетерминирован (2 из 4 на одном файле) — лечится отдельным классифицирующим вызовом, не согласован.
 
 ## Состояние на 02.07.2026 — АДМИНКА «ЦЕНЫ» + фикс записи конфигов из веба (V1.047–V1.048, В ПРОДЕ)
 - **Новый раздел админки «Цены» (`/admin/prices`)**: у каждого продукта «цена до скидки» (зачёркнутая)

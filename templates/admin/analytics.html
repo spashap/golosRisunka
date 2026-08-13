@@ -53,7 +53,20 @@
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.conversion }}</div><div class="admin-kpi__l">{% if show == 'all' %}посетитель{% else %}вовлечённый{% endif %} → оплата</div></div>
 </div>
 
-<h2>Воронка</h2>
+<h2 style="margin-top:26px">Фремиум <span class="hint">(бесплатный разбор)</span></h2>
+<p class="hint">Анкету прошли <b>{{ free.total }}</b> — из них оставили только почту
+  <b>{{ free.email_only }}</b>, принесли рисунок <b>{{ free.requested }}</b>.
+  Открывали страницу: {{ free.openers }}.
+  <a href="{{ url_for('admin.free_analytics') }}?days={{ days }}">Подробная аналитика фремиума →</a></p>
+<div class="admin-kpis">
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.total }}</div><div class="admin-kpi__l">прошли анкету</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.email_only }}</div><div class="admin-kpi__l">только email<br>(рисунка нет)</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.requested }}</div><div class="admin-kpi__l">запросили разбор<br>(рисунок загружен)</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.done }}</div><div class="admin-kpi__l">разбор готов</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.dropped }}</div><div class="admin-kpi__l">ушли без почты<br>и без рисунка</div></div>
+</div>
+
+<h2 style="margin-top:26px">Воронка</h2>
 <p class="hint">Кликните по шагу — раскроется список тех, кто его прошёл (до {{ 60 }}).</p>
 <div class="vis-list">
   <div class="drill-head">
