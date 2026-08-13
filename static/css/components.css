@@ -496,6 +496,29 @@ html.dk .btn { color: #241A12; }
                                      color: var(--accent2); font-weight: 700; }
 .price-card .btn { margin-top: auto; }       /* кнопка прижата к низу карточки */
 .price-card--soon { opacity: .82; }
+/* Бесплатная карточка ведёт взгляд: акцентная рамка вместо тонкой линии. */
+.price-card--free { border: 2px solid var(--accent); box-shadow: var(--shadow-hard); }
+.price-card .p-note { margin-top: 10px; text-align: center; color: var(--muted);
+                      font-size: var(--fs-micro); }
+
+/* Полоса «проверьте бесплатно» внутри текстовых секций лендинга. */
+.free-band {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  margin-top: 26px; padding: 20px 24px; border-radius: var(--radius-card);
+  background: var(--bg-soft); border: 2px solid var(--accent);
+}
+.free-band--wide { margin-top: 0; }
+.free-band__text { flex: 1 1 260px; font-size: var(--fs-body); line-height: 1.5; }
+.free-band__text b { display: block; font-family: var(--font-head); font-weight: 800;
+                     font-size: var(--fs-h3); margin-bottom: 4px; }
+.free-band .btn { flex: 0 0 auto; }
+@media (max-width: 560px) { .free-band .btn { width: 100%; } }
+
+/* Второй вход в герое — бесплатный, рядом с платным. */
+.hero__free { margin-left: 12px; }
+@media (max-width: 560px) {
+  .hero__free { display: block; margin: 12px 0 0; width: 100%; }
+}
 .price-card .p-soon-note { margin-top: auto; color: var(--soft); font-size: var(--fs-small);
                            font-family: var(--font-body); }
 

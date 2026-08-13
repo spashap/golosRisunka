@@ -53,7 +53,7 @@
         рисунком его характер, важные для него темы и внутренний мир — и подсказываем, как понять и поддержать
         именно его. Бережно, по методикам, без гаданий.</p>
       <div class="cta-zone">
-        <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order">Получить отчёт — {{ min_price }} ₽</a><span class="cta-info" tabindex="0" role="button" aria-label="Что входит в отчёт">что входит <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order">Получить отчёт</a><a class="btn btn--ghost hero__free" href="/free" data-ym-goal="landing_hero_free">Сначала бесплатно — один рисунок</a><span class="cta-info" tabindex="0" role="button" aria-label="Что входит в отчёт">что входит <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <div class="cta-pop">
           <div class="note">
             <svg width="34" height="22" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -155,6 +155,16 @@
           повторяется из работы в работу (устойчивое), а что появилось впервые (настроение момента), — по одному
           рисунку этого не увидеть.</p>
       </div>
+    </div>
+
+    {# Тревога у читателя тут уже названа его словами — самое естественное место
+       предложить проверить её, ничего не платя. #}
+    <div class="free-band reveal reveal--d1">
+      <div class="free-band__text">
+        <b>Узнали свою ситуацию?</b>
+        Проверьте её на одном рисунке — бесплатно, за минуту, без карты и регистрации.
+      </div>
+      <a class="btn btn--primary" href="/free" data-ym-goal="landing_cases_free">Проверить бесплатно</a>
     </div>
   </div>
 </section>
@@ -282,29 +292,64 @@
 <!-- 9. Цены -->
 <section class="section section--soft" id="ceny">
   <div class="wrap">
-    <h2 class="reveal">Выберите отчёт</h2>
-    <div class="sub reveal reveal--d1">Сейчас доступен отчёт по 1–3 рисункам одного периода. Отчёт о развитии во времени появится позже.</div>
+    <h2 class="reveal">Начните с бесплатного</h2>
+    <div class="sub reveal reveal--d1">Разбор одного рисунка — бесплатно, пока мы запускаемся.
+      Если захотите увидеть портрет целиком, полный отчёт соберёт его по 1–3 рисункам.</div>
     <div class="price-grid">
-      {% for code, p in products.items() %}
-      <div class="card price-card{% if not p.enabled %} price-card--soon{% endif %} reveal reveal--d1">
-        {% if not p.enabled %}<span class="badge badge--corner">скоро</span>{% endif %}
+
+      {# Бесплатный вариант — отдельная карточка, не продукт из прайса: в products.json
+         лежат только платные продукты, и платёжная цепочка их не касается. #}
+      <div class="card price-card price-card--free reveal reveal--d1">
+        <span class="badge badge--corner">бесплатно</span>
+        <div class="p-title">Разбор одного рисунка</div>
+        <div class="p-sub">Загрузите одно фото — и увидите, что на листе видно на самом деле</div>
+        <div class="p-prices">
+          <div class="p-launch">Пока идёт запуск</div>
+          <span class="p-price">0 ₽</span>
+        </div>
+        <ul class="p-features">
+          <li>Что видно на рисунке — материал, масштаб, детали</li>
+          <li>Одна деталь и что о ней говорит традиция прочтения детского рисунка</li>
+          <li>Вопрос, который стоит задать ребёнку сегодня</li>
+          <li>Готов за минуту, копия на почту</li>
+        </ul>
+        <a class="btn btn--primary" href="/free"
+           data-ym-goal="landing_price_free">Разобрать рисунок бесплатно</a>
+        <p class="p-note">Без карты и без регистрации</p>
+      </div>
+
+      {# Платные продукты. Отчёт о развитии («скоро») на главной больше не показываем:
+         карточка несуществующего продукта занимала место бесплатного. #}
+      {% for code, p in products.items() if p.enabled %}
+      <div class="card price-card reveal reveal--d1">
         <div class="p-title">{{ p.title }}</div>
         <div class="p-sub">{{ p.subtitle }}</div>
         <div class="p-prices">
-          {% if p.enabled %}<div class="p-launch">Цена на запуске</div>{% endif %}
+          <div class="p-launch">Цена на запуске</div>
           {% if p.old_price_rub %}<span class="p-old">{{ p.old_price_rub }} ₽</span>{% endif %}
           <span class="p-price">{{ p.price_rub }} ₽</span>
         </div>
         <ul class="p-features">
           {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
         </ul>
-        {% if p.enabled %}
-        <a class="btn btn--primary" href="/order?product={{ code }}" data-ym-goal="landing_price_order_{{ code }}">Заказать отчёт — {{ p.price_rub }} ₽</a>
-        {% else %}
-        <span class="p-soon-note">Появится после запуска MVP</span>
-        {% endif %}
+        <a class="btn btn--primary" href="/order?product={{ code }}"
+           data-ym-goal="landing_price_order_{{ code }}">Заказать отчёт</a>
+        <p class="p-note">Не понравится — вернём деньги в течение 7 дней</p>
       </div>
       {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- 9b. Последний бесплатный вход перед FAQ -->
+<section class="section">
+  <div class="wrap">
+    <div class="free-band free-band--wide reveal">
+      <div class="free-band__text">
+        <b>Сомневаетесь, стоит ли это ваших денег?</b>
+        Начните с бесплатного разбора одного рисунка — и решайте по результату, а не по обещаниям.
+      </div>
+      <a class="btn btn--primary" href="/free" data-ym-goal="landing_prefaq_free">Разобрать рисунок бесплатно</a>
     </div>
   </div>
 </section>
