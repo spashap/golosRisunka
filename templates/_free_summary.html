@@ -33,13 +33,18 @@
   <p class="offer__ask">{{ ask }}</p>
   {% if ask_note %}<p class="offer__asknote">{{ ask_note }}</p>{% endif %}
 
-  <label class="file-drop offer__drop" for="f-file">
-    <img class="preview" hidden alt="">
-    <div class="fd-icon">📷</div>
-    <div class="fd-text">Нажмите и выберите фото рисунка — JPG, PNG или HEIC, до 15 МБ</div>
-    <input type="file" id="f-file" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*"
-           data-ym-goal="free_add_drawing">
-  </label>
+  {# Разметка один в один как в платной форме заказа (templates/order.html). #}
+  <div class="field offer__drop">
+    <label class="file-drop" for="f-file">
+      <img class="preview" hidden alt="">
+      <div class="fd-icon">🖼️</div>
+      <div class="fd-text">Нажмите и выберите фото — JPG, PNG или HEIC, до 15 МБ</div>
+      <input type="file" id="f-file" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*"
+             data-ym-goal="free_add_drawing">
+    </label>
+    <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа —
+      мы не публикуем работы и не передаём их третьим лицам.</div>
+  </div>
 
   <h3 class="h3 offer__how">{{ texts.UPLOAD_TITLE }}</h3>
   <p>{{ texts.UPLOAD_BODY }}</p>

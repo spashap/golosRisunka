@@ -288,6 +288,11 @@ html.dk .btn { color: #241A12; }
 
 /* загрузка рисунка */
 .file-drop {
+  /* display:block ОБЯЗАТЕЛЕН: класс висит на <label>, а label по умолчанию инлайновый.
+     Инлайновый элемент с блочными детьми (.fd-icon/.fd-text) рвёт рамку на фрагменты,
+     а содержимое вываливается наружу. Баг был и в платной форме заказа — этот
+     компонент с самого начала задумывался блочным. */
+  display: block;
   border: 2px dashed var(--badge); border-radius: 12px; padding: 22px;
   text-align: center; cursor: pointer; background: var(--bg); transition: .15s;
 }
