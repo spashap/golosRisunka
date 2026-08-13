@@ -70,14 +70,17 @@
         <a class="btn btn--primary" style="width:100%" href="/free"
            data-ym-goal="free_coloring_again">{{ cta.button }}</a>
         {% else %}
-        <p class="free-report__lead"><b>{{ cta.title }}</b></p>
-        <p>{{ cta.launch }}</p>
+        <span class="badge">Следующий шаг</span>
+        <h2 class="h2 free-sell__title">{{ cta.title }}</h2>
+        <p class="free-sell__lead">{{ cta.launch }}</p>
         <p>{{ cta.body }}</p>
         <p>{{ cta.main }}</p>
-        <p class="hint">{{ cta.ready }}</p>
+        <p class="free-sell__price">{{ cta.price }} ₽{% if cta.old_price %}<span
+           class="free-sell__old">{{ cta.old_price }} ₽</span>{% endif %}</p>
         <a class="btn btn--primary" style="width:100%" href="/order?free={{ token }}"
            data-ym-goal="free_to_order">{{ cta.button }}</a>
-        <p class="hint" style="text-align:center;margin-top:10px">{{ cta.guarantee }}</p>
+        <p class="hint" style="text-align:center;margin-top:10px">{{ cta.ready }}</p>
+        <p class="free-sell__guarantee"><b>✓</b> {{ cta.guarantee }}</p>
         {% endif %}
       </div>
 

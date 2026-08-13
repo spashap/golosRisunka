@@ -473,7 +473,9 @@ def coloring_cta(name: str, address_form: str = "он") -> dict:
 def selling_block(name: str, address_form: str = "он") -> dict:
     """Продающий финал. Цена — из админки, направления — из платного отчёта."""
     from config import settings
-    price = settings.get_products().get("snapshot", {}).get("price_rub", 0)
+    prod = settings.get_products().get("snapshot", {})
+    price = prod.get("price_rub", 0)
+    old_price = prod.get("old_price_rub") or None
     f = _SELLING_FORMS.get(address_form, _SELLING_FORMS["он"])
     forms = _FORMS.get(address_form, _FORMS["он"])
     return {
@@ -485,6 +487,7 @@ def selling_block(name: str, address_form: str = "он") -> dict:
         "guarantee": SELLING_GUARANTEE,
         "button": RESULT_CTA_BUTTON.format(name=genitive(name, address_form), price=price),
         "price": price,
+        "old_price": old_price,
     }
 
 # --- Особые случаи §9: авторские абзацы. Их эмитит СЕРВЕР по флагу модели, а не сама
