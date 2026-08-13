@@ -1,12 +1,54 @@
 {% extends "admin/_base_admin.html" %}
 {% from "admin/_period.html" import period_filter %}
+{% from "admin/_tabs.html" import tabs %}
 {% block title %}Заказы{% endblock %}
 {% block content %}
 <div class="admin-head">
   <h1 class="h2">Заказы</h1>
   {{ period_filter(periods, days, url_for("admin.orders")) }}
 </div>
+{{ tabs(tabs_items, tab, url_for("admin.orders"), extra="&days=" ~ days,
+        counts={"free": free_n}) }}
 {% if msg %}<p class="admin-flash admin-flash--ok">{{ msg }}</p>{% endif %}
+
+{% if tab == 'free' %}
+<p class="hint">Бесплатные разборы, где родитель оставил почту, — с ними можно связаться.
+  Это НЕ заказы: денег нет, товара нет, есть контакт и то, что человек рассказал о ребёнке.
+  Разборы без почты и качество текстов — в разделах
+  <a href="{{ url_for('admin.free_analytics') }}?days={{ days }}">Фремиум</a> и
+  <a href="{{ url_for('admin.free') }}?days={{ days }}">Бета</a>.</p>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>№</th><th>Создан (UTC)</th><th>Email</th><th>Ребёнок</th><th>Тревога</th>
+    <th>Что оставил</th><th>Статус</th><th>Разбор</th><th>Купил</th></tr></thead>
+  <tbody>
+  {% for f in free_leads %}
+  <tr>
+    <td>{{ f.id }}</td>
+    <td style="white-space:nowrap">{{ f.created }}</td>
+    <td>{{ f.email }}</td>
+    <td>{{ f.child }}{% if f.age %}, {{ f.age }}{% endif %}</td>
+    <td class="hint">{{ f.concern }}</td>
+    <td>{% if f.email_only %}только почта{% else %}почта и рисунок{% endif %}</td>
+    <td><span class="admin-status admin-status--{{ f.status }}">{{ f.status }}</span>
+      {% if f.reject %}<br><span class="hint">{{ f.reject }}</span>{% endif %}</td>
+    <td>{% if f.status == 'done' %}<a href="/free/r/{{ f.token }}" target="_blank">открыть</a>{% endif %}</td>
+    <td>
+      {% for o in f.orders %}
+        <b>#{{ o.order_id }}</b>
+        <span class="hint">{{ 'оплачен' if o.paid else o.status }} · {{ o.kind_label }}</span><br>
+      {% else %}—{% endfor %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="9">За период таких нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if free_leads|length == 300 %}<p class="hint">Показаны последние 300.</p>{% endif %}
+
+{% else %}
 <div class="admin-scroll">
 <table>
   <thead><tr><th>№</th><th>Создан (UTC)</th><th>Email</th><th>Ребёнок</th><th>Продукт</th>
@@ -40,4 +82,5 @@
 </table>
 </div>
 {% if orders|length == 300 %}<p class="hint">Показаны последние 300.</p>{% endif %}
+{% endif %}
 {% endblock %}

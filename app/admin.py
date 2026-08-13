@@ -612,10 +612,51 @@ def free_allow_replace(analysis_id: int):
     return redirect(url_for("admin.free", msg="Разрешена повторная загрузка"))
 
 
+# Вкладки «Заказы»: платные заказы и бесплатные разборы лежат в РАЗНЫХ таблицах
+# (orders / free_analyses) и меряются разным — сводить их в один список нельзя,
+# но искать «кто у нас был» заказчик приходит на один экран.
+ORDER_TABS = [("paid", "Платные заказы"), ("free", "Бесплатные разборы")]
+
+
+def _free_leads(db, since: str) -> list[dict]:
+    """Бесплатные разборы, где родитель оставил почту, — это лиды, а не просто строки
+    беты: с ними можно связаться. Без почты разбор виден в разделах «Фремиум»/«Бета»."""
+    rows = db.execute(
+        "SELECT * FROM free_analyses WHERE email IS NOT NULL AND created_at >= ?"
+        " ORDER BY id DESC LIMIT 300", (since,)).fetchall()
+    bought = fa.purchases_index(db, rows)
+    out = []
+    for r in rows:
+        buys = bought.get(r["id"], [])
+        out.append({
+            "id": r["id"], "token": r["token"],
+            "created": (r["created_at"] or "")[:16].replace("T", " "),
+            "email": r["email"], "child": r["child_name"], "age": r["child_age"],
+            "concern": fa.concern_label(r["concern_key"]),
+            "status": r["status"], "reject": r["reject_reason"],
+            # «Только почта» = ветка «нет рисунка под рукой»: анкета есть, файла нет.
+            "email_only": r["status"] == "answers",
+            "orders": buys,
+            "paid": any(b["paid"] for b in buys),
+        })
+    return out
+
+
 @bp_admin.get("/orders")
 def orders():
     _guard()
     days, since = _period()
+    tab = request.args.get("tab") if request.args.get("tab") in \
+        {t[0] for t in ORDER_TABS} else "paid"
+    db = get_db()
+    free_n = db.execute(
+        "SELECT COUNT(*) c FROM free_analyses WHERE email IS NOT NULL"
+        " AND created_at >= ?", (since,)).fetchone()["c"]
+    if tab == "free":
+        return _render("admin.orders", "admin/orders.html",
+                       days=days, periods=PERIODS, tab=tab, tabs_items=ORDER_TABS,
+                       orders=[], free_leads=_free_leads(db, since),
+                       free_n=free_n, msg=request.args.get("msg"))
     rows = get_db().execute(
         "SELECT o.*, r.public_token,"
         " (SELECT COUNT(*) FROM drawings d WHERE d.order_id = o.id) AS drawings_n"
@@ -633,7 +674,8 @@ def orders():
             "utm": _utm_label(o["utm_json"]) if o["utm_json"] else "",
         })
     return _render("admin.orders", "admin/orders.html",
-                   days=days, periods=PERIODS, orders=orders_view,
+                   days=days, periods=PERIODS, tab=tab, tabs_items=ORDER_TABS,
+                   orders=orders_view, free_leads=[], free_n=free_n,
                    msg=request.args.get("msg"))
 
 
@@ -689,22 +731,57 @@ def order_regenerate(order_id: int):
     return redirect(url_for("admin.orders", days=days, msg=msg))
 
 
+CLIENT_TABS = [("all", "Все"), ("buyers", "Покупатели"), ("free", "Из фремиума")]
+
+# Клиент фремиума создаётся в app/free._link_customer, как только родитель оставил почту,
+# — то есть в списке он БЫЛ и раньше, но выглядел пустой строкой без детей и заказов.
+# Детей фремиум намеренно не заводит (у него полоса возраста, а не birth_ym), поэтому
+# имя ребёнка для таких строк берём из самих разборов.
+_CLIENTS_SQL = (
+    "SELECT c.id, c.email, c.created_at,"
+    " (SELECT GROUP_CONCAT(name, ', ') FROM children ch WHERE ch.customer_id = c.id) kids,"
+    " (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id) n_orders,"
+    " (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id"
+    "   AND o.paid_at IS NOT NULL) n_paid,"
+    " (SELECT COALESCE(SUM(price_kopecks), 0) FROM orders o"
+    "   WHERE o.customer_id = c.id AND o.paid_at IS NOT NULL) paid_k,"
+    " (SELECT COUNT(*) FROM free_analyses f WHERE f.customer_id = c.id) n_free,"
+    " (SELECT COUNT(*) FROM free_analyses f WHERE f.customer_id = c.id"
+    "   AND f.status = 'done') n_free_done,"
+    " (SELECT GROUP_CONCAT(DISTINCT f.child_name) FROM free_analyses f"
+    "   WHERE f.customer_id = c.id) free_kids"
+    " FROM customers c")
+
+
 @bp_admin.get("/clients")
 def clients():
     _guard()
-    rows = get_db().execute(
-        "SELECT c.id, c.email, c.created_at,"
-        " (SELECT GROUP_CONCAT(name, ', ') FROM children ch WHERE ch.customer_id = c.id) kids,"
-        " (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id) n_orders,"
-        " (SELECT COALESCE(SUM(price_kopecks), 0) FROM orders o"
-        "   WHERE o.customer_id = c.id AND o.paid_at IS NOT NULL) paid_k"
-        " FROM customers c ORDER BY c.id DESC LIMIT 500").fetchall()
+    tab = request.args.get("tab") if request.args.get("tab") in \
+        {t[0] for t in CLIENT_TABS} else "all"
+    # Фильтр по вычисленным колонкам — во ВНЕШНЕМ запросе: в WHERE самого SELECT
+    # алиасы подзапросов не видны, а лимит 500 должен применяться уже после фильтра.
+    where = {"buyers": " WHERE n_paid > 0", "free": " WHERE n_free > 0"}.get(tab, "")
+    db = get_db()
+    rows = db.execute(
+        f"SELECT * FROM ({_CLIENTS_SQL}){where} ORDER BY id DESC LIMIT 500").fetchall()
+    counts = db.execute(
+        f"SELECT COUNT(*) all_n, SUM(CASE WHEN n_paid > 0 THEN 1 ELSE 0 END) buyers_n,"
+        f" SUM(CASE WHEN n_free > 0 THEN 1 ELSE 0 END) free_n"
+        f" FROM ({_CLIENTS_SQL})").fetchone()
     clients_view = [{
         "id": r["id"], "email": r["email"],
-        "created": r["created_at"][:10], "kids": r["kids"] or "",
-        "orders": r["n_orders"], "rub": r["paid_k"] // 100,
+        "created": r["created_at"][:10],
+        "kids": r["kids"] or "",
+        "free_kids": (r["free_kids"] or "").replace(",", ", "),
+        "orders": r["n_orders"], "paid": r["n_paid"], "rub": r["paid_k"] // 100,
+        "free": r["n_free"], "free_done": r["n_free_done"],
+        # «Только фремиум» — лид без единого заказа: с ним ещё предстоит работа.
+        "lead": r["n_free"] > 0 and r["n_orders"] == 0,
     } for r in rows]
-    return _render("admin.clients", "admin/clients.html", clients=clients_view)
+    return _render("admin.clients", "admin/clients.html", clients=clients_view,
+                   tab=tab, tabs_items=CLIENT_TABS,
+                   counts={"all": counts["all_n"], "buyers": counts["buyers_n"] or 0,
+                           "free": counts["free_n"] or 0})
 
 
 @bp_admin.get("/coupons")

@@ -1,16 +1,38 @@
 {% extends "admin/_base_admin.html" %}
+{% from "admin/_tabs.html" import tabs %}
 {% block title %}Клиенты{% endblock %}
 {% block content %}
 <div class="admin-head"><h1 class="h2">Клиенты</h1></div>
+{{ tabs(tabs_items, tab, url_for("admin.clients"), counts=counts) }}
+<p class="hint">Родитель попадает сюда, как только оставил почту — в платном заказе или
+  в бесплатном разборе. «Из фремиума» без заказов — это лид: контакт есть, покупки ещё нет.
+  Ребёнка фремиум намеренно не заводит (там возрастная полоса, а не дата рождения),
+  поэтому у таких строк имя показано из разбора.</p>
+<div class="admin-scroll">
 <table>
-  <thead><tr><th>№</th><th>Email</th><th>С нами с</th><th>Дети</th><th>Заказов</th><th>Оплачено</th></tr></thead>
+  <thead><tr><th>№</th><th>Email</th><th>С нами с</th><th>Дети</th>
+    <th>Заказов</th><th>Оплачено</th><th>Разборов</th><th></th></tr></thead>
   <tbody>
   {% for c in clients %}
-  <tr><td>{{ c.id }}</td><td>{{ c.email }}</td><td>{{ c.created }}</td>
-      <td>{{ c.kids }}</td><td>{{ c.orders }}</td><td>{{ c.rub }} ₽</td></tr>
+  <tr>
+    <td>{{ c.id }}</td>
+    <td>{{ c.email }}</td>
+    <td>{{ c.created }}</td>
+    <td>{% if c.kids %}{{ c.kids }}
+        {% elif c.free_kids %}{{ c.free_kids }} <span class="hint">(из разбора)</span>
+        {% endif %}</td>
+    <td>{{ c.orders }}</td>
+    <td>{{ c.rub }} ₽</td>
+    <td>{% if c.free %}{{ c.free }}{% if c.free_done %} <span class="hint">({{ c.free_done }} готов.)</span>{% endif %}{% endif %}</td>
+    <td>{% if c.lead %}<span class="status-pill status-pill--wait">только фремиум</span>
+        {% elif c.free and c.paid %}<span class="status-pill status-pill--ready">фремиум → покупка</span>
+        {% endif %}</td>
+  </tr>
   {% else %}
-  <tr><td colspan="6">Клиентов пока нет</td></tr>
+  <tr><td colspan="8">Клиентов пока нет</td></tr>
   {% endfor %}
   </tbody>
 </table>
+</div>
+{% if clients|length == 500 %}<p class="hint">Показаны последние 500.</p>{% endif %}
 {% endblock %}

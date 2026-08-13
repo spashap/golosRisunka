@@ -1,0 +1,12 @@
+{# Вкладки раздела: те же пилюли, что и фильтр периода — новых CSS-классов админка
+   не получает (её шаблоны отдают css без ?v=, а nginx кэширует статику 30 дней).
+   counts — необязательный словарь {ключ: число} для счётчика в подписи. #}
+{% macro tabs(items, current, base_url, extra="", counts=None) %}
+<div class="admin-periods">
+  {% for val, label in items %}
+  <a class="status-pill {% if current == val %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+     href="{{ base_url }}?tab={{ val }}{{ extra }}">{{ label }}{%
+     if counts and counts.get(val) is not none %} · {{ counts.get(val) }}{% endif %}</a>
+  {% endfor %}
+</div>
+{% endmacro %}

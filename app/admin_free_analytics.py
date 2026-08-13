@@ -156,6 +156,21 @@ def _label(options: list[dict], key: str | None) -> str:
     return key or "—"
 
 
+def concern_label(key: str | None) -> str:
+    """Подпись тревоги для списков админки (там, где `black` ничего не говорит)."""
+    return _label(T.CONCERNS, key)
+
+
+def purchases_index(db, rows) -> dict:
+    """{id анкеты: [покупки]} для списков админки (вкладка «Бесплатные разборы»).
+    Та же атрибуция, что и на странице «Фремиум», — двух разных ответов на вопрос
+    «купил ли этот человек» в админке быть не должно."""
+    per: dict[int, list] = {}
+    for p in _attribute_orders(db, rows)[1]:
+        per.setdefault(p["analysis_id"], []).append(p)
+    return per
+
+
 # --- Разбивка по вариантам анкеты ---------------------------------------------------
 
 def _breakdown(rows, key_fn, order: list[tuple[str, str]], buyers: dict,
