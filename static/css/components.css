@@ -906,6 +906,14 @@ html.dk .btn { color: #241A12; }
 }
 .choice__opt:hover > span { border-color: var(--accent-2); }
 
+/* Кнопка «назад» внутри шага: на телефоне это основной способ исправить ответ,
+   и полагаться только на системную кнопку браузера нельзя. */
+.wiz-back {
+  display: inline-block; margin-bottom: 10px; padding: 6px 0;
+  color: var(--muted); font-size: var(--fs-small); font-weight: 600;
+}
+.wiz-back:hover { color: var(--accent); }
+
 /* Шаги мастера: показываем по одному. Индикатор прогресса переиспользует .car-dots. */
 .wizard__step { display: none; }
 .wizard__step.is-on { display: block; }
@@ -947,6 +955,26 @@ html.dk .btn { color: #241A12; }
   background: var(--bg-soft); border: 1px solid var(--line);
 }
 .free-vote { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 0; }
+
+/* Трактовка — отдельный блок, а не абзац прозы: родитель должен видеть, где
+   наблюдение, а где интерпретация, и на чём она основана. */
+.interp {
+  margin: 18px 0; padding: 18px 20px; border-radius: var(--radius-card);
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-left: 4px solid var(--accent2);
+}
+.interp__label {
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-micro);
+  letter-spacing: .4px; text-transform: uppercase; color: var(--accent2);
+  margin-bottom: 8px;
+}
+.interp__text { font-size: var(--fs-body); line-height: 1.6; margin: 0 0 10px; }
+.interp__hedge { font-size: var(--fs-small); color: var(--muted); margin: 0 0 10px; }
+.interp__src {
+  font-size: var(--fs-micro); color: var(--muted); margin: 0;
+  padding-top: 10px; border-top: 1px solid var(--line);
+}
+.interp__srcnote { font-style: normal; }
 
 /* Экран вывода — точка продажи бесплатного предложения, а не форма загрузки.
    Поэтому карточка с акцентной рамкой, заголовком, списком выгод и крупным CTA. */

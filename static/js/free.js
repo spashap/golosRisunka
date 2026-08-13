@@ -106,25 +106,36 @@
     document.getElementById("f-addr-pick").hidden = false;
   });
 
+  // Слушаем И click: повторный тап по УЖЕ выбранному варианту не вызывает change,
+  // и человек, вернувшийся назад, упирался в мёртвую кнопку.
+  wiz.addEventListener("click", function (e) {
+    var t = e.target.closest('input[type="radio"]');
+    if (t && t.name === "concern" && t.checked) pickConcern(t.value);
+  });
+
   wiz.addEventListener("change", function (e) {
     var t = e.target;
     if (!t.name) return;
     state[t.name] = t.value;
     saveDraft();
     if (t.name === "address") { addressUI(); renderDurations(); }
-    if (t.name === "concern") {
-      var q = document.getElementById("f-dur-q");
-      var pron = state.address === "она" ? "она" : "он";
-      q.textContent = t.value === "stopped"
-        ? window.FREE_CONCERN_STOPPED_Q.replace("{on}", pron) : (q.dataset.def || q.textContent);
-      renderDurations();
-      // Нейтральный путь: длительности нет, но свободный текст оставляем.
-      document.getElementById("f-duration").parentNode.querySelector(".choice").hidden =
-        (t.value === "neutral");
-      q.hidden = (t.value === "neutral");
-      show(2);
-    }
+    if (t.name === "concern") pickConcern(t.value);
   });
+
+  function pickConcern(value) {
+    state.concern = value;
+    saveDraft();
+    var q = document.getElementById("f-dur-q");
+    var pron = state.address === "она" ? "она" : "он";
+    q.textContent = value === "stopped"
+      ? window.FREE_CONCERN_STOPPED_Q.replace("{on}", pron) : (q.dataset.def || q.textContent);
+    renderDurations();
+    // Нейтральный путь: длительности нет, но свободный текст оставляем.
+    document.getElementById("f-duration").parentNode.querySelector(".choice").hidden =
+      (value === "neutral");
+    q.hidden = (value === "neutral");
+    show(2);
+  }
 
   function renderDurations() {
     var pron = state.address === "она" ? "она" : "он";
@@ -144,6 +155,8 @@
   }
 
   wiz.addEventListener("click", function (e) {
+    var back = e.target.closest("[data-back]");
+    if (back) { e.preventDefault(); history.back(); return; }
     var next = e.target.closest("[data-next]");
     if (!next) return;
     e.preventDefault();

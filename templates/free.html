@@ -59,6 +59,8 @@
 
       {# --- Экран 2: что вы замечаете. Выбор сразу ведёт дальше. --- #}
       <div class="wizard__step" data-step="1">
+        <button class="wiz-back" data-back type="button"
+                data-ym-goal="free_back">← Назад</button>
         <h2 class="h2" id="f-concern-q">Что вы замечаете в его рисунках?</h2>
         <div class="form-card">
           <div class="choice choice--tight" id="f-concern">
@@ -73,6 +75,8 @@
 
       {# --- Экран 3: как давно + необязательный свободный текст. --- #}
       <div class="wizard__step" data-step="2">
+        <button class="wiz-back" data-back type="button"
+                data-ym-goal="free_back">← Назад</button>
         <h2 class="h2" id="f-dur-q">{{ texts.DURATION_QUESTION }}</h2>
         <div class="form-card">
           <div class="choice choice--grid choice--wide" id="f-duration">
@@ -94,7 +98,11 @@
       </div>
 
       {# --- Вывод после вопросов (приходит с сервера) --- #}
-      <div class="wizard__step" data-step="3" id="f-summary"></div>
+      <div class="wizard__step" data-step="3">
+        <button class="wiz-back" data-back type="button"
+                data-ym-goal="free_back">← Изменить ответы</button>
+        <div id="f-summary"></div>
+      </div>
     </div>
 
     {# --- Экран ожидания: её фото и её собственный вопрос, стадии из поля stage. --- #}

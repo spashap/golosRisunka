@@ -106,6 +106,12 @@ FREE_HEDGE = re.compile(
     r"складывается\s+(?:ощущение|впечатление)|читается\s+как|как\s+будто|"
     r"мож(?:ет|но)\s+быть", re.IGNORECASE)
 
+# Атрибуция: платный ATTRIBUTION не знает родовых форм, которые предлагает сам
+# промпт («в анализе детского рисунка», «в прочтении детского рисунка»).
+FREE_ATTRIBUTION = re.compile(
+    ATTRIBUTION.pattern + r"|в\s+(?:анализе|прочтении|чтении)\s+детск\w+\s+рисун\w+|"
+    r"в\s+детской\s+психологии\s+развития", re.IGNORECASE)
+
 # «Автор» о самом ребёнке. Допускаем ОДНО вхождение — в родовой формуле традиции
 # («связывают со значимостью для автора»); больше — значит, ребёнка так и зовут.
 MAX_AUTHOR_MENTIONS = 1
@@ -333,7 +339,7 @@ def _check_hypothesis(a: FreeAnalysis) -> list[dict]:
         # После разворота на продажу «похоже, ему нравится закрашивать плотно» — это
         # осторожное наблюдение о поведении, а не проективная трактовка, и запрещать
         # его значит возвращать мёртвый тон. Тяжёлые термины о ребёнке ловим отдельно.
-        if ATTRIBUTION.search(detail):
+        if FREE_ATTRIBUTION.search(detail):
             hits.append({
                 "where": "detail", "match": "(атрибуция при hypothesis=null)",
                 "kind": "hypothesis", "context": detail,
@@ -353,12 +359,22 @@ def _check_hypothesis(a: FreeAnalysis) -> list[dict]:
         return hits
 
     phrase = a.hypothesis.phrase
-    if _norm(phrase) not in _norm(detail):
+    # Трактовка живёт ТОЛЬКО в объекте hypothesis: на странице она показывается
+    # отдельным блоком с заголовком и источником. Дубль в detail дал бы родителю
+    # один и тот же текст дважды.
+    if _norm(phrase) in _norm(detail):
         hits.append({
-            "where": "hypothesis.phrase", "match": phrase[:80], "kind": "hypothesis",
+            "where": "detail", "match": phrase[:60], "kind": "hypothesis",
             "context": detail,
-            "why": "phrase обязана встречаться в detail ДОСЛОВНО — иначе библиотека "
-                   "трактовок описывает не то, что прочитал родитель",
+            "why": "трактовка продублирована в detail — оставь в detail только "
+                   "наблюдение, сама трактовка показывается отдельным блоком",
+        })
+    if FREE_ATTRIBUTION.search(detail):
+        hits.append({
+            "where": "detail", "match": "(ссылка на традицию в detail)",
+            "kind": "hypothesis", "context": detail,
+            "why": "ссылки на традицию и авторов в detail не нужны — источник "
+                   "подставляет система по ключу трактовки",
         })
     if not HEDGE.search(phrase):
         hits.append({
@@ -367,17 +383,23 @@ def _check_hypothesis(a: FreeAnalysis) -> list[dict]:
             "why": "нет гипотезного оборота — добавь «может говорить о», «иногда "
                    "связывают с», «можно прочитать как»",
         })
-    if not (ATTRIBUTION.search(phrase) or ATTRIBUTION.search(detail)):
+    # Атрибуция стала ДАННЫМИ: под каждой трактовкой сервер печатает источник из
+    # словаря по ключу. Поэтому в самой фразе она обязательна только там, где источника
+    # нет — то есть у key="new". Раньше это правило снимало вполне корректные гипотезы
+    # только потому, что модель написала «в анализе», а не «в традиции».
+    from config.free_keys import source_for
+    if source_for(a.hypothesis.key) is None and not FREE_ATTRIBUTION.search(phrase):
         hits.append({
             "where": "hypothesis.phrase", "match": phrase[:80], "kind": "hypothesis",
-            "context": detail,
-            "why": "нет атрибуции — отнеси к традиции: «в традиции прочтения детского "
-                   "рисунка это иногда связывают с…». Источники не выдумывай",
+            "context": phrase,
+            "why": "у этой трактовки нет источника в словаре, поэтому нужна атрибуция "
+                   "в самой фразе: «в традиции прочтения детского рисунка это иногда "
+                   "связывают с…». Источники не выдумывай",
         })
-    if len(ATTRIBUTION.findall(detail)) > 1:
+    if len(FREE_ATTRIBUTION.findall(phrase)) > 1:
         hits.append({
-            "where": "detail", "match": "(две атрибуции)", "kind": "hypothesis",
-            "context": detail,
+            "where": "hypothesis.phrase", "match": "(две атрибуции)",
+            "kind": "hypothesis", "context": phrase,
             "why": "вторая атрибуция — это вторая гипотеза. Оставь РОВНО ОДНУ: несколько "
                    "конкурирующих трактовок выглядят уклончиво для мамы",
         })

@@ -209,8 +209,12 @@ class FreeAnalysis(BaseModel):
         return self
 
     def word_count(self) -> int:
+        # hypothesis.phrase считается тоже: с тех пор как трактовка живёт отдельным
+        # объектом и показывается своим блоком, это такой же текст для родителя,
+        # как и остальные. Не учитывать её — занижать реальный объём разбора.
         return count_words(self.opening, self.detail, self.portrait_hint,
-                           self.question_to_child, self.unknown_next)
+                           self.question_to_child, self.unknown_next,
+                           self.hypothesis.phrase if self.hypothesis else "")
 
 
 class FreeInsufficient(BaseModel):

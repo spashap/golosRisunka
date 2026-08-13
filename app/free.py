@@ -24,7 +24,7 @@ from app.auth import SESSION_COOKIE, login_link_for
 from app.db import get_db, new_token, now
 from app.mailer import render_email, send_email
 from app.track import track_event
-from config import free_names, settings
+from config import free_keys, free_names, settings
 from config import free_texts as T
 
 log = logging.getLogger("free")
@@ -296,6 +296,8 @@ def result(token: str):
         name_gen=T.genitive(name, address), name_acc=T.accusative(name, address),
         band_label=T.BAND_LABELS[T.age_band(row["child_age"] or 6)],
         flags=flags, interps=interps,
+        source=(free_keys.source_for((data.get("hypothesis") or {}).get("key", ""))
+                if data.get("hypothesis") else None),
         coloring_par=T.g(T.COLORING_PARAGRAPH, address) if "coloring" in flags else None,
         mismatch_par=(T.MISMATCH_PARAGRAPH if row["correlate"] == 0
                       and "coloring" not in flags else None),

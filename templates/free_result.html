@@ -30,6 +30,21 @@
 
       {# 3. деталь, портрет (кроме раскраски), вопрос, зазор #}
       <p>{{ a.detail }}</p>
+
+      {# Трактовка — отдельный блок с заголовком, гипотезной оговоркой и источником.
+         Раньше она тонула в прозе, и было не отличить наблюдение от интерпретации. #}
+      {% if a.hypothesis %}
+      <div class="interp">
+        <div class="interp__label">Как это читают в традиции анализа детского рисунка</div>
+        <p class="interp__text">{{ a.hypothesis.phrase }}</p>
+        <p class="interp__hedge">Это гипотеза, а не вывод: по одному рисунку её не
+          проверить. Точнее всего ответит {{ name }} — вопрос ниже.</p>
+        {% if source %}
+        <p class="interp__src"><b>Источник:</b> {{ source.source }}{% if source.note %}
+          — <span class="interp__srcnote">{{ source.note }}</span>{% endif %}</p>
+        {% endif %}
+      </div>
+      {% endif %}
       {% if a.portrait_hint %}<p>{{ a.portrait_hint }}</p>{% endif %}
       <p><b>Спросите {{ name_acc }} сегодня:</b> <i>{{ a.question_to_child }}</i></p>
       <p><b>Чего этот лист не показывает.</b> {{ a.unknown_next }}</p>
