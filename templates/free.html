@@ -71,7 +71,7 @@
           <div class="choice" id="f-duration">
             {% for d in durations %}
             <label class="choice__opt"><input class="visually-hidden" type="radio"
-                   name="duration" value="{{ d.key }}"><span data-raw="{{ d.label }}"></span></label>
+                   name="duration" value="{{ d.key }}"><span data-raw="{{ d.label }}">{{ d.label | replace("{ego}", "него") | replace("{on}", "он") | replace("{risoval}", "рисовал") }}</span></label>
             {% endfor %}
           </div>
         </div>
@@ -121,5 +121,5 @@
 {% endblock %}
 {% block footer %}{{ super() }}
 <script>window.FREE_CONCERN_STOPPED_Q = {{ texts.DURATION_QUESTION_STOPPED | tojson }};</script>
-<script src="{{ static }}/js/free.js" defer></script>
+<script src="{{ static }}/js/free.js?v={{ version }}" defer></script>
 {% endblock %}

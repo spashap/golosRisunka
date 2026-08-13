@@ -29,9 +29,11 @@
 <link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="{{ static }}/css/fonts.css">
-<link rel="stylesheet" href="{{ static }}/css/tokens.css">
-<link rel="stylesheet" href="{{ static }}/css/components.css">
+{# ?v=версия — обязательно: nginx отдаёт статику с max-age=30 дней, и без
+   этого правки CSS не доезжают до тех, кто уже был на сайте. #}
+<link rel="stylesheet" href="{{ static }}/css/fonts.css?v={{ version }}">
+<link rel="stylesheet" href="{{ static }}/css/tokens.css?v={{ version }}">
+<link rel="stylesheet" href="{{ static }}/css/components.css?v={{ version }}">
 {% block head %}{% endblock %}
 {% include "_metrika.html" %}
 </head>
