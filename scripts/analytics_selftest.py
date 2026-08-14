@@ -124,6 +124,16 @@ def main() -> int:
         if page == "landing.html":
             check("landing loads track.js", "js/track.js" in html)
 
+    # Шапка общая: подмена кнопки на /free-check не должна протечь на остальные страницы.
+    fc = c.get("/free-check").get_data(as_text=True)
+    check("/free-check renders", "Бесплатная проверка детского рисунка" in fc)
+    check("/free-check swaps the header CTA", 'data-ym-goal="header_cta_freecheck"' in fc
+          and 'data-ym-goal="header_order"' not in fc)
+    for url in ("/", "/order"):
+        h = c.get(url).get_data(as_text=True)
+        check(f"header CTA unchanged on {url}", 'data-ym-goal="header_order"' in h)
+        check(f"nav item present on {url}", 'data-ym-goal="header_nav_check"' in h)
+
     print("5. funnels are nested where they must be")
     for vid, evs, dev, ch, sw in [
             ("st_p1", ["landing_view"], "desktop", "ads", None),

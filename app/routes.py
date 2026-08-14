@@ -170,6 +170,20 @@ def track_beacon():
     return ("", 204)
 
 
+@bp.get("/free-check")
+def free_check():
+    """Посадочная под холодный платный трафик (Meta/Instagram) в бесплатный мастер.
+
+    Единственное действие на странице — уйти в /free/. Поэтому в шапке подменяем
+    платный призыв на бесплатный: `header_cta` читает `_header.html`, у остальных
+    страниц остаётся значение по умолчанию, и они не меняются вообще.
+    """
+    track_event("free_check_view")
+    return render_template("free_check.html", header_cta={
+        "href": "/free/#name", "text": "Проверить бесплатно",
+        "goal": "header_cta_freecheck"})
+
+
 @bp.get("/primer/<token>")
 def sample_page(token: str):
     """Индексируемая страница-пример отчёта (SEO: «пример анализа детского рисунка»).
@@ -818,7 +832,7 @@ def sitemap():
     base = f"https://{settings.SITE_DOMAIN}"
     today = datetime.date.today().isoformat()
     # (path, priority, lastmod)
-    urls = [("/", "1.0", today), ("/blog", "0.7", today),
+    urls = [("/", "1.0", today), ("/free-check", "0.9", today), ("/blog", "0.7", today),
             ("/privacy", "0.2", today), ("/terms", "0.2", today),
             ("/contacts", "0.3", today)]
     urls += [(f"/primer/{s.token}", "0.8", today) for s in get_samples()]

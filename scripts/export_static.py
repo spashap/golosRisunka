@@ -24,6 +24,7 @@ NOINDEX = '<meta name="robots" content="noindex, nofollow">'
 # роуты → файлы (cleanUrls на Vercel уберёт .html из адресов)
 PAGES = {
     "/": "index.html",
+    "/free-check": "free-check.html",
     "/order": "order.html",
     "/blog": "blog.html",
     "/privacy": "privacy.html",

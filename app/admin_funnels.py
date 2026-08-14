@@ -42,6 +42,21 @@ PAID_STEPS: list[tuple[str, str, str]] = [
     ("Дошёл до оплаты", "checkout_view", GATE),
 ]
 
+# Холодная дверь: посадочная /free-check под платный трафик. Отдельная воронка, а не
+# ветка бесплатной: у неё свой первый шаг (реклама привела НА СТРАНИЦУ, а не в мастер),
+# и главный вопрос к ней — «доводит ли она до мастера дешевле, чем главная».
+COLD_STEPS: list[tuple[str, str, str]] = [
+    ("Открыл посадочную", "free_check_view", GATE),
+    ("Досмотрел до карточек", "click:sec_fc_cards", PATH),
+    ("Досмотрел до конца", "click:sec_fc_final", PATH),
+    ("Нажал любой призыв", "click:freecheck_*", GATE),
+    ("Дошёл до мастера", "free_view", GATE),
+    ("Ввёл имя и возраст", "click:free_step1", GATE),
+    ("Дошёл до вывода", "free_summary", GATE),
+    ("Отправил рисунок", "free_upload", GATE),
+    ("Создал заказ", "order_created", GATE),
+]
+
 FREE_STEPS: list[tuple[str, str, str]] = [
     ("Открыл /free", "free_view", GATE),
     ("Ввёл имя и возраст", "click:free_step1", GATE),
@@ -176,6 +191,7 @@ def build(db, since: str) -> dict:
     return {
         "paid": _funnel(visits, orders, PAID_STEPS, "landing_view"),
         "free": _funnel(visits, orders, FREE_STEPS, "free_view"),
+        "cold": _funnel(visits, orders, COLD_STEPS, "free_check_view"),
         "visits_total": len(visits),
         "devices": sorted(devices.items(), key=lambda kv: -kv[1]),
         "channels": sorted(channels.items(), key=lambda kv: -kv[1]["visits"]),

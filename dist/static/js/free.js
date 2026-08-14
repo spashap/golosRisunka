@@ -9,7 +9,23 @@
   var steps = Array.prototype.slice.call(wiz.querySelectorAll(".wizard__step"));
   var dots = document.getElementById("free-dots");
   var state = { name: "", band: "", address: "", concern: "", duration: "", text: "" };
-  var token = null, objUrl = null, current = 0;
+  var token = null, objUrl = null, current = 0, preset = false;
+
+  // Приход с посадочной /free-check: карточка тревоги передаёт свой ключ в ?concern=.
+  // Значение НЕ доверяем — принимаем только если такой вариант реально есть в мастере:
+  // иначе чужая ссылка молча положила бы в анкету ключ, которого не знает сервер.
+  function applyPresetConcern() {
+    var key;
+    try { key = new URLSearchParams(location.search).get("concern"); } catch (e) { return; }
+    if (!key) return;
+    var el = wiz.querySelector('input[name="concern"][value="' + key + '"]');
+    if (!el) return;
+    el.checked = true;
+    state.concern = key;
+    preset = true;
+    saveDraft();
+    if (window.ymGoal) { window.ymGoal("free_concern_preset"); }
+  }
 
   function saveDraft() {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ s: state, _ts: Date.now() })); } catch (e) {}
@@ -169,6 +185,9 @@
       err.hidden = true;
       if (!state.address) state.address = guess(state.name) || "он";
       renderDurations();
+      // Тревога уже выбрана карточкой на /free-check — второй раз тот же вопрос
+      // не задаём: pickConcern сам уводит на шаг «как давно».
+      if (preset) { preset = false; pickConcern(state.concern); return; }
       show(1);
     } else if (i === 2) {
       state.text = document.getElementById("f-text").value;
@@ -323,6 +342,9 @@
     var el = document.getElementById(id); if (el) el.dataset.def = el.textContent;
   });
   restoreDraft();
+  // ПОСЛЕ черновика: пришедший по ссылке с карточки выбрал тревогу только что,
+  // и его выбор главнее того, что лежало в localStorage с прошлого раза.
+  applyPresetConcern();
   // Заменяем текущую запись истории, чтобы первый «назад» с шага 2 вёл на шаг 1,
   // а не на страницу, с которой человек пришёл.
   history.replaceState({ step: 0 }, "", "#name");

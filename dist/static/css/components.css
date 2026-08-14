@@ -181,6 +181,15 @@ html.dk .btn { color: #241A12; }
 .site-nav__login { font-weight: 600; font-size: 15px; color: var(--accent); }
 .site-nav__login:hover { text-decoration: underline; }
 .site-header .btn { padding: 10px 22px; font-size: 15px; }
+/* Пятый пункт меню («Бесплатная проверка») перестаёт помещаться на узких ноутбуках.
+   В полосе 881–1000 px ужимаем шапку, а не переносим её в две строки: у body стоит
+   overflow-x: clip, и переполнение обрезало бы кнопку справа, а не показало скролл. */
+@media (max-width: 1000px) and (min-width: 881px) {
+  .site-nav { gap: 12px; }
+  .site-nav a { font-size: 14px; }
+  .logo__img { height: 44px; }
+  .site-header .btn { padding: 9px 16px; font-size: 14px; }
+}
 @media (max-width: 880px) {
   .site-nav { display: none; }           /* мобайл: лого + Войти + CTA, без JS-бургера */
   .site-header__row { gap: 10px; padding-left: 14px; padding-right: 14px; }
@@ -524,6 +533,14 @@ html.dk .btn { color: #241A12; }
 .worry-band__text { font-size: var(--fs-body); line-height: 1.6; color: var(--muted);
                     margin: 0 auto 18px; max-width: 56ch; }
 .worry-band__note { margin-top: 10px; font-size: var(--fs-micro); color: var(--soft); }
+/* Мелкая строка под кнопкой в hero («Без оплаты • Без регистрации…») — недостающая
+   часть компонента hero: карточка умела eyebrow/заголовок/лид/кнопку, но не примечание. */
+.hero__note { margin-top: 12px; font-size: var(--fs-micro); color: var(--soft); }
+/* Отдельно стоящая кнопка по центру секции. Раньше такой строки не было: кнопка либо
+   жила в hero, либо внутри free-band/worry-band, и в обычной секции её приходилось бы
+   центрировать инлайн-стилем — что запрещено бренд-буком. */
+.cta-row { text-align: center; margin-top: 28px; }
+@media (max-width: 560px) { .cta-row .btn { display: block; width: 100%; } }
 
 /* Прайс из одной карточки — не растягиваем её на всю ширину. */
 .price-grid--single { grid-template-columns: minmax(0, 420px); justify-content: center; }
@@ -580,6 +597,16 @@ html.dk .btn { color: #241A12; }
 .case-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .case p { color: var(--ink); font-size: var(--fs-body); line-height: 1.5; margin: 0; }
 .case strong { color: var(--accent2); font-weight: 700; }
+/* Кликабельный вариант кейс-карточки (страница /free-check: карточка = выбор тревоги,
+   который уезжает в мастер). Карточка ДОЛЖНА выглядеть нажимаемой: без этого её
+   принимают за текст и не трогают. Стрелка — псевдоэлемент, чтобы не засорять разметку. */
+.case--link { display: block; color: inherit; position: relative;
+              transition: transform .15s ease, box-shadow .15s ease, border-color .15s; }
+.case--link:hover, .case--link:focus-visible {
+  transform: translateY(-2px); border-color: var(--accent);
+  box-shadow: var(--shadow-hard); }
+.case--link::after { content: "→"; color: var(--accent); font-weight: 700;
+                     margin-left: 6px; white-space: nowrap; }
 @media (max-width: 880px) { .case-list { grid-template-columns: 1fr; } }
 
 /* --- «Без мифов»: две колонки «не делаем / делаем» (спокойно, без красного) --- */

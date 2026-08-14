@@ -1,4 +1,12 @@
-{# Единая шапка сайта: лендинг, страницы, hosted-отчёты. Sticky-полоса навигации. #}
+{# Единая шапка сайта: лендинг, страницы, hosted-отчёты. Sticky-полоса навигации.
+
+   Кнопка в шапке настраивается СТРАНИЦЕЙ через переменную header_cta (включение
+   наследует контекст вызывающего шаблона). Значения по умолчанию — те же, что были
+   зашиты раньше, поэтому все существующие страницы рендерятся байт-в-байт как прежде.
+   Нужно это ровно одной странице — /free-check: там платный призыв в шапке спорил бы
+   с единственной задачей страницы. #}
+{% set cta = header_cta | default({'href': '/order', 'text': 'Получить отчёт',
+                                   'goal': 'header_order'}, true) %}
 <header class="site-header">
   <div class="wrap site-header__row">
     <a class="logo" href="/" data-ym-goal="header_logo">
@@ -14,11 +22,12 @@
       <a href="/#primery" data-ym-goal="header_nav_examples">Примеры</a>
       <a href="/#kak" data-ym-goal="header_nav_how">Как это работает</a>
       <a href="/#ceny" data-ym-goal="header_nav_prices">Цены</a>
+      <a href="/free-check" data-ym-goal="header_nav_check">Бесплатная проверка</a>
       <a href="/blog" data-ym-goal="header_nav_blog">Блог</a>
     </nav>
     <div class="site-header__actions">
       <a class="site-nav__login" href="/login" data-ym-goal="header_login">Войти</a>
-      <a class="btn" href="/order" data-ym-goal="header_order">Получить отчёт</a>
+      <a class="btn" href="{{ cta.href }}" data-ym-goal="{{ cta.goal }}">{{ cta.text }}</a>
     </div>
   </div>
 </header>
