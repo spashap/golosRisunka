@@ -32,7 +32,10 @@ systemctl restart golosrisunka-web.service golosrisunka-worker.service
 # Фремиум-воркер: перезапускаем, только если юнит уже установлен. Первый раз его
 # ставят руками (systemctl enable --now golosrisunka-free) — deploy.sh сам юниты
 # не создаёт, и молча пропустить это нельзя: без воркера разборы не генерируются.
-if systemctl list-unit-files | grep -q '^golosrisunka-free\.service'; then
+# Проверка через `systemctl cat`, а НЕ через `list-unit-files | grep`: полный листинг
+# после рестарта web/worker один раз вернулся пустым (systemd был занят), юнит сочли
+# неустановленным и молча не перезапустили — воркер остался на старом коде.
+if systemctl cat golosrisunka-free.service >/dev/null 2>&1; then
   systemctl restart golosrisunka-free.service
 else
   echo "WARNING: golosrisunka-free.service НЕ УСТАНОВЛЕН — бесплатные разборы"
