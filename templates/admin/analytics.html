@@ -66,27 +66,83 @@
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.dropped }}</div><div class="admin-kpi__l">ушли без почты<br>и без рисунка</div></div>
 </div>
 
-<h2 style="margin-top:26px">Воронка</h2>
-<p class="hint">Кликните по шагу — раскроется список тех, кто его прошёл (до {{ 60 }}).</p>
-<div class="vis-list">
-  <div class="drill-head">
-    <span>Шаг</span><span>Уникальных</span><span>От пред.</span><span>От лендинга</span>
-  </div>
-  {% for f in funnel %}
-  <details class="drill">
-    <summary>
-      <span>{{ f.label }}</span>
-      <span><b>{{ f.n }}</b></span>
-      <span>{{ f.pct_prev }}</span>
-      <span>{{ f.pct_top }}</span>
-    </summary>
-    <div class="vis-body">{{ members_table(f.members) }}</div>
-  </details>
+{% macro funnel_table(f) %}
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Шаг</th><th>Вид</th><th>Визитов</th><th>От пред.</th><th>От начала</th>
+    <th>Потеряли</th><th>Моб.</th><th>Деск.</th></tr></thead>
+  <tbody>
+  {% for s in f.steps %}
+  <tr>
+    <td>{{ s.label }}</td>
+    <td class="hint">{% if s.kind == 'gate' %}шаг{% else %}наблюдение{% endif %}</td>
+    <td><b>{{ s.n }}</b></td>
+    <td>{{ s.pct_prev }}</td>
+    <td>{{ s.pct_top }}</td>
+    <td>{% if s.lost > 0 %}<span class="admin-status admin-status--failed">−{{ s.lost }}</span>{% endif %}</td>
+    <td>{{ s.mobile }}</td>
+    <td>{{ s.desktop }}</td>
+  </tr>
   {% endfor %}
+  </tbody>
+</table>
 </div>
+<p class="hint">Визитов в этой двери: <b>{{ f.visits }}</b>
+  {%- if f.revenue %} · выручка с них: <b>{{ f.revenue }} ₽</b>{% endif %}</p>
+{% endmacro %}
 
-<h2 style="margin-top:26px">Источники (first-touch UTM)</h2>
-<p class="hint">Кликните по источнику — кто с него пришёл.</p>
+<h2 style="margin-top:26px">Воронки по визитам</h2>
+<p class="hint">Единица — <b>визит</b> (заход с паузой не больше 30 минут), а не человек
+  за период. Два вида строк, и путать их нельзя:<br>
+  <b>шаг</b> — через него нельзя пройти мимо, поэтому он достраивается по самому
+  дальнему достигнутому: недолетевший маяк не рвёт воронку, и «оплатил» не может быть
+  больше, чем «создал заказ».<br>
+  <b>наблюдение</b> — «доскроллил до цен». Считается как есть, без достройки:
+  человек мог прийти по прямой ссылке сразу на форму, и записать ему «видел цены» ради
+  красиво убывающей таблицы значило бы соврать. Поэтому переход от наблюдений к шагам
+  бывает и больше 100% — это находка, а не ошибка: столько людей пришло к оформлению
+  мимо лендинга.<br>
+  «Оплатил» берётся из заказа, а не из события: оплату подтверждает вебхук, в котором
+  браузера нет вообще. Один визит может попасть в обе двери.
+  Кто именно и что делал — раздел <a href="{{ url_for('admin.visits') }}?days={{ days }}">Визиты</a>.</p>
+
+<h3 style="margin-top:18px">Платная дверь — с лендинга</h3>
+{{ funnel_table(funnels.paid) }}
+
+<h3 style="margin-top:22px">Бесплатная дверь — /free</h3>
+{{ funnel_table(funnels.free) }}
+
+<h2 style="margin-top:26px">Каналы (по визитам)</h2>
+<p class="hint">Канал определяется по метке визита: <code>ads</code> — есть yclid или
+  рекламный utm_medium (это Директ), <code>organic</code> — переход из поиска,
+  <code>internal</code> — переход внутри сайта. Здесь считается ПОСЛЕДНЕЕ касание:
+  покупку приносит тот клик, после которого человек купил, а не тот, с которого
+  он когда-то узнал о нас.</p>
+<table>
+  <thead><tr><th>Канал</th><th>Визитов</th><th>Заказов</th><th>Оплачено</th><th>Выручка</th><th>Конверсия</th></tr></thead>
+  <tbody>
+  {% for name, ch in funnels.channels %}
+  <tr>
+    <td>{{ name }}</td>
+    <td>{{ ch.visits }}</td>
+    <td>{{ ch.orders }}</td>
+    <td>{{ ch.paid }}</td>
+    <td>{{ ch.rub }} ₽</td>
+    <td>{% if ch.visits %}{{ (ch.paid / ch.visits * 100) | round(1) }}%{% else %}—{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="hint">Визитов за период нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="hint">Всего визитов за период: <b>{{ funnels.visits_total }}</b> ·
+  устройства: {% for d, n in funnels.devices %}{{ d }} — {{ n }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+
+<h2 style="margin-top:26px">Источники (первое касание, по людям)</h2>
+<p class="hint">Не путать с таблицей каналов выше. Здесь — <b>откуда человек УЗНАЛ</b> о
+  нас (UTM первого касания, хранится год) и считаются люди. В «Каналах» — что привело
+  его <b>именно в этот раз</b>, и считаются визиты. Для решения «куда давать деньги»
+  смотрите «Каналы»: покупку приносит последний клик. Кликните по источнику — кто пришёл.</p>
 <div class="vis-list">
   <div class="drill-head drill-head--src">
     <span>Источник</span><span>Посетителей</span><span>Заказов</span><span>Оплат</span><span>Выручка</span>

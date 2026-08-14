@@ -9,9 +9,12 @@
 <link rel="icon" type="image/png" href="{{ static }}/img/favico/favicon-96x96.png" sizes="96x96">
 <link rel="icon" type="image/svg+xml" href="{{ static }}/img/favico/favicon.svg">
 <link rel="shortcut icon" href="{{ static }}/img/favico/favicon.ico">
-<link rel="stylesheet" href="{{ static }}/css/fonts.css">
-<link rel="stylesheet" href="{{ static }}/css/tokens.css">
-<link rel="stylesheet" href="{{ static }}/css/components.css">
+{# ?v= — как на сайте: nginx отдаёт статику с max-age=30 дней, и без версии правки
+   стилей админки не доезжают до того, кто в ней уже был (правилось как «сломанная
+   вёрстка» дважды). Из-за этой же дыры новые CSS-классы для админки не писались вовсе. #}
+<link rel="stylesheet" href="{{ static }}/css/fonts.css?v={{ version }}">
+<link rel="stylesheet" href="{{ static }}/css/tokens.css?v={{ version }}">
+<link rel="stylesheet" href="{{ static }}/css/components.css?v={{ version }}">
 </head>
 <body class="admin-body">
 <div class="admin-layout">

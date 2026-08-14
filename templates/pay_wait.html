@@ -32,8 +32,15 @@
           clearInterval(iv);
           msg.textContent = 'Если вы завершили оплату — отчёт уже в работе, загляните в кабинет или почту. '
             + 'Если оплата не прошла — вернитесь к форме и попробуйте снова.';
-          try { var fd = new FormData(); fd.append('ev', 'pay_status_timeout'); navigator.sendBeacon('/t/e', fd); }
-          catch (e) { /* нестрашно */ }
+          if (window.grBeacon) {
+            window.grBeacon({ ev: 'pay_status_timeout', oid: String(orderId) });
+          } else {
+            try {
+              var fd = new FormData();
+              fd.append('ev', 'pay_status_timeout'); fd.append('oid', String(orderId));
+              navigator.sendBeacon('/t/e', fd);
+            } catch (e) { /* нестрашно */ }
+          }
         }
       })
       .catch(function () { /* сеть моргнула — продолжаем */ });

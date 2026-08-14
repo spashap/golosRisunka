@@ -52,9 +52,13 @@
   function clearError() { errBox.style.display = 'none'; errBox.textContent = ''; }
 
   // Диагностический маяк (виден в /admin/actions) — ловим проблемы оплаты у клиентов.
+  // oid обязателен: без номера заказа сбой виджета связывался с заказом только на глаз.
   function beacon(ev) {
-    try { var fd = new FormData(); fd.append('ev', ev); navigator.sendBeacon('/t/e', fd); }
-    catch (e) { /* нестрашно */ }
+    if (window.grBeacon) { window.grBeacon({ ev: ev, oid: String(orderId) }); return; }
+    try {
+      var fd = new FormData(); fd.append('ev', ev); fd.append('oid', String(orderId));
+      navigator.sendBeacon('/t/e', fd);
+    } catch (e) { /* нестрашно */ }
   }
 
   function loadScript() {

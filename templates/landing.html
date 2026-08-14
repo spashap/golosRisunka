@@ -37,6 +37,10 @@
 <style>{{ inline_css | safe }}</style>
 <script type="application/ld+json">{{ schema_jsonld | safe }}</script>
 {% include "_metrika.html" %}
+{# Своя аналитика: цели, вовлечённость, глубина прокрутки, видимость блоков.
+   Лендинг НЕ наследует _base.html (свой инлайн-CSS), поэтому скрипт подключается
+   здесь отдельно — иначе самая важная страница осталась бы без измерений. #}
+<script src="{{ static }}/js/track.js?v={{ version }}"></script>
 </head>
 <body>
 
@@ -44,7 +48,7 @@
 
 <main>
 <!-- 1. HERO: кино-фото на весь экран + матовая карточка. Cold traffic: чистый хук, CTA-бонус. -->
-<section class="hero">
+<section class="hero" data-track-section="hero">
   <div class="hero__in">
     <div class="hero__card">
       <span class="hero__eyebrow">У каждого рисунка есть голос</span>
@@ -70,7 +74,7 @@
 </section>
 
 <!-- 1b. Больше, чем просто рисунок (раскрытие — обещание героя) -->
-<section class="section" id="bolshe">
+<section class="section" id="bolshe" data-track-section="more_than_drawing">
   <div class="wrap">
     <h2 class="reveal">Больше, чем просто рисунок</h2>
     <div class="sub reveal reveal--d1">За «просто птицей» или «просто домиком» почти всегда есть что-то о самом ребёнке: что его занимает, что он проживает, что для него важно. Мы помогаем это увидеть.</div>
@@ -85,7 +89,7 @@
 </section>
 
 <!-- 2. Что внутри персонального отчёта -->
-<section class="section" id="vnutri">
+<section class="section" id="vnutri" data-track-section="whats_inside">
   <div class="wrap">
     <h2 class="reveal">Что вы узнаете о ребёнке</h2>
     <div class="sub reveal reveal--d1">Иногда родители смотрят на рисунок и видят просто дом, кота или человечка.
@@ -105,7 +109,7 @@
 </section>
 
 <!-- 3. Как строится вывод -->
-<section class="section section--soft" id="logika">
+<section class="section section--soft" id="logika" data-track-section="how_we_read">
   <div class="wrap">
     <h2 class="reveal">Как строится вывод в отчёте</h2>
     <div class="sub reveal reveal--d1">Мы смотрим на конкретные детали рисунка и бережно объясняем, о чём они могут говорить: как гипотезу, которую лучше проверить в разговоре с ребёнком, а не как приговор.</div>
@@ -130,7 +134,7 @@
 </section>
 
 <!-- 3b. Например, такие ситуации (иллюстративные кейсы — трас-блок) -->
-<section class="section" id="situacii">
+<section class="section" id="situacii" data-track-section="cases">
   <div class="wrap">
     <h2 class="reveal">Например, такие ситуации</h2>
     <div class="sub reveal reveal--d1">Это не реальные клиенты, а примеры того, что может дать отчёт: как он раскрывает то, что ребёнок выражает рисунком, и что подсказывает родителю.</div>
@@ -171,7 +175,7 @@
 </section>
 
 <!-- 4. Примеры отчётов -->
-<section class="section" id="primery">
+<section class="section" id="primery" data-track-section="samples">
   <div class="wrap">
     <h2 class="reveal">Посмотрите, что родители узнают о ребёнке в отчёте</h2>
     <div class="sub reveal reveal--d1">Откройте реальные примеры: внутри — портрет ребёнка, его темы и характер, бережные наблюдения и подсказки родителю.</div>
@@ -213,7 +217,7 @@
 </section>
 
 <!-- 5. Без мифов -->
-<section class="section section--soft" id="bez-mifov">
+<section class="section section--soft" id="bez-mifov" data-track-section="no_myths">
   <div class="wrap">
     <h2 class="reveal">Бережно и по методикам — не по гаданиям</h2>
     <div class="sub reveal reveal--d1">Мы не гадаем по цветам и символам. Мы бережно читаем рисунок — с учётом этапов детского развития и методик (Пиаже, Ловенфельд, Выготский), как наблюдение и гипотезу, а не приговор.</div>
@@ -241,7 +245,7 @@
 </section>
 
 <!-- 6. Как это работает -->
-<section class="section" id="kak">
+<section class="section" id="kak" data-track-section="how">
   <div class="wrap">
     <h2 class="reveal">Как это работает</h2>
     <div class="sub reveal reveal--d1">Три шага — и персональный отчёт у вас на почте.</div>
@@ -279,7 +283,7 @@
 </section>
 
 <!-- 8. Доверие -->
-<section class="section">
+<section class="section" data-track-section="trust">
   <div class="wrap">
     <h2 class="reveal">Почему нам можно доверять</h2>
     <div class="steps">
@@ -291,7 +295,7 @@
 </section>
 
 <!-- 9. Цены -->
-<section class="section section--soft" id="ceny">
+<section class="section section--soft" id="ceny" data-track-section="prices">
   <div class="wrap">
     <h2 class="reveal">Сколько стоит отчёт</h2>
     <div class="sub reveal reveal--d1">Отчёт по 1–3 рисункам одного периода. Отчёт о развитии
@@ -320,7 +324,7 @@
 
 <!-- 9b. Тревожная дверь. Стоит СРАЗУ после цены: человек только что её увидел и
      колеблется. Визуально это НЕ карточка тарифа — иначе читалось бы третьим тарифом. -->
-<section class="section">
+<section class="section" data-track-section="worry">
   <div class="wrap">
     <div class="worry-band reveal">
       <h2 class="worry-band__title">Что-то в рисунках тревожит?</h2>
@@ -336,7 +340,7 @@
 </section>
 
 <!-- 10. FAQ -->
-<section class="section" id="faq">
+<section class="section" id="faq" data-track-section="faq">
   <div class="wrap">
     <h2 class="reveal">Частые вопросы</h2>
     <div class="reveal reveal--d1">
@@ -349,7 +353,7 @@
 
 {% if blog_posts %}
 <!-- 11. Блог -->
-<section class="section section--soft" id="blog">
+<section class="section section--soft" id="blog" data-track-section="blog">
   <div class="wrap">
     <h2 class="reveal">Разбираемся в детских рисунках без мифов и страшных трактовок</h2>
     <div class="sub reveal reveal--d1">Спокойные ответы на вопросы, которые возникают почти у каждого родителя.</div>

@@ -21,6 +21,8 @@ from flask import (Blueprint, abort, redirect, render_template, request,
                    Response, url_for)
 
 from app import admin_free_analytics as fa
+from app import admin_funnels as fn
+from app import admin_tasks as tasks
 from app import geoip, jobs
 from app.db import get_db, now
 from config import settings
@@ -31,6 +33,7 @@ ADMIN_COOKIE = "gr_a"
 
 # сайдбар: (endpoint, подпись)
 SECTIONS = [
+    ("admin.todo", "Задачи"),
     ("admin.analytics", "Аналитика"),
     ("admin.visits", "Визиты"),
     ("admin.actions", "Действия"),
@@ -45,17 +48,8 @@ SECTIONS = [
     ("admin.free", "Бета"),
 ]
 
-FUNNEL_STEPS = [
-    ("landing_view", "Лендинг"),
-    ("engaged", "Вовлёкся (скролл/15с)"),
-    ("sample_view", "Смотрел примеры"),
-    ("order_form_view", "Открыл форму"),
-    ("form_started", "Начал заполнять"),
-    ("order_created", "Создал заказ"),
-    ("checkout_view", "Дошёл до оплаты"),
-    ("order_paid", "Оплатил"),
-    ("report_delivered", "Получил отчёт"),
-]
+# Шаги воронок переехали в app/admin_funnels.py: там они считаются по ВИЗИТАМ и
+# вложены по построению. Здесь остался только состав сайдбара и периоды.
 
 PERIODS = [("1", "сегодня"), ("7", "7 дней"), ("30", "30 дней"), ("all", "всё время")]
 
@@ -167,6 +161,40 @@ def _drill_member(row) -> dict:
     }
 
 
+@bp_admin.get("/todo")
+def todo():
+    """Что нужно сделать РУКАМИ: цели в Метрике, доступы, просьбы подрядчику.
+    Первым в сайдбаре намеренно — это единственный раздел, который просит действия."""
+    _guard()
+    return _render("admin.todo", "admin/todo.html", **tasks.load(get_db()),
+                   msg=request.args.get("msg"))
+
+
+@bp_admin.post("/todo/add")
+def todo_add():
+    _guard()
+    title = (request.form.get("title") or "").strip()
+    if not title:
+        return redirect(url_for("admin.todo", msg="Нужно название задачи"))
+    tasks.add(get_db(), title, (request.form.get("details") or "").strip())
+    return redirect(url_for("admin.todo"))
+
+
+@bp_admin.post("/todo/<int:task_id>/toggle")
+def todo_toggle(task_id: int):
+    _guard()
+    tasks.toggle(get_db(), task_id)
+    return redirect(url_for("admin.todo"))
+
+
+@bp_admin.post("/todo/<int:task_id>/delete")
+def todo_delete(task_id: int):
+    _guard()
+    ok = tasks.delete(get_db(), task_id)
+    return redirect(url_for("admin.todo", msg=None if ok else
+                            "Эту задачу удалить нельзя — её можно только закрыть"))
+
+
 @bp_admin.get("/analytics")
 def analytics():
     _guard()
@@ -207,34 +235,10 @@ def analytics():
         "conversion": f"{paid['c'] / visitors * 100:.1f}%" if visitors else "—",
     }
 
-    # Воронка: счётчики одним grouped-запросом + посетители для раскрытия (capped).
-    ftypes = [ev for ev, _ in FUNNEL_STEPS]
-    ph = ",".join("?" * len(ftypes))
-    counts = {r["type"]: r["c"] for r in db.execute(
-        "SELECT type, COUNT(DISTINCT COALESCE(visitor_id, 'c' || customer_id)) c FROM events"
-        f" WHERE type IN ({ph}) AND {NOT_BOT} AND created_at >= ?{eng} GROUP BY type",
-        (*ftypes, since, *eng_p))}
-    fmembers: dict[str, list] = {}
-    for row in db.execute(
-            "SELECT type, COALESCE(visitor_id, 'c' || customer_id) who, visitor_id,"
-            " MAX(geo_country) gc, MAX(geo_region) gr, MAX(device) dev,"
-            " MAX(customer_id) cid, MAX(created_at) last FROM events"
-            f" WHERE type IN ({ph}) AND {NOT_BOT} AND created_at >= ?{eng}"
-            " GROUP BY type, who ORDER BY last DESC", (*ftypes, since, *eng_p)):
-        lst = fmembers.setdefault(row["type"], [])
-        if len(lst) < DRILL_CAP:
-            lst.append(_drill_member(row))
-    funnel, prev = [], None
-    for ev, label in FUNNEL_STEPS:
-        n = counts.get(ev, 0)
-        funnel.append({
-            "label": label, "n": n, "type": ev,
-            "members": fmembers.get(ev, []),
-            "pct_prev": f"{n / prev * 100:.0f}%" if prev else "",
-            "pct_top": (f"{n / funnel[0]['n'] * 100:.1f}%"
-                        if funnel and funnel[0]["n"] else ""),
-        })
-        prev = n or None
+    # Воронки по ВИЗИТАМ (app/admin_funnels.py). Старая воронка делила девять
+    # независимых множеств уникальных посетителей друг на друга — шаги не были
+    # вложены, а «оплата» приходила от вебхука без посетителя вовсе.
+    funnels = fn.build(db, since)
 
     # Источники: посетители по landing_view (с раскрытием) + заказы/оплаты из orders.
     sources: dict[str, dict] = {}
@@ -279,7 +283,7 @@ def analytics():
     # Фильтр «вовлечённых» сюда не применяем — анкета сама по себе и есть вовлечение.
     return _render("admin.analytics", "admin/analytics.html",
                    days=days, periods=PERIODS, show=request.args.get("show"),
-                   kpi=kpi, funnel=funnel, sources=sources_view,
+                   kpi=kpi, funnels=funnels, sources=sources_view,
                    free=fa.dashboard_counters(db, since),
                    events=events_view, bots=bots,
                    humans=humans, engaged=engaged, landing_only=landing_only,
@@ -472,8 +476,11 @@ def _heartbeats(db) -> list[dict]:
     out = []
     seen = {r["name"]: r["last_seen_at"] for r in
             db.execute("SELECT name, last_seen_at FROM service_heartbeat")}
-    for name, label in (("free_worker", "free_worker (бесплатные разборы)"),
-                        ("worker", "worker (платные отчёты)")):
+    # Порог свой у каждого: free_worker отмечается раз в секунду, а платный воркер
+    # молчит всё время генерации отчёта (Gemini — минуты). Общие 120 с красили
+    # нормальную работу в тревогу.
+    for name, label, limit in (("free_worker", "free_worker (бесплатные разборы)", 120),
+                               ("worker", "worker (платные отчёты)", 600)):
         ts = seen.get(name)
         ago = None
         if ts:
@@ -482,7 +489,7 @@ def _heartbeats(db) -> list[dict]:
             except ValueError:
                 ago = None
         out.append({"name": name, "label": label, "ago": ago,
-                    "ok": ago is not None and ago < 120})
+                    "ok": ago is not None and ago < limit})
     return out
 
 

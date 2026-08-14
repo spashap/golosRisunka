@@ -206,7 +206,11 @@
       if (!f) return;
       if (f.size > 15 * 1024 * 1024) {
         err.textContent = "Фото больше 15 МБ. Снимите ещё раз или выберите файл поменьше.";
-        err.hidden = false; input.value = ""; return;
+        err.hidden = false; input.value = "";
+        // Снимок с телефона легко больше лимита — и до сих пор этот обрыв был
+        // невидим: человек «выбрал файл» и просто исчезал из воронки.
+        if (window.ymGoal) { window.ymGoal("free_file_too_big"); }
+        return;
       }
       err.hidden = true;
       var img = document.querySelector("#f-upload img.preview");
@@ -221,9 +225,15 @@
     go.addEventListener("click", function () {
       var f = input.files && input.files[0];
       var mail = document.getElementById("f-email").value.trim();
-      if (!f) { err.textContent = "Сначала добавьте фото рисунка."; err.hidden = false; return; }
+      if (!f) {
+        err.textContent = "Сначала добавьте фото рисунка."; err.hidden = false;
+        if (window.ymGoal) { window.ymGoal("free_upload_no_file"); }
+        return;
+      }
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) {
-        err.textContent = "Проверьте почту — на неё придёт копия разбора."; err.hidden = false; return;
+        err.textContent = "Проверьте почту — на неё придёт копия разбора."; err.hidden = false;
+        if (window.ymGoal) { window.ymGoal("free_upload_bad_email"); }
+        return;
       }
       err.hidden = true;
       var fd = new FormData(); fd.append("file", f); fd.append("email", mail);
@@ -250,6 +260,8 @@
           go.disabled = false; go.textContent = "Разобрать рисунок";
           err.textContent = "Нет связи. Проверьте интернет и попробуйте ещё раз.";
           err.hidden = false;
+          // Обрыв сети на мобильном: сервер об этом не узнает никогда.
+          if (window.ymGoal) { window.ymGoal("free_upload_network_error"); }
         });
     });
   }
@@ -296,8 +308,13 @@
         document.getElementById("w-barwrap").hidden = true;
         document.getElementById("w-stage").hidden = true;
         document.getElementById("w-late").hidden = false;
+        // 90 секунд ожидания — это уже «долго», и мы хотим знать, как часто.
+        if (window.ymGoal) { window.ymGoal("free_wait_late"); }
       }
-      if (tries > 240) return;
+      if (tries > 240) {
+        if (window.ymGoal) { window.ymGoal("free_wait_gave_up"); }
+        return;
+      }
       setTimeout(function () { poll(tries + 1); }, 2000);
     }).catch(function () { setTimeout(function () { poll(tries + 1); }, 3000); });
   }

@@ -969,6 +969,12 @@ html.dk .btn { color: #241A12; }
 .admin-status--failed { color: #C0392B; }
 .admin-status--insufficient { color: var(--accent2); }
 .admin-status--created { color: var(--soft); }
+/* .hint стоит почти в каждом шаблоне админки, но правило было ТОЛЬКО у `.field .hint` —
+   вне поля формы подсказки рисовались обычным текстом и не отличались от данных.
+   Ограничено админкой намеренно: на сайте .hint вне .field сейчас выглядит как абзац,
+   и глобальное правило молча перекрасило бы публичные страницы. */
+.admin-main .hint { color: var(--soft); font-size: 13px; }
+.admin-main td.hint, .admin-main .hint code { font-size: 12.5px; }
 @media (max-width: 900px) { .admin-kpis { grid-template-columns: repeat(2, 1fr); } }
 
 /* --- Админка: каркас с сайдбаром --- */
@@ -1250,58 +1256,13 @@ html.dk .btn { color: #241A12; }
     accurateTrackBounce: true,
     trackLinks: true
   });
-
-  // --- Цели по кликам/сабмитам (data-ym-goal / data-ym-goal-submit) ---
-  // Шлём и в Яндекс (reachGoal), и первой стороной (beacon -> /t/e) для админки.
-  window.ymGoal = function (goal, params) {
-    if (!goal) { return; }
-    if (window.ym) { try { ym(109824945, "reachGoal", goal, params || {}); } catch (e) {} }
-    try { navigator.sendBeacon("/t/e", new URLSearchParams({ g: goal })); } catch (e) {}
-  };
-  document.addEventListener("click", function (ev) {
-    var el = ev.target.closest && ev.target.closest("[data-ym-goal]");
-    if (el) { window.ymGoal(el.getAttribute("data-ym-goal")); }
-  }, true);
-  document.addEventListener("submit", function (ev) {
-    var f = ev.target.closest && ev.target.closest("[data-ym-goal-submit]");
-    if (f) { window.ymGoal(f.getAttribute("data-ym-goal-submit")); }
-  }, true);
-
-  // --- Вовлечённость: один beacon "engaged" при ПЕРВОМ из:
-  //   скролл / клик / клавиша / тач  ИЛИ  15 секунд ВИДИМОГО пребывания на странице.
-  //   Модель «engaged session» (как GA4); порог 15с совпадает с «отказом» Метрики.
-  //   Боты без JS и мгновенные отказы (без скролла, <15с) НЕ шлют его → в админке
-  //   они не попадают в «вовлечённых». Фоновые/предзагруженные вкладки не копят время
-  //   (visibilityState). Шлётся максимум один раз.
-  (function () {
-    var sent = false, visibleSec = 0, THRESHOLD = 15;
-    var EVENTS = ["scroll", "wheel", "click", "keydown", "touchstart"];
-    var tick = null;
-    function cleanup() {
-      EVENTS.forEach(function (ev) { document.removeEventListener(ev, onInteract, true); });
-      if (tick) { clearInterval(tick); tick = null; }
-    }
-    function fire() {
-      if (sent) { return; }
-      sent = true;
-      try { navigator.sendBeacon("/t/e", new URLSearchParams({ engaged: "1" })); } catch (e) {}
-      cleanup();
-    }
-    function onInteract() { fire(); }
-    EVENTS.forEach(function (ev) {
-      document.addEventListener(ev, onInteract, { capture: true, passive: true });
-    });
-    tick = setInterval(function () {
-      if (document.visibilityState === "visible") {
-        visibleSec += 1;
-        if (visibleSec >= THRESHOLD) { fire(); }
-      }
-    }, 1000);
-  })();
+  window.GR_YM_ID = 109824945;
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/109824945"
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
+
+<script src="/static/js/track.js?v=1.068"></script>
 </head>
 <body>
 
@@ -1332,7 +1293,7 @@ html.dk .btn { color: #241A12; }
 
 <main>
 <!-- 1. HERO: кино-фото на весь экран + матовая карточка. Cold traffic: чистый хук, CTA-бонус. -->
-<section class="hero">
+<section class="hero" data-track-section="hero">
   <div class="hero__in">
     <div class="hero__card">
       <span class="hero__eyebrow">У каждого рисунка есть голос</span>
@@ -1358,7 +1319,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 1b. Больше, чем просто рисунок (раскрытие — обещание героя) -->
-<section class="section" id="bolshe">
+<section class="section" id="bolshe" data-track-section="more_than_drawing">
   <div class="wrap">
     <h2 class="reveal">Больше, чем просто рисунок</h2>
     <div class="sub reveal reveal--d1">За «просто птицей» или «просто домиком» почти всегда есть что-то о самом ребёнке: что его занимает, что он проживает, что для него важно. Мы помогаем это увидеть.</div>
@@ -1373,7 +1334,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 2. Что внутри персонального отчёта -->
-<section class="section" id="vnutri">
+<section class="section" id="vnutri" data-track-section="whats_inside">
   <div class="wrap">
     <h2 class="reveal">Что вы узнаете о ребёнке</h2>
     <div class="sub reveal reveal--d1">Иногда родители смотрят на рисунок и видят просто дом, кота или человечка.
@@ -1393,7 +1354,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 3. Как строится вывод -->
-<section class="section section--soft" id="logika">
+<section class="section section--soft" id="logika" data-track-section="how_we_read">
   <div class="wrap">
     <h2 class="reveal">Как строится вывод в отчёте</h2>
     <div class="sub reveal reveal--d1">Мы смотрим на конкретные детали рисунка и бережно объясняем, о чём они могут говорить: как гипотезу, которую лучше проверить в разговоре с ребёнком, а не как приговор.</div>
@@ -1418,7 +1379,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 3b. Например, такие ситуации (иллюстративные кейсы — трас-блок) -->
-<section class="section" id="situacii">
+<section class="section" id="situacii" data-track-section="cases">
   <div class="wrap">
     <h2 class="reveal">Например, такие ситуации</h2>
     <div class="sub reveal reveal--d1">Это не реальные клиенты, а примеры того, что может дать отчёт: как он раскрывает то, что ребёнок выражает рисунком, и что подсказывает родителю.</div>
@@ -1458,7 +1419,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 4. Примеры отчётов -->
-<section class="section" id="primery">
+<section class="section" id="primery" data-track-section="samples">
   <div class="wrap">
     <h2 class="reveal">Посмотрите, что родители узнают о ребёнке в отчёте</h2>
     <div class="sub reveal reveal--d1">Откройте реальные примеры: внутри — портрет ребёнка, его темы и характер, бережные наблюдения и подсказки родителю.</div>
@@ -1622,7 +1583,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 5. Без мифов -->
-<section class="section section--soft" id="bez-mifov">
+<section class="section section--soft" id="bez-mifov" data-track-section="no_myths">
   <div class="wrap">
     <h2 class="reveal">Бережно и по методикам — не по гаданиям</h2>
     <div class="sub reveal reveal--d1">Мы не гадаем по цветам и символам. Мы бережно читаем рисунок — с учётом этапов детского развития и методик (Пиаже, Ловенфельд, Выготский), как наблюдение и гипотезу, а не приговор.</div>
@@ -1650,7 +1611,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 6. Как это работает -->
-<section class="section" id="kak">
+<section class="section" id="kak" data-track-section="how">
   <div class="wrap">
     <h2 class="reveal">Как это работает</h2>
     <div class="sub reveal reveal--d1">Три шага — и персональный отчёт у вас на почте.</div>
@@ -1715,7 +1676,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 8. Доверие -->
-<section class="section">
+<section class="section" data-track-section="trust">
   <div class="wrap">
     <h2 class="reveal">Почему нам можно доверять</h2>
     <div class="steps">
@@ -1727,7 +1688,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 9. Цены -->
-<section class="section section--soft" id="ceny">
+<section class="section section--soft" id="ceny" data-track-section="prices">
   <div class="wrap">
     <h2 class="reveal">Сколько стоит отчёт</h2>
     <div class="sub reveal reveal--d1">Отчёт по 1–3 рисункам одного периода. Отчёт о развитии
@@ -1756,7 +1717,7 @@ html.dk .btn { color: #241A12; }
 
 <!-- 9b. Тревожная дверь. Стоит СРАЗУ после цены: человек только что её увидел и
      колеблется. Визуально это НЕ карточка тарифа — иначе читалось бы третьим тарифом. -->
-<section class="section">
+<section class="section" data-track-section="worry">
   <div class="wrap">
     <div class="worry-band reveal">
       <h2 class="worry-band__title">Что-то в рисунках тревожит?</h2>
@@ -1772,7 +1733,7 @@ html.dk .btn { color: #241A12; }
 </section>
 
 <!-- 10. FAQ -->
-<section class="section" id="faq">
+<section class="section" id="faq" data-track-section="faq">
   <div class="wrap">
     <h2 class="reveal">Частые вопросы</h2>
     <div class="reveal reveal--d1">
@@ -1807,7 +1768,7 @@ html.dk .btn { color: #241A12; }
 
 
 <!-- 11. Блог -->
-<section class="section section--soft" id="blog">
+<section class="section section--soft" id="blog" data-track-section="blog">
   <div class="wrap">
     <h2 class="reveal">Разбираемся в детских рисунках без мифов и страшных трактовок</h2>
     <div class="sub reveal reveal--d1">Спокойные ответы на вопросы, которые возникают почти у каждого родителя.</div>
@@ -2095,7 +2056,7 @@ html.dk .btn { color: #241A12; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.067</span>
+    <span class="foot-ver">V1.068</span>
   </div>
 </footer>
 

@@ -27,6 +27,8 @@ venv\Scripts\python.exe free_worker.py [--once]                 # воркер �
 venv\Scripts\python.exe scripts\free_lab.py --matrix             # офлайн-прогон фремиум-разборов + замер цены
 venv\Scripts\python.exe scripts\free_lab.py --texts              # все сборки §5 фремиума + пары с оверрайдом
 venv\Scripts\python.exe scripts\free_retention_check.py          # проверка удаления фото по сроку хранения
+venv\Scripts\python.exe scripts\analytics_selftest.py            # самопроверка аналитики (копия БД, 30 проверок)
+venv\Scripts\python.exe scripts\metrika_goals_sync.py --dry-run  # завести цели из config/goals.py в Метрике
 venv\Scripts\python.exe scripts\regenerate_report.py ORDER_ID   # ручной перезапуск заказа
 venv\Scripts\python.exe scripts\generate_report.py IMG [IMG2] --context C1.txt [C2.txt] [--common X.txt] [-o DIR]
 venv\Scripts\python.exe scripts\render_sample.py                # отчёт из fake JSON (шаблон)
@@ -120,12 +122,26 @@ release.bat "msg"                                               # релиз о�
   как ДАННЫЕ (модель их не называет); страница noindex и вне robots/sitemap (иначе конкурирует
   с лендингом по коммерческим запросам). На лендинге «бесплатно» — свойство действия, НЕ имя
   продукта: слов «бесплатный отчёт», «0 ₽», «начните с бесплатного» быть не должно.
-- **АНАЛИТИКА / Я.Метрика (обязательно)**: счётчик стоит на ВСЕХ страницах сайта, кроме `/admin*`
-  (`templates/_metrika.html`, гейт `metrika_id and not request.path.startswith('/admin')`;
-  ID из `YANDEX_METRIKA_ID` в `.env`). КАЖДАЯ новая кнопка/CTA/ссылка-действие получает уникальный
-  `data-ym-goal="page_action"` (форма — `data-ym-goal-submit="..."`); делегированный трекер в
-  `_metrika.html` сам шлёт `reachGoal` — JS дописывать не нужно. Имя цели уникальное, по схеме
-  `<страница>_<действие>` (напр. `order_submit`, `cabinet_download_pdf`). Админку НЕ трекать.
+- **АНАЛИТИКА (обязательно, пересобрана 14.08 — см. журнал)**. Два слоя, не путать:
+  (1) `templates/_metrika.html` — ТОЛЬКО счётчик Метрики (гейт `metrika_id` + не `/admin`),
+  (2) **`static/js/track.js` — своя аналитика, работает ВСЕГДА** (цели, вовлечённость, глубина
+  прокрутки, видимость блоков, маяк `/t/e`). Не возвращать первичный трекинг под гейт Метрики:
+  без чужого ID собственная воронка выключалась целиком. Лендинг НЕ наследует `_base.html` —
+  скрипт подключается там ОТДЕЛЬНО (иначе главная страница остаётся без измерений).
+  КАЖДАЯ новая кнопка/CTA получает уникальный `data-ym-goal="<страница>_<действие>"` (форма —
+  `data-ym-goal-submit`), **и её имя обязано попасть в реестр `config/goals.py`** — иначе
+  `scripts/analytics_selftest.py` красный, а в Метрике цель просто не существует
+  (`reachGoal` без заведённой цели уходит в пустоту). Новый смысловой блок страницы —
+  `data-track-section="<имя>"` + строка в `goals.SECTIONS`. Админку НЕ трекать.
+- **ЕДИНИЦА АНАЛИТИКИ — ВИЗИТ** (`web_visits`, cookie `gr_s`, 30 мин), а НЕ посетитель за период.
+  Воронки — `app/admin_funnels.py`, две двери (платная/бесплатная), шаги двух видов: ВОРОТА
+  достраиваются по самым дальним достигнутым (вложенность), НАБЛЮДЕНИЯ (скролл/секции) —
+  никогда не достраиваются. «Оплатил» берётся из ЗАКАЗА (`orders.visit_id`+`paid_at`), а не из
+  события: оплату подтверждает вебхук без браузера. Проверка после правок — `scripts/analytics_selftest.py`.
+- **Яндекс-API** (`app/metrika.py`, токен `YANDEX_OAUTH_TOKEN` в СЕРВЕРНОМ `.env`, гейт
+  `metrika.enabled()`): Management API — завести цели из реестра (`scripts/metrika_goals_sync.py`,
+  идемпотентно, `--dry-run`), Reporting API — расход Директа по кампаниям (наша база его знать
+  не может). Logs API НЕ используем: свои сырые события богаче, а квота 10 ГБ не бесплатна по труду.
 
 ## Состояние на 13.08.2026 — ФРЕМИУМ `/free` В ПРОДЕ (V1.049→V1.064)
 - **Бесплатный разбор одного рисунка живёт на `/free`**, вход с главной тремя тихими точками.

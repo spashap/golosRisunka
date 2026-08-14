@@ -15,8 +15,13 @@ ADMIN_ALERT_EMAIL = os.getenv("ADMIN_ALERT_EMAIL", "spashap@gmail.com")
 # Доступ в админку /admin: отдельный вход по паролю (НЕ смешан с /login клиентов).
 # Пустой ADMIN_PASS = админка полностью выключена (404).
 ADMIN_PASS = os.getenv("ADMIN_PASS", "")
-# Яндекс.Метрика: пока ID пуст — счётчик на страницы не вставляется
+# Яндекс.Метрика: пока ID пуст — счётчик на страницы не вставляется.
+# Своя аналитика (static/js/track.js -> /t/e) от этого НЕ зависит.
 YANDEX_METRIKA_ID = os.getenv("YANDEX_METRIKA_ID", "")
+# OAuth-токен Яндекса для API Метрики (цели, отчёты, расход Директа) и Вебмастера.
+# Права: metrika:read + metrika:write + webmaster:api. Пусто = интеграция выключена.
+YANDEX_OAUTH_TOKEN = os.getenv("YANDEX_OAUTH_TOKEN", "").strip()
+YANDEX_WEBMASTER_HOST_ID = os.getenv("YANDEX_WEBMASTER_HOST_ID", "").strip()
 # Dev-чит: этому email на localhost код входа показывается прямо на странице
 DEV_LOGIN_CODE_EMAIL = "spashap@gmail.com"
 # ЮKassa: режим test/live + раздельные ключи (как в shepotZvezd, проверено в бою).

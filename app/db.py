@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS orders (
     base_order_id INTEGER REFERENCES orders(id),  -- Development: на каком заказе основан
     child_json TEXT,                      -- данные ребёнка из формы (до создания child)
     visitor_id TEXT,                      -- аналитика: кто купил
+    visit_id TEXT,                        -- в каком ВИЗИТЕ оформлен (воронка и кампания)
     utm_json TEXT,                        -- first-touch UTM на момент заказа
     free_token TEXT,                      -- из какого бесплатного разбора пришёл заказ (атрибуция)
     retry_count INTEGER DEFAULT 0,        -- сколько авто-перезапусков уже было (транзитные сбои)
@@ -104,8 +105,10 @@ CREATE TABLE IF NOT EXISTS coupons (
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY,
     visitor_id TEXT,
+    visit_id TEXT,                        -- визит (см. web_visits): БЕЗ него воронка врёт
     customer_id INTEGER,
     type TEXT NOT NULL,
+    path TEXT,                            -- НА КАКОЙ странице произошло (иначе цель безадресна)
     payload_json TEXT,
     utm_json TEXT,
     user_agent TEXT,                      -- сырой UA (для разбора устройства)
@@ -116,6 +119,36 @@ CREATE TABLE IF NOT EXISTS events (
     geo_city TEXT,                        -- город (если есть в базе)
     created_at TEXT NOT NULL
 );
+-- Визит = непрерывный сеанс одного человека (окно 30 минут, cookie gr_s).
+-- Без этой таблицы «воронка» считала уникальных посетителей за период и делила одно
+-- множество на другое: шаги не вложены, длительности нет, кампанию к заказу не привязать.
+-- Одна строка на визит; события ссылаются на неё через events.visit_id.
+CREATE TABLE IF NOT EXISTS web_visits (
+    visit_id TEXT PRIMARY KEY,
+    visitor_id TEXT,
+    started_at TEXT NOT NULL,
+    last_at TEXT NOT NULL,
+    entry_path TEXT,                      -- с какой страницы вошёл
+    exit_path TEXT,                       -- на какой ушёл
+    pages INTEGER DEFAULT 0,              -- просмотров HTML-страниц в визите
+    engaged INTEGER DEFAULT 0,            -- был скролл/клик/15 c видимого пребывания
+    max_scroll INTEGER DEFAULT 0,         -- 25/50/75/100 — глубина прокрутки за визит
+    device TEXT,                          -- mobile / tablet / desktop / bot (UA)
+    screen_w INTEGER,                     -- ШИРИНА ЭКРАНА от клиента: UA про верстку не знает
+    is_touch INTEGER,
+    channel TEXT,                         -- ads / organic / social / referral / direct / internal
+    utm_json TEXT,                        -- UTM ЭТОГО визита (последнее касание)
+    yclid TEXT,                           -- клик Яндекс.Директа — единственная точная связь с кампанией
+    referer TEXT,
+    geo_country TEXT,
+    geo_region TEXT,
+    customer_id INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_visits_started ON web_visits(started_at);
+CREATE INDEX IF NOT EXISTS idx_visits_visitor ON web_visits(visitor_id, started_at);
+CREATE INDEX IF NOT EXISTS idx_visits_channel ON web_visits(channel, started_at);
+-- Индекс по events(visit_id) строится в _migrate(): на СТАРОЙ базе executescript
+-- пропускает CREATE TABLE events, колонки visit_id ещё нет, и индекс здесь упал бы.
 -- === Фремиум-бета (projectSpec/fremium) ==========================================
 -- Строка создаётся УЖЕ на шаге вывода после вопросов, до всякой загрузки: так видны
 -- и оборванные воронки, а не только дошедшие до разбора.
@@ -187,6 +220,18 @@ CREATE TABLE IF NOT EXISTS free_interpretation_keys (
     first_seen_at TEXT,
     verdict_at TEXT
 );
+-- Задачи заказчика (раздел «Задачи»). Живут в БД, а не в голове и не в переписке:
+-- часть работы делается РУКАМИ в чужих интерфейсах (цели в Метрике, доступы,
+-- просьбы подрядчику), и в коде такую задачу оставить негде.
+CREATE TABLE IF NOT EXISTS admin_tasks (
+    id INTEGER PRIMARY KEY,
+    key TEXT UNIQUE,                      -- у засеянных задач; NULL у добавленных руками
+    title TEXT NOT NULL,
+    details TEXT,
+    status TEXT NOT NULL DEFAULT 'open',  -- open / done
+    created_at TEXT NOT NULL,
+    done_at TEXT
+);
 -- Признак живости фоновых юнитов: deploy.sh новый юнит не поднимает, мониторинга нет,
 -- и после перезагрузки бокса разборы молча перестали бы генерироваться.
 CREATE TABLE IF NOT EXISTS service_heartbeat (
@@ -230,9 +275,12 @@ def _migrate(conn: sqlite3.Connection) -> None:
     колонки в готовую таблицу). Идемпотентно: только ADD COLUMN, если колонки нет."""
     cols = {r["name"] for r in conn.execute("PRAGMA table_info(events)")}
     for col in ("user_agent", "device", "referer",
-                "geo_country", "geo_region", "geo_city"):
+                "geo_country", "geo_region", "geo_city",
+                "visit_id", "path"):
         if col not in cols:
             conn.execute(f"ALTER TABLE events ADD COLUMN {col} TEXT")
+    # Только ПОСЛЕ ALTER: на старой базе колонки visit_id в момент executescript ещё нет.
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_visit ON events(visit_id)")
 
     # durable magic-login токен покупателя (ссылка «войти» в каждом письме).
     # Колонку добавляем ДО индекса: на старой БД executescript(SCHEMA) пропускает
@@ -254,6 +302,12 @@ def _migrate(conn: sqlite3.Connection) -> None:
     # из разбора — единственный точный источник, и без колонки он терялся.
     if "free_token" not in ocols:
         conn.execute("ALTER TABLE orders ADD COLUMN free_token TEXT")
+    # Визит, в котором оформлен заказ. Оплата приходит вебхуком БЕЗ браузера, поэтому
+    # событие order_paid к визиту не привязать — «оплатил» в воронке визитов считается
+    # по самому заказу, а не по событию.
+    if "visit_id" not in ocols:
+        conn.execute("ALTER TABLE orders ADD COLUMN visit_id TEXT")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_orders_visit ON orders(visit_id)")
 
 
 def get_db() -> sqlite3.Connection:
@@ -272,7 +326,8 @@ def track(event_type: str, visitor_id: str | None = None,
           utm: dict | None = None, conn: sqlite3.Connection | None = None,
           user_agent: str | None = None, device: str | None = None,
           referer: str | None = None, geo_country: str | None = None,
-          geo_region: str | None = None, geo_city: str | None = None) -> None:
+          geo_region: str | None = None, geo_city: str | None = None,
+          visit_id: str | None = None, path: str | None = None) -> None:
     """Серверное событие аналитики. Никогда не роняет запрос.
     conn — явное соединение для процессов без Flask (воркер).
     user_agent/device/referer/geo_* заполняются из request (track.py); воркер их не шлёт.
@@ -280,10 +335,11 @@ def track(event_type: str, visitor_id: str | None = None,
     try:
         db = conn if conn is not None else get_db()
         db.execute(
-            "INSERT INTO events (visitor_id, customer_id, type, payload_json, utm_json,"
-            " user_agent, device, referer, geo_country, geo_region, geo_city, created_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (visitor_id, customer_id, event_type,
+            "INSERT INTO events (visitor_id, visit_id, customer_id, type, path,"
+            " payload_json, utm_json, user_agent, device, referer,"
+            " geo_country, geo_region, geo_city, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (visitor_id, visit_id, customer_id, event_type, path,
              json.dumps(payload, ensure_ascii=False) if payload else None,
              json.dumps(utm, ensure_ascii=False) if utm else None,
              user_agent, device, referer,

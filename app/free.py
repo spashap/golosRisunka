@@ -129,10 +129,13 @@ def summary():
     # от него возвращает ту же полосу, поэтому предикат лимита и тексты не разъезжаются.
     band_key = f.get("band") or ""
     if band_key not in T.BAND_BY_KEY:
+        track_event("free_summary_invalid", {"field": "band"})
         return jsonify({"error": "bad_input"}), 400
     age = T.band_age(band_key)
     concern = f.get("concern") or ""
     if not name or concern not in T.CONCERN_KEYS:
+        track_event("free_summary_invalid",
+                    {"field": "name" if not name else "concern"})
         return jsonify({"error": "bad_input"}), 400
     address = f.get("address") if f.get("address") in ("он", "она") else \
         free_names.address_form_or_ask(name)[0]
@@ -174,19 +177,31 @@ def summary():
 
 # --- Загрузка -----------------------------------------------------------------------
 
+def _upload_failed(reason: str, payload: dict, code: int):
+    """Отказ загрузки — СОБЫТИЕ, а не только сообщение в интерфейсе.
+
+    Это была самая большая дыра в воронке: человек дошёл до конца анкеты, нажал
+    «разобрать» и упёрся в лимит/формат/размер — а в аналитике не оставалось ничего,
+    и шаг «загрузили рисунок» просто не наступал без объяснения причины.
+    """
+    track_event("free_upload_failed", {"reason": reason})
+    return jsonify(payload), code
+
+
 @bp_free.post("/upload/<token>")
 def upload(token: str):
     db = get_db()
     row = db.execute("SELECT * FROM free_analyses WHERE token = ?", (token,)).fetchone()
     if row is None:
-        return jsonify({"error": "not_found"}), 404
+        return _upload_failed("not_found", {"error": "not_found"}, 404)
     if row["status"] not in ("answers", "rejected", "failed"):
-        return jsonify({"error": "already", "token": token}), 409
+        return _upload_failed("already", {"error": "already", "token": token}, 409)
 
     limit_row = _existing_free(db, row["limit_key"], row["child_name_norm"],
                                row["child_age"])
     if limit_row is not None:
-        return jsonify({"error": "limit", "token": limit_row["token"]}), 409
+        return _upload_failed("limit",
+                              {"error": "limit", "token": limit_row["token"]}, 409)
 
     if settings.FREE_DAILY_CAP:
         today = now()[:10]
@@ -202,21 +217,21 @@ def upload(token: str):
     # письмо, которого у нас не было.
     addr = (request.form.get("email") or "").strip().lower()
     if not EMAIL_RE.match(addr):
-        return jsonify({"error": "email"}), 400
+        return _upload_failed("email", {"error": "email"}, 400)
 
     fs = request.files.get("file")
     if fs is None or not fs.filename:
-        return jsonify({"error": "no_file"}), 400
+        return _upload_failed("no_file", {"error": "no_file"}, 400)
     ext = Path(fs.filename.lower()).suffix
     if ext not in ALLOWED_EXT:
-        return jsonify({"error": "format"}), 400
+        return _upload_failed("format", {"error": "format"}, 400)
     blob = fs.read()
     # Дешёвые проверки СИНХРОННО и до вставки: так «неудачная загрузка не расходует
     # лимит» выполняется по построению, а не сверкой статусов.
     if len(blob) > settings.UPLOAD_MAX_BYTES:
-        return jsonify({"error": "too_big"}), 400
+        return _upload_failed("too_big", {"error": "too_big"}, 400)
     if len(blob) < 1024 or not _sniff(blob):
-        return jsonify({"error": "broken"}), 400
+        return _upload_failed("broken", {"error": "broken"}, 400)
 
     d = settings.FREE_DIR / str(row["id"])
     d.mkdir(parents=True, exist_ok=True)
@@ -281,6 +296,9 @@ def result(token: str):
     if row is None:
         abort(404)
     if row["status"] != "done":
+        # Ожидание — тоже состояние воронки: сюда попадают те, кто вернулся по ссылке
+        # раньше, чем разбор готов, и не увидел результата.
+        track_event("free_wait_view", {"status": row["status"]})
         return render_template("free_wait.html", token=token,
                                wait_hint=T.wait_hint(row["concern_key"],
                                                      row["address_form"] or "он"))

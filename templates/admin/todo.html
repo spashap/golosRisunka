@@ -1,0 +1,65 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Задачи{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Задачи</h1>
+  <span class="hint">открыто: <b>{{ open_n }}</b> · закрыто: {{ done_n }}</span>
+</div>
+{% if msg %}<p class="admin-flash admin-flash--ok">{{ msg }}</p>{% endif %}
+<p class="hint">То, что нужно сделать руками и чего нет в коде: цели в Метрике,
+  доступы, просьбы подрядчику. Свёрнуто — только название; разверните, чтобы увидеть,
+  что именно делать.</p>
+
+{# Свёрнутая задача = одна строка. Подробности в <details>, без JS. #}
+<div class="vis-list">
+  {% for t in tasks %}
+  <details class="drill drill--src">
+    <summary>
+      <span>{% if t.done %}<s>{{ t.title }}</s>{% else %}{{ t.title }}{% endif %}</span>
+      <span>{% if t.done %}<span class="status-pill status-pill--ready">сделано</span>
+            {% else %}<span class="status-pill status-pill--wait">открыта</span>{% endif %}</span>
+      <span class="hint">{{ t.created }}</span>
+      <span class="hint">{% if t.done %}закрыта {{ t.done_at }}{% endif %}</span>
+      <span class="hint">подробнее ▾</span>
+    </summary>
+    <div class="vis-body">
+      {% if t.details %}
+      <div style="white-space:pre-wrap; font-size:13.5px; line-height:1.55">{{ t.details }}</div>
+      {% else %}
+      <p class="hint">Без описания.</p>
+      {% endif %}
+      <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap">
+        <form method="post" action="{{ url_for('admin.todo_toggle', task_id=t.id) }}">
+          <button class="status-pill {{ 'status-pill--wait' if t.done else 'status-pill--ready' }}"
+                  type="submit">{{ 'вернуть в работу' if t.done else 'отметить сделанной' }}</button>
+        </form>
+        {% if not t.seeded %}
+        <form method="post" action="{{ url_for('admin.todo_delete', task_id=t.id) }}"
+              onsubmit="return confirm('Удалить задачу «{{ t.title }}»?')">
+          <button class="status-pill status-pill--warn" type="submit">удалить</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </details>
+  {% else %}
+  <p class="hint">Задач нет.</p>
+  {% endfor %}
+</div>
+
+<h2 class="h3" style="margin-top:26px">Добавить задачу</h2>
+<form method="post" action="{{ url_for('admin.todo_add') }}" class="form-card"
+      style="max-width:720px">
+  <div class="field">
+    <label for="t-title">Название</label>
+    <div class="ctl"><input class="input" id="t-title" name="title" type="text"
+         maxlength="200" placeholder="Что нужно сделать" required></div>
+  </div>
+  <div class="field" style="margin-top:14px">
+    <label for="t-details">Подробности <span class="hint">(необязательно)</span></label>
+    <div class="ctl"><textarea class="input" id="t-details" name="details" rows="4"
+         maxlength="8000" placeholder="Что именно делать, где и зачем"></textarea></div>
+  </div>
+  <button class="btn btn--primary" type="submit" style="margin-top:16px">Добавить</button>
+</form>
+{% endblock %}

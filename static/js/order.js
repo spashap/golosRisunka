@@ -48,6 +48,9 @@
       var el = form.querySelector('[name="' + name + '"]');
       if (el && !el.value) el.value = data[name];
     });
+    // Черновик восстановлен = человек ВЕРНУЛСЯ к брошенной форме. Отдельный сигнал:
+    // такой визит нельзя считать первым знакомством, и мерить его надо иначе.
+    if (window.ymGoal) { window.ymGoal("order_draft_restored"); }
   }
 
   form.addEventListener("input", saveDraft);
@@ -107,6 +110,9 @@
           missing.map(function (m) { return m.label; }).join(", ") + ".";
         addMsg.hidden = false;
       }
+      // Клиентская проверка молчала в аналитике: на сервер такой заказ не уходит,
+      // и «человек уперся в форму» выглядело как «просто ушёл».
+      if (window.ymGoal) { window.ymGoal("order_block_incomplete"); }
       return;
     }
     hideAddMsg();
@@ -142,6 +148,9 @@
         if (f.size > 15 * 1024 * 1024) {
           alert("Файл больше 15 МБ — выберите фото поменьше.");
           fileInput.value = "";
+          // Телефонное фото легко перевешивает лимит; без события это выглядело
+          // как «выбрал файл и передумал».
+          if (window.ymGoal) { window.ymGoal("order_file_too_big"); }
           return;
         }
         var txt = block.querySelector(".fd-text");
@@ -232,6 +241,8 @@
       if (sgPending) {       // опечатка не подтверждена — не отправляем
         e.preventDefault();
         sgBox.scrollIntoView({ block: "center", behavior: "smooth" });
+        // Мы САМИ остановили отправку — это наш отказ, а не уход клиента.
+        if (window.ymGoal) { window.ymGoal("order_blocked_email_typo"); }
       }
     });
   }
@@ -247,6 +258,7 @@
   });
 
   // маяк аналитики: начали заполнять форму (один раз)
+  // (восстановление черновика отмечается в restoreDraft — это возврат к брошенной форме)
   var started = false;
   form.addEventListener("input", function () {
     if (started) return;

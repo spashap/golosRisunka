@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+import re
 from functools import lru_cache
 
 from flask import (Blueprint, Response, abort, g, jsonify, redirect,
@@ -19,6 +20,7 @@ from app.orders import EMAIL_RE, FormError, validate_and_create_order
 from app.payments import create_payment, mark_paid
 from app.yookassa import YuKassaError
 from app.samples import get_sample_by_token, get_samples
+from app import track
 from app.track import parse_device, track_event
 from config import free_names, settings
 from config.form_fields import CHILD_FIELDS, COUPON_FIELD, DRAWING_FIELDS, EMAIL_FIELD
@@ -119,24 +121,52 @@ _DIAG_EVENTS = {"pay_redirect_go", "pay_widget_error",
                 "pay_widget_render_failed", "pay_status_timeout"}
 
 
+_SCROLL_GOAL = re.compile(r"^scroll_(25|50|75|100)$")
+
+
+def _beacon_path() -> str | None:
+    """Страница, НА КОТОРОЙ произошло событие. Присылает клиент (`p`), потому что сам
+    запрос всегда приходит на /t/e. Чужие абсолютные URL не принимаем."""
+    p = (request.form.get("p") or request.args.get("p") or "").strip()
+    return p[:200] if p.startswith("/") else None
+
+
 @bp.post("/t/e")
 def track_beacon():
     """First-party приём через navigator.sendBeacon. Дёшево, анонимно, не роняет ничего.
-    - g=<goal>  -> событие 'click:<goal>' (UI-цели data-ym-goal);
+    - g=<goal>  -> событие 'click:<goal>' (UI-цели data-ym-goal + скролл/секции);
     - ev=<name> -> диагностическое событие из _DIAG_EVENTS (как есть, без префикса);
     - engaged=1 -> событие 'engaged' (вовлечённость: скролл/взаимодействие/15с видимого
-      пребывания — см. _metrika.html). Шлётся максимум раз за загрузку страницы; в админке
-      «Визиты» считаем вовлечённых = DISTINCT visitor_id с событием 'engaged'."""
+      пребывания — см. _metrika.html). Шлётся максимум раз за загрузку страницы;
+    - sw/t      -> ширина экрана и тач: верстка ломается по ШИРИНЕ, а user-agent о ней
+      не знает (iPad в режиме десктопа, узкое окно на ноутбуке).
+    Всё это пишется и в событие, и в строку визита (web_visits)."""
+    path = _beacon_path()
+    try:
+        sw = int(request.form.get("sw") or request.args.get("sw") or 0)
+    except ValueError:
+        sw = 0
+    if sw:
+        track.mark_visit(screen_w=min(sw, 9999),
+                         is_touch=1 if (request.form.get("t") or request.args.get("t")) else 0)
+
     if request.form.get("engaged") or request.args.get("engaged"):
-        track_event("engaged")
+        track_event("engaged", path=path)
+        track.mark_visit(engaged=1)
         return ("", 204)
     ev = (request.form.get("ev") or request.args.get("ev") or "").strip().lower()
     if ev in _DIAG_EVENTS:
-        track_event(ev)
+        # oid — какой заказ сломался. Без него сбой виджета можно было связать с заказом
+        # только по visitor_id и близости времени, то есть на глаз.
+        oid = (request.form.get("oid") or request.args.get("oid") or "").strip()
+        track_event(ev, {"order_id": int(oid)} if oid.isdigit() else None, path=path)
         return ("", 204)
     goal = (request.form.get("g") or request.args.get("g") or "").strip().lower()
     if goal and len(goal) <= 64 and set(goal) <= _GOAL_CHARS:
-        track_event("click:" + goal)
+        track_event("click:" + goal, path=path)
+        m = _SCROLL_GOAL.match(goal)
+        if m:
+            track.mark_visit(max_scroll=int(m.group(1)))
     return ("", 204)
 
 
@@ -160,10 +190,14 @@ def hosted_report(token: str):
         track_event("sample_view", {"token": token})
         return Response(sample.html_path.read_text(encoding="utf-8"), mimetype="text/html")
     row = get_db().execute(
-        "SELECT html_path FROM reports WHERE public_token = ?", (token,)).fetchone()
+        "SELECT order_id, html_path FROM reports WHERE public_token = ?",
+        (token,)).fetchone()
     if row and row["html_path"]:
         path = settings.BASE_DIR / row["html_path"]
         if path.exists():
+            # Открытие СВОЕГО отчёта — момент получения ценности; без события
+            # «дошёл до отчёта» и «отчёт прочитан» были неразличимы.
+            track_event("report_view", {"order_id": row["order_id"]})
             return Response(path.read_text(encoding="utf-8"), mimetype="text/html")
     abort(404)
 
@@ -227,6 +261,7 @@ def login_verify():
     try:
         token = verify_code(email, code)
     except AuthError as e:
+        track_event("login_code_failed", {"reason": str(e)[:60]})
         return render_template("login.html", step="code", email=email,
                                error=str(e), notice=None,
                                dev_code=_dev_code(email)), 400
@@ -250,6 +285,7 @@ def login_enter(token):
     """Magic-link из письма: durable-токен покупателя → сессия без кода."""
     session = login_with_token(token)
     if session is None:
+        track_event("login_magic_failed")
         return render_template("login.html", step="email", email="", error=None,
                                notice="Ссылка не сработала — войдите по email ниже."), 404
     track_event("login_magic")
@@ -275,6 +311,7 @@ def login_recover():
     try:
         token = recover_login(email, child_name, child_birth)
     except AuthError as e:
+        track_event("login_recover_failed", {"reason": str(e)[:60]})
         return render_template("login.html", step="recover", email=email,
                                error=str(e), notice=None), 400
     track_event("login_recover_success")
@@ -487,11 +524,13 @@ def order_submit():
                                   status=400, reused=reused)
     track_event("order_created", {"order_id": order_id, "drawings": len(files)})
     db = get_db()
-    if free_token:
-        # Точная атрибуция «фремиум -> покупка». Пишем ПОСЛЕ создания заказа, чтобы
-        # app/orders.py (валидация формы) не пришлось трогать вообще.
-        db.execute("UPDATE orders SET free_token = ? WHERE id = ?", (free_token, order_id))
-        db.commit()
+    # visit_id — в каком ВИЗИТЕ оформлен заказ (per-visit воронка и связь с кампанией);
+    # free_token — точная атрибуция «фремиум -> покупка». Пишем ПОСЛЕ создания заказа,
+    # чтобы app/orders.py (валидация формы) не пришлось трогать вообще.
+    db.execute("UPDATE orders SET visit_id = ?, free_token = COALESCE(?, free_token)"
+               " WHERE id = ?",
+               (getattr(g, "visit_id", None), free_token or None, order_id))
+    db.commit()
     order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     return redirect(create_payment(order_id, order["price_kopecks"]))
 
@@ -551,6 +590,11 @@ def yookassa_create(order_id: int):
             resp = _confirmation_response({"confirmation_url": conf.get("confirmation_url"),
                                            "confirmation_token": conf.get("confirmation_token")})
             if resp:
+                # Повторный заход на оплату того же заказа. Раньше ветка возвращала
+                # ответ молча, и «пробовал платить дважды» — сильнейший признак
+                # проблемы на чекауте — не был виден вообще.
+                track_event("pay_retry_existing",
+                            {"order_id": order_id, "mobile": is_mobile})
                 return jsonify(resp)
     product = settings.get_products()[order["product_code"]]
     return_url = (f"{settings.PUBLIC_BASE_URL}/pay/yookassa/return/{order_id}"
@@ -681,7 +725,9 @@ def order_success(order_id: int):
     if order["status"] == "created":
         # Не оплачен: webhook мог опоздать (ведём на поллинг), либо это чужой/
         # угаданный order_id. В обоих случаях цель Метрики срабатывать не должна.
+        track_event("pay_wait_view", {"order_id": order_id})
         return render_template("pay_wait.html", order_id=order_id)
+    track_event("order_success_view", {"order_id": order_id})
     return render_template(
         "order_success.html",
         email=order["email"],
@@ -696,6 +742,7 @@ def order_success(order_id: int):
 
 @bp.get("/blog")
 def blog_index():
+    track_event("blog_index_view")
     return render_template("blog_index.html", posts=get_posts())
 
 
@@ -704,6 +751,9 @@ def blog_post(slug: str):
     post = get_post(slug)
     if post is None:
         abort(404)
+    # Статьи — целый SEO-канал, и до сих пор их чтение не фиксировалось никак:
+    # были видны только исходящие клики, то есть лишь те, кто дочитал и ушёл дальше.
+    track_event("blog_post_view", {"slug": slug})
     return render_template("blog_post.html", post=post)
 
 
@@ -728,9 +778,10 @@ LEGAL_PAGES = {
 @bp.get("/terms")
 @bp.get("/contacts")
 def legal():
-    from flask import request
     key = request.path.strip("/")
     title, text = LEGAL_PAGES[key]
+    # Юридические страницы читают перед покупкой — это сигнал сомнения, а не шум.
+    track_event("legal_view", {"page": key})
     return render_template("legal.html", title=title, text=text)
 
 

@@ -1,5 +1,5 @@
 """Flask-приложение «Голос рисунка». Один процесс, серверный HTML (spec §2)."""
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, request
 
 from app import track
 from app.db import init_db
@@ -33,13 +33,19 @@ def create_app() -> Flask:
     from app.free import bp_free
     app.register_blueprint(bp_free)
 
+    # Ошибки — тоже поведение: битая ссылка из письма или из выдачи выглядела в
+    # аналитике как «человек просто не дошёл», а не как страница, которой нет.
     @app.errorhandler(404)
     def not_found(e):
+        from app.track import track_event
+        track_event("error_404", {"path": request.path[:200]})
         return render_template("error.html", code=404,
                                message="Такой страницы нет"), 404
 
     @app.errorhandler(500)
     def server_error(e):
+        from app.track import track_event
+        track_event("error_500", {"path": request.path[:200]})
         return render_template("error.html", code=500,
                                message="Что-то пошло не так. Мы уже разбираемся."), 500
 

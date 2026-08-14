@@ -40,9 +40,9 @@
 <link rel="preload" href="/static/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
 
-<link rel="stylesheet" href="/static/css/fonts.css?v=1.067">
-<link rel="stylesheet" href="/static/css/tokens.css?v=1.067">
-<link rel="stylesheet" href="/static/css/components.css?v=1.067">
+<link rel="stylesheet" href="/static/css/fonts.css?v=1.068">
+<link rel="stylesheet" href="/static/css/tokens.css?v=1.068">
+<link rel="stylesheet" href="/static/css/components.css?v=1.068">
 
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "Article",
@@ -74,58 +74,13 @@
     accurateTrackBounce: true,
     trackLinks: true
   });
-
-  // --- Цели по кликам/сабмитам (data-ym-goal / data-ym-goal-submit) ---
-  // Шлём и в Яндекс (reachGoal), и первой стороной (beacon -> /t/e) для админки.
-  window.ymGoal = function (goal, params) {
-    if (!goal) { return; }
-    if (window.ym) { try { ym(109824945, "reachGoal", goal, params || {}); } catch (e) {} }
-    try { navigator.sendBeacon("/t/e", new URLSearchParams({ g: goal })); } catch (e) {}
-  };
-  document.addEventListener("click", function (ev) {
-    var el = ev.target.closest && ev.target.closest("[data-ym-goal]");
-    if (el) { window.ymGoal(el.getAttribute("data-ym-goal")); }
-  }, true);
-  document.addEventListener("submit", function (ev) {
-    var f = ev.target.closest && ev.target.closest("[data-ym-goal-submit]");
-    if (f) { window.ymGoal(f.getAttribute("data-ym-goal-submit")); }
-  }, true);
-
-  // --- Вовлечённость: один beacon "engaged" при ПЕРВОМ из:
-  //   скролл / клик / клавиша / тач  ИЛИ  15 секунд ВИДИМОГО пребывания на странице.
-  //   Модель «engaged session» (как GA4); порог 15с совпадает с «отказом» Метрики.
-  //   Боты без JS и мгновенные отказы (без скролла, <15с) НЕ шлют его → в админке
-  //   они не попадают в «вовлечённых». Фоновые/предзагруженные вкладки не копят время
-  //   (visibilityState). Шлётся максимум один раз.
-  (function () {
-    var sent = false, visibleSec = 0, THRESHOLD = 15;
-    var EVENTS = ["scroll", "wheel", "click", "keydown", "touchstart"];
-    var tick = null;
-    function cleanup() {
-      EVENTS.forEach(function (ev) { document.removeEventListener(ev, onInteract, true); });
-      if (tick) { clearInterval(tick); tick = null; }
-    }
-    function fire() {
-      if (sent) { return; }
-      sent = true;
-      try { navigator.sendBeacon("/t/e", new URLSearchParams({ engaged: "1" })); } catch (e) {}
-      cleanup();
-    }
-    function onInteract() { fire(); }
-    EVENTS.forEach(function (ev) {
-      document.addEventListener(ev, onInteract, { capture: true, passive: true });
-    });
-    tick = setInterval(function () {
-      if (document.visibilityState === "visible") {
-        visibleSec += 1;
-        if (visibleSec >= THRESHOLD) { fire(); }
-      }
-    }, 1000);
-  })();
+  window.GR_YM_ID = 109824945;
 </script>
 <noscript><div><img src="https://mc.yandex.ru/watch/109824945"
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
+
+<script src="/static/js/track.js?v=1.068"></script>
 </head>
 <body>
 
@@ -154,7 +109,7 @@
 </header>
 
 <div class="section">
-  <article class="wrap prose" style="max-width: 760px">
+  <article class="wrap prose" style="max-width: 760px" data-track-section="article">
     <p class="hint" style="margin-bottom: 6px"><a href="/blog" data-ym-goal="blogpost_back_blog">Блог</a></p>
     <h1 class="h2">«Злые» рисунки: ребёнок черкает, давит на карандаш, рвёт бумагу</h1>
     <p>Одно дело — нарисованный монстр, и совсем другое — сам процесс: ребёнок давит на карандаш так, что рвётся бумага, яростно зачёркивает нарисованное, комкает лист и швыряет его в угол. Здесь родительская тревога понятна — на глазах происходит что-то бурное. Разберёмся, что стоит за «злым» рисованием и когда оно действительно заслуживает внимания.</p>
@@ -227,7 +182,7 @@
     <span class="foot__brand">Голос рисунка</span>
     Образовательное наблюдение, не медицинская диагностика · golosrisunka.ru
     
-    <span class="foot-ver">V1.067</span>
+    <span class="foot-ver">V1.068</span>
   </div>
 </footer>
 </body>

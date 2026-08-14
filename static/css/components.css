@@ -832,6 +832,12 @@ html.dk .btn { color: #241A12; }
 .admin-status--failed { color: #C0392B; }
 .admin-status--insufficient { color: var(--accent2); }
 .admin-status--created { color: var(--soft); }
+/* .hint стоит почти в каждом шаблоне админки, но правило было ТОЛЬКО у `.field .hint` —
+   вне поля формы подсказки рисовались обычным текстом и не отличались от данных.
+   Ограничено админкой намеренно: на сайте .hint вне .field сейчас выглядит как абзац,
+   и глобальное правило молча перекрасило бы публичные страницы. */
+.admin-main .hint { color: var(--soft); font-size: 13px; }
+.admin-main td.hint, .admin-main .hint code { font-size: 12.5px; }
 @media (max-width: 900px) { .admin-kpis { grid-template-columns: repeat(2, 1fr); } }
 
 /* --- Админка: каркас с сайдбаром --- */

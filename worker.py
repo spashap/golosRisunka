@@ -22,6 +22,20 @@ from app.logging_setup import configure_logging
 from config import settings
 
 
+def _beat(conn) -> None:
+    """Признак живости для админки. Раздел «Бета» показывал строку про этого воркера
+    с самого начала, но писал её только free_worker — платный воркер всегда выглядел
+    мёртвым, и настоящая остановка была бы неотличима от нормы."""
+    try:
+        conn.execute(
+            "INSERT INTO service_heartbeat (name, last_seen_at) VALUES ('worker', ?)"
+            " ON CONFLICT(name) DO UPDATE SET last_seen_at = excluded.last_seen_at",
+            (db_now(),))
+        conn.commit()
+    except Exception:              # мониторинг не должен ронять генерацию отчётов
+        pass
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="report generation worker")
     ap.add_argument("--once", action="store_true",
@@ -41,6 +55,7 @@ def main() -> int:
              settings.WORKER_POLL_SECONDS, args.once)
 
     while True:
+        _beat(conn)
         row = conn.execute(
             "SELECT id FROM orders WHERE status = 'paid' ORDER BY paid_at, id LIMIT 1"
         ).fetchone()

@@ -36,6 +36,10 @@
 <link rel="stylesheet" href="{{ static }}/css/components.css?v={{ version }}">
 {% block head %}{% endblock %}
 {% include "_metrika.html" %}
+{# Своя аналитика (цели, вовлечённость, глубина прокрутки, видимость блоков).
+   БЕЗ defer и до тела страницы: инлайн-скрипты страниц зовут window.ymGoal по ходу
+   разбора документа. Счётчик Метрики выше — track.js подхватывает его, если он есть. #}
+<script src="{{ static }}/js/track.js?v={{ version }}"></script>
 </head>
 <body>
 {% include "_header.html" %}
