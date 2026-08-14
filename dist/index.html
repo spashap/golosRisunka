@@ -734,16 +734,6 @@ html.dk .btn { color: #241A12; }
 .case-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .case p { color: var(--ink); font-size: var(--fs-body); line-height: 1.5; margin: 0; }
 .case strong { color: var(--accent2); font-weight: 700; }
-/* Кликабельный вариант кейс-карточки (страница /free-check: карточка = выбор тревоги,
-   который уезжает в мастер). Карточка ДОЛЖНА выглядеть нажимаемой: без этого её
-   принимают за текст и не трогают. Стрелка — псевдоэлемент, чтобы не засорять разметку. */
-.case--link { display: block; color: inherit; position: relative;
-              transition: transform .15s ease, box-shadow .15s ease, border-color .15s; }
-.case--link:hover, .case--link:focus-visible {
-  transform: translateY(-2px); border-color: var(--accent);
-  box-shadow: var(--shadow-hard); }
-.case--link::after { content: "→"; color: var(--accent); font-weight: 700;
-                     margin-left: 6px; white-space: nowrap; }
 @media (max-width: 880px) { .case-list { grid-template-columns: 1fr; } }
 
 /* --- «Без мифов»: две колонки «не делаем / делаем» (спокойно, без красного) --- */
@@ -1289,7 +1279,7 @@ html.dk .btn { color: #241A12; }
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 
-<script src="/static/js/track.js?v=1.069"></script>
+<script src="/static/js/track.js?v=1.070"></script>
 </head>
 <body>
 
@@ -2085,7 +2075,7 @@ html.dk .btn { color: #241A12; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.069</span>
+    <span class="foot-ver">V1.070</span>
   </div>
 </footer>
 
