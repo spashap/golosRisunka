@@ -1,6 +1,6 @@
 {% extends "admin/_base_admin.html" %}
 {% from "admin/_period.html" import period_filter %}
-{% block title %}Аналитика{% endblock %}
+{% block title %}Воронки{% endblock %}
 
 {# Таблица посетителей под раскрытым шагом воронки / источником #}
 {% macro members_table(members) %}
@@ -23,48 +23,12 @@
 
 {% block content %}
 <div class="admin-head">
-  <h1 class="h2">Аналитика</h1>
+  <h1 class="h2">Воронки</h1>
   {{ period_filter(periods, days, url_for("admin.analytics")) }}
 </div>
-{% if not metrika_configured %}
-<p class="hint">Яндекс.Метрика не подключена — добавьте <code>YANDEX_METRIKA_ID</code>
-  в <code>.env</code>, и счётчик появится на всех страницах сайта.</p>
-{% endif %}
-
-<div class="admin-head" style="margin:14px 0 4px">
-  <p class="hint" style="margin:0">
-    {% if show == 'all' %}Считаем <b>всех людей</b>: {{ humans }}{% else %}Считаем только <b>вовлечённых</b>: {{ engaged }}{% endif %}
-    · landing-only (отказы): <b>{{ landing_only }}</b>{% if humans %} из {{ humans }} ({{ (landing_only / humans * 100) | round | int }}%){% endif %}{% if bots %} · ботов отсечено: {{ bots }}{% endif %}.<br>
-    «Вовлечённый» = был скролл/клик/нажатие или ≥15 c на странице. landing-only = зашёл на лендинг и ушёл.
-  </p>
-  <div class="admin-periods">
-    <a class="status-pill {% if show != 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
-       href="{{ url_for('admin.analytics') }}?days={{ days }}">Без отказов</a>
-    <a class="status-pill {% if show == 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
-       href="{{ url_for('admin.analytics') }}?days={{ days }}&show=all">Все люди</a>
-  </div>
-</div>
-
-<div class="admin-kpis">
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.visitors }}</div><div class="admin-kpi__l">{% if show == 'all' %}посетителей{% else %}вовлечённых{% endif %}</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.orders }}</div><div class="admin-kpi__l">заказов создано</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.paid }}</div><div class="admin-kpi__l">оплачено</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.revenue_rub }} ₽</div><div class="admin-kpi__l">выручка</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.conversion }}</div><div class="admin-kpi__l">{% if show == 'all' %}посетитель{% else %}вовлечённый{% endif %} → оплата</div></div>
-</div>
-
-<h2 style="margin-top:26px">Фремиум <span class="hint">(бесплатный разбор)</span></h2>
-<p class="hint">Анкету прошли <b>{{ free.total }}</b> — из них оставили только почту
-  <b>{{ free.email_only }}</b>, принесли рисунок <b>{{ free.requested }}</b>.
-  Открывали страницу: {{ free.openers }}.
-  <a href="{{ url_for('admin.free_analytics') }}?days={{ days }}">Подробная аналитика фремиума →</a></p>
-<div class="admin-kpis">
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.total }}</div><div class="admin-kpi__l">прошли анкету</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.email_only }}</div><div class="admin-kpi__l">только email<br>(рисунка нет)</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.requested }}</div><div class="admin-kpi__l">запросили разбор<br>(рисунок загружен)</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.done }}</div><div class="admin-kpi__l">разбор готов</div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.dropped }}</div><div class="admin-kpi__l">ушли без почты<br>и без рисунка</div></div>
-</div>
+<p class="hint">Здесь — шаги по трём дверям и каналы визитов. Деньги, трафик и когорты
+  фремиума — на <a href="{{ url_for('admin.dashboard') }}">Дашборде</a>; сырые события — в
+  <a href="{{ url_for('admin.actions') }}?days={{ days }}">Действиях</a>.</p>
 
 {% macro funnel_table(f) %}
 <div class="admin-scroll">
@@ -110,6 +74,8 @@
 {{ funnel_table(funnels.paid) }}
 
 <h3 style="margin-top:22px">Бесплатная дверь — /free</h3>
+<p class="hint">Заканчивается на «отправил рисунок»: разбор открывают и заказ делают в другом
+  визите, по ссылке из письма. Покупки из фремиума — когорты на Дашборде и страница «Фремиум».</p>
 {{ funnel_table(funnels.free) }}
 
 <h3 style="margin-top:22px">Холодная дверь — посадочная /free-check</h3>
@@ -169,20 +135,4 @@
   {% endfor %}
 </div>
 
-<h2 style="margin-top:26px">Последние события <span class="hint">(до 60)</span></h2>
-<div class="admin-scroll">
-<table>
-  <thead><tr><th>Время (UTC)</th><th>Событие</th><th>Гео</th><th>Устройство</th><th>Кто</th><th>Данные</th></tr></thead>
-  <tbody>
-  {% for e in events %}
-  <tr><td style="white-space:nowrap">{{ e.time }}</td><td>{{ e.type }}</td>
-      <td>{{ e.geo }}</td><td>{{ e.device }}</td>
-      <td><code style="font-size:11px">{{ e.who }}</code></td>
-      <td><code style="font-size:12px">{{ e.payload }}</code></td></tr>
-  {% else %}
-  <tr><td colspan="6">Событий за период нет</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
 {% endblock %}

@@ -736,13 +736,37 @@ def yookassa_webhook():
     у которых object — НЕ платёж: их пропускаем, не дёргая API зря."""
     body = request.get_json(force=True, silent=True) or {}
     event = body.get("event") or ""
-    payment_id = (body.get("object") or {}).get("id")
+    obj = body.get("object") or {}
+    payment_id = obj.get("id")
     if payment_id and (event.startswith("payment.") or not event):
         try:
             _settle_payment(payment_id)
         except Exception:
             log.exception("yookassa webhook failed for payment %s", payment_id)
+    elif event == "refund.succeeded" and obj.get("payment_id"):
+        # Возврат: выручка на дашборде считается за его вычетом. Подлинность — как у
+        # платежа: перезапрашиваем платёж и смотрим refunded_amount.
+        try:
+            _apply_refund(obj["payment_id"])
+        except Exception:
+            log.exception("yookassa refund webhook failed for payment %s", obj.get("payment_id"))
     return "", 200
+
+
+def _apply_refund(payment_id: str) -> None:
+    pay = yookassa.get_payment(payment_id)
+    if not pay:
+        return
+    refunded = float((pay.get("refunded_amount") or {}).get("value") or 0)
+    if refunded <= 0:
+        return
+    db = get_db()
+    db.execute("UPDATE orders SET refunded_at = COALESCE(refunded_at, ?), refund_kopecks = ?"
+               " WHERE yookassa_payment_id = ?",
+               (datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+                int(round(refunded * 100)), payment_id))
+    db.commit()
+    track_event("order_refunded", {"payment_id": payment_id, "rub": refunded})
 
 
 @bp.get("/pay/yookassa/status/<int:order_id>")

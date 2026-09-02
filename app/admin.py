@@ -20,6 +20,7 @@ import re
 from flask import (Blueprint, abort, redirect, render_template, request,
                    Response, url_for)
 
+from app import admin_dashboard as dash
 from app import admin_free_analytics as fa
 from app import admin_funnels as fn
 from app import admin_tasks as tasks
@@ -34,8 +35,8 @@ ADMIN_COOKIE = "gr_a"
 
 # сайдбар: (endpoint, подпись)
 SECTIONS = [
-    ("admin.todo", "Задачи"),
-    ("admin.analytics", "Аналитика"),
+    ("admin.dashboard", "Дашборд"),
+    ("admin.analytics", "Воронки"),
     ("admin.visits", "Визиты"),
     ("admin.actions", "Действия"),
     ("admin.orders", "Заказы"),
@@ -48,6 +49,7 @@ SECTIONS = [
     ("admin.emails", "Письма"),
     ("admin.free_analytics", "Фремиум"),
     ("admin.free", "Бета"),
+    ("admin.todo", "Задачи"),
 ]
 
 # Шаги воронок переехали в app/admin_funnels.py: там они считаются по ВИЗИТАМ и
@@ -174,9 +176,46 @@ def logout():
 
 
 @bp_admin.get("/")
-def index():
+def dashboard():
+    """Главная: пять вопросов владельца (app/admin_dashboard.py)."""
     _guard()
-    return redirect(url_for("admin.analytics"))
+    db = get_db()
+    days = request.args.get("days", "7")
+    return _render("admin.dashboard", "admin/dashboard.html",
+                   periods=dash.PERIODS, msg=request.args.get("msg"),
+                   **dash.build(db, days, _heartbeats(db)))
+
+
+@bp_admin.post("/spend/add")
+def spend_add():
+    _guard()
+    day = (request.form.get("day") or "")[:10]
+    channel = request.form.get("channel") or ""
+    try:
+        rub = float(request.form.get("rub") or 0)
+    except ValueError:
+        rub = 0
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", day) or channel not in dict(dash.SPEND_CHANNELS) or rub < 0:
+        abort(400)
+    db = get_db()
+    db.execute("INSERT INTO ad_spend (day, channel, rub, note, created_at) VALUES (?,?,?,?,?)",
+               (day, channel, rub, (request.form.get("note") or "")[:120] or None, now()))
+    db.commit()
+    return redirect(url_for("admin.dashboard", days=request.form.get("days", "7"), msg="spend"))
+
+
+@bp_admin.post("/spend/<int:spend_id>/delete")
+def spend_delete(spend_id: int):
+    _guard()
+    db = get_db()
+    db.execute("DELETE FROM ad_spend WHERE id = ?", (spend_id,))
+    db.commit()
+    return redirect(url_for("admin.dashboard", days=request.form.get("days", "7")))
+
+
+@bp_admin.app_template_filter("msk")
+def _msk_filter(ts):
+    return dash.msk(ts)
 
 
 # --- Помощники периода ---
@@ -294,7 +333,7 @@ def analytics():
         "visitors": visitors, "orders": orders_total, "paid": paid["c"],
         "revenue_rub": paid["s"] // 100,
         "conversion": f"{paid['c'] / visitors * 100:.1f}%" if visitors else "—",
-    }
+    }   # оставлено для совместимости шаблона; главные числа теперь на дашборде
 
     # Воронки по ВИЗИТАМ (app/admin_funnels.py). Старая воронка делила девять
     # независимых множеств уникальных посетителей друг на друга — шаги не были
@@ -353,81 +392,80 @@ def analytics():
 
 @bp_admin.get("/visits")
 def visits():
-    """Визиты: устройства, источники (UTM), гео, последние посетители.
-    По умолчанию показываем НЕ вовлечённых (отказы); ?show=all — всех.
-    Каждая строка раскрывается inline в полную ленту событий посетителя."""
+    """Визиты из web_visits (A10): вход/выход, страницы, длительность, скролл, канал,
+    устройство, заказы. По умолчанию — настоящие (screen_w есть); ?show=all — все."""
     _guard()
     days, since = _period()
-    show = request.args.get("show")          # None/'' = не вовлечённые; 'all' = все
+    show = request.args.get("show")
     db = get_db()
-
-    devices = db.execute(
-        "SELECT COALESCE(device, '—') d, COUNT(DISTINCT visitor_id) c FROM events"
-        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ? GROUP BY device"
-        " ORDER BY c DESC", (since,)).fetchall()
-    devices_view = [{"device": r["d"], "n": r["c"]} for r in devices]
-
-    src: dict[str, int] = {}
-    for row in db.execute(
-            "SELECT utm_json, COUNT(DISTINCT visitor_id) c FROM events"
-            f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ? GROUP BY utm_json", (since,)):
-        src[_utm_label(row["utm_json"])] = src.get(_utm_label(row["utm_json"]), 0) + row["c"]
-    sources = sorted(src.items(), key=lambda kv: -kv[1])
-
-    geo_rows = db.execute(
-        "SELECT geo_country, COUNT(DISTINCT visitor_id) c FROM events"
-        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND geo_country IS NOT NULL"
-        " AND created_at >= ? GROUP BY geo_country ORDER BY c DESC LIMIT 15", (since,)).fetchall()
-    geo_view = [{"country": geoip.country_name(r["geo_country"]), "n": r["c"]} for r in geo_rows]
-
-    engaged_expr = "MAX(CASE WHEN type = 'engaged' THEN 1 ELSE 0 END)"
-    having = "" if show == "all" else f" HAVING {engaged_expr} = 0"
+    cap = 200
+    real = "" if show == "all" else " AND v.screen_w IS NOT NULL"
     rows = db.execute(
-        "SELECT visitor_id, COUNT(*) n, MIN(created_at) first_seen, MAX(created_at) last_seen,"
-        " MAX(device) device, MAX(referer) referer, MAX(utm_json) utm_json,"
-        " MAX(customer_id) customer_id, MAX(geo_country) geo_country,"
-        " MAX(geo_region) geo_region,"
-        f" {engaged_expr} engaged"
-        f" FROM events WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?"
-        f" GROUP BY visitor_id{having} ORDER BY last_seen DESC LIMIT 200", (since,)).fetchall()
+        "SELECT v.* FROM web_visits v"
+        f" WHERE v.started_at >= ? AND {fn.NOT_BOT}{real}"
+        " ORDER BY v.started_at DESC LIMIT ?", (since, cap)).fetchall()
+    counts = db.execute(
+        "SELECT SUM(CASE WHEN v.screen_w IS NOT NULL AND (v.device IS NULL OR v.device NOT IN ('bot','owner')) THEN 1 ELSE 0 END) real_n,"
+        " SUM(CASE WHEN v.device IS NULL OR v.device NOT IN ('bot','owner') THEN 1 ELSE 0 END) all_n,"
+        " SUM(CASE WHEN v.device = 'bot' THEN 1 ELSE 0 END) bots,"
+        " SUM(CASE WHEN v.device = 'owner' THEN 1 ELSE 0 END) owner_n,"
+        " SUM(CASE WHEN v.screen_w IS NOT NULL AND (v.device IS NULL OR v.device NOT IN ('bot','owner')) AND v.engaged = 1 THEN 1 ELSE 0 END) engaged_n,"
+        " SUM(CASE WHEN v.screen_w IS NOT NULL AND (v.device IS NULL OR v.device NOT IN ('bot','owner')) AND v.pages >= 2 THEN 1 ELSE 0 END) multi_n"
+        " FROM web_visits v WHERE v.started_at >= ?", (since,)).fetchone()
+    ids = [r["visit_id"] for r in rows]
+    events: dict[str, list] = {}
+    orders: dict[str, list] = {}
+    if ids:
+        q = ",".join("?" * len(ids))
+        for e in db.execute(
+                f"SELECT visit_id, type, path, payload_json, created_at FROM events"
+                f" WHERE visit_id IN ({q}) ORDER BY id", ids):
+            lst = events.setdefault(e["visit_id"], [])
+            if len(lst) < 80:
+                lst.append({"time": dash.msk(e["created_at"], "%H:%M:%S"), "type": e["type"],
+                            "path": e["path"], "payload": (e["payload_json"] or "")[:80]})
+        for o in db.execute(
+                f"SELECT id, visit_id, status, paid_at FROM orders WHERE visit_id IN ({q})", ids):
+            orders.setdefault(o["visit_id"], []).append(
+                {"id": o["id"], "status": o["status"], "paid": bool(o["paid_at"])})
 
-    ids = [r["visitor_id"] for r in rows]
-    timeline = _visitor_timelines(db, ids, since)
-    orders_by_vis = _visitor_orders(db, ids)
+    def _dur(a: str, b: str) -> str:
+        try:
+            s_ = (datetime.datetime.fromisoformat(b) - datetime.datetime.fromisoformat(a)).total_seconds()
+        except ValueError:
+            return "—"
+        return f"{int(s_)} с" if s_ < 90 else f"{int(s_ // 60)} мин"
 
-    visitors_view = [{
-        "id": (r["visitor_id"] or "")[:10],
-        "full_id": r["visitor_id"],
-        "device": r["device"] or "—",
-        "utm": _utm_label(r["utm_json"]),
-        "referer": (r["referer"] or "")[:60] or "(прямой)",
-        "events": r["n"],
-        "engaged": bool(r["engaged"]),
-        "customer": f"c{r['customer_id']}" if r["customer_id"] else "",
-        "geo": geoip.geo_label(r["geo_country"], r["geo_region"]),
-        "first": r["first_seen"][:16].replace("T", " "),
-        "last": r["last_seen"][:16].replace("T", " "),
-        "timeline": timeline.get(r["visitor_id"], []),
-        "orders": orders_by_vis.get(r["visitor_id"], []),
-    } for r in rows]
-
-    total_visitors = db.execute(
-        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
-        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND created_at >= ?", (since,)).fetchone()["c"]
-    engaged = db.execute(
-        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
-        f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND type = 'engaged' AND created_at >= ?",
-        (since,)).fetchone()["c"]
-    bots = db.execute(
-        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
-        " WHERE visitor_id IS NOT NULL AND device = 'bot' AND created_at >= ?", (since,)).fetchone()["c"]
-    bounce = f"{(total_visitors - engaged) / total_visitors * 100:.0f}%" if total_visitors else "—"
-
+    view = []
+    for v in rows:
+        utm = {}
+        try:
+            utm = json.loads(v["utm_json"]) if v["utm_json"] else {}
+        except ValueError:
+            pass
+        sw = v["screen_w"] or 0
+        device = "моб." if (0 < sw < 640) or (not sw and v["device"] == "mobile") else \
+                 "планшет" if v["device"] == "tablet" else "деск."
+        view.append({
+            "started": dash.msk(v["started_at"]),
+            "channel": dash.CHANNEL_LABELS.get(v["channel"] or "direct", v["channel"]),
+            "campaign": utm.get("utm_campaign") or utm.get("utm_source") or ("yclid" if v["yclid"] else ""),
+            "entry": (v["entry_path"] or "")[:40], "exit": (v["exit_path"] or "")[:40],
+            "referer": (v["referer"] or "").split("//")[-1][:40],
+            "pages": v["pages"], "duration": _dur(v["started_at"], v["last_at"]),
+            "max_scroll": v["max_scroll"], "device": device, "screen_w": sw or "",
+            "geo": geoip.geo_label(v["geo_country"], v["geo_region"]),
+            "orders": orders.get(v["visit_id"], []), "customer": v["customer_id"],
+            "events": events.get(v["visit_id"], []),
+        })
+    real_n = counts["real_n"] or 0
+    summary = [("настоящих визитов", real_n), ("задержались", counts["engaged_n"] or 0),
+               ("смотрели ≥2 страниц", counts["multi_n"] or 0),
+               ("отказы", real_n - (counts["engaged_n"] or 0))]
     return _render("admin.visits", "admin/visits.html",
-                   days=days, periods=PERIODS, show=show, shown=len(rows),
-                   devices=devices_view, sources=sources, geo=geo_view,
-                   visitors=visitors_view, total=total_visitors,
-                   engaged=engaged, bounce=bounce, bots=bots)
+                   days=days, periods=PERIODS, show=show, visits=view, cap=cap,
+                   real_n=real_n, all_n=counts["all_n"] or 0, bots=counts["bots"] or 0,
+                   owner_n=counts["owner_n"] or 0, summary=summary)
 
 
 def _visitor_timelines(db, ids: list[str], since: str,
@@ -700,7 +738,7 @@ def _free_leads(db, since: str) -> list[dict]:
         out.append({
             "id": r["id"], "token": r["token"],
             "feedback": rated.get(r["id"]), "is_test": bool(r["is_test"]),
-            "created": (r["created_at"] or "")[:16].replace("T", " "),
+            "created": dash.msk(r["created_at"]),
             "email": r["email"], "child": r["child_name"], "age": r["child_age"],
             "concern": fa.concern_label(r["concern_key"]),
             "status": r["status"], "reject": r["reject_reason"],
@@ -737,7 +775,7 @@ def orders():
     for o in rows:
         child = json.loads(o["child_json"] or "{}")
         orders_view.append({
-            "id": o["id"], "created": o["created_at"][:16].replace("T", " "),
+            "id": o["id"], "created": dash.msk(o["created_at"]),
             "feedback": rated.get(o["id"]), "is_test": bool(o["is_test"]),
             "email": o["email"], "child": child.get("name", ""),
             "product": o["product_code"], "rub": o["price_kopecks"] // 100,
@@ -918,7 +956,7 @@ def feedback():
             url = f"/r/{f['public_token']}" if f["public_token"] else None
             email = f["cust_email"] or f["order_email"] or ""
         items.append({
-            "id": f["id"], "kind": f["kind"], "at": (f["at"] or "")[:16].replace("T", " "),
+            "id": f["id"], "kind": f["kind"], "at": dash.msk(f["at"]),
             "stars": f["stars"], "str": fb.stars_str(f["stars"]),
             "text": f["text"] or "", "email": email, "what": what, "url": url,
             "updated": bool(f["updated_at"]), "customer_id": f["customer_id"],

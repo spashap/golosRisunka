@@ -234,6 +234,17 @@ CREATE TABLE IF NOT EXISTS admin_tasks (
 );
 -- Признак живости фоновых юнитов: deploy.sh новый юнит не поднимает, мониторинга нет,
 -- и после перезагрузки бокса разборы молча перестали бы генерироваться.
+-- Расход на рекламу, вводится руками из кабинетов Директа/Meta (наша база его знать
+-- не может). Одна строка = день × канал; цена лида/продажи на дашборде считается отсюда.
+CREATE TABLE IF NOT EXISTS ad_spend (
+    id INTEGER PRIMARY KEY,
+    day TEXT NOT NULL,                    -- 'YYYY-MM-DD' (московский день)
+    channel TEXT NOT NULL,                -- ads / meta / social / referral
+    rub REAL NOT NULL,
+    note TEXT,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ad_spend_day ON ad_spend(day);
 CREATE TABLE IF NOT EXISTS service_heartbeat (
     name TEXT PRIMARY KEY,
     last_seen_at TEXT NOT NULL
@@ -330,6 +341,11 @@ def _migrate(conn: sqlite3.Connection) -> None:
     # случайный access_token, он живёт в куке браузера, который оформлял заказ.
     if "access_token" not in ocols:
         conn.execute("ALTER TABLE orders ADD COLUMN access_token TEXT")
+    # Возвраты: выручка на дашборде — за их вычетом. Пишет вебхук refund.succeeded.
+    if "refunded_at" not in ocols:
+        conn.execute("ALTER TABLE orders ADD COLUMN refunded_at TEXT")
+    if "refund_kopecks" not in ocols:
+        conn.execute("ALTER TABLE orders ADD COLUMN refund_kopecks INTEGER")
     # Тестовые данные владельца/партнёров: 91% «выручки» в админке были тесты.
     # is_test выставляется по списку settings.TEST_EMAILS и по куке владельца
     # (gr_ignore); KPI/воронки/выручка такие строки не считают, списки их помечают.

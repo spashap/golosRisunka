@@ -1,90 +1,152 @@
-{% extends "_base.html" %}
-{% block title %}Админка — Голос рисунка{% endblock %}
-{% block body %}
-<div class="section" style="padding-top: 40px">
-  <div class="wrap prose" style="max-width: 1100px">
-    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px">
-      <h1 class="h2" style="margin: 0">Админка</h1>
-      <div class="admin-periods">
-        {% for val, label in periods %}
-        <a class="status-pill {% if days == val %}status-pill--ready{% else %}status-pill--wait{% endif %}"
-           href="/admin/?days={{ val }}">{{ label }}</a>
-        {% endfor %}
-        <form method="post" action="/admin/logout" style="display: inline">
-          <button class="status-pill status-pill--warn" type="submit">выйти</button>
-        </form>
-      </div>
-    </div>
-    {% if not metrika_configured %}
-    <p class="hint" style="margin-top: 6px">Яндекс.Метрика: счётчик не подключён —
-      добавьте <code>YANDEX_METRIKA_ID</code> в <code>.env</code>, и тег появится на всех страницах.</p>
-    {% endif %}
+{% extends "admin/_base_admin.html" %}
+{% block title %}Дашборд{% endblock %}
 
-    <div class="admin-kpis">
-      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.visitors }}</div><div class="admin-kpi__l">посетителей</div></div>
-      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.orders }}</div><div class="admin-kpi__l">заказов создано</div></div>
-      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.paid }}</div><div class="admin-kpi__l">оплачено</div></div>
-      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.revenue_rub }} ₽</div><div class="admin-kpi__l">выручка</div></div>
-      <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.conversion }}</div><div class="admin-kpi__l">посетитель → оплата</div></div>
-    </div>
+{% macro dlt(d) -%}
+  {% if d.pct %}<span class="dlt dlt--{{ d.dir }}">{{ d.pct }}</span>{% endif %}
+{%- endmacro %}
 
-    <h2>Воронка</h2>
-    <table>
-      <thead><tr><th>Шаг</th><th>Уникальных</th><th>От пред. шага</th><th>От лендинга</th></tr></thead>
-      <tbody>
-      {% for f in funnel %}
-      <tr><td>{{ f.label }}</td><td><b>{{ f.n }}</b></td><td>{{ f.pct_prev }}</td><td>{{ f.pct_top }}</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-
-    <h2>Источники (first-touch UTM)</h2>
-    <table>
-      <thead><tr><th>Источник</th><th>Посетителей</th><th>Заказов</th><th>Оплат</th><th>Выручка</th></tr></thead>
-      <tbody>
-      {% for name, s in sources %}
-      <tr><td>{{ name }}</td><td>{{ s.visitors }}</td><td>{{ s.orders }}</td><td>{{ s.paid }}</td><td>{{ s.rub }} ₽</td></tr>
-      {% else %}
-      <tr><td colspan="5">Пока пусто</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-
-    <h2>Заказы {% if orders|length == 200 %}<span class="hint">(последние 200)</span>{% endif %}</h2>
-    <div class="admin-scroll">
-    <table>
-      <thead><tr><th>№</th><th>Создан (UTC)</th><th>Email</th><th>Ребёнок</th><th>Продукт</th>
-        <th>Сумма</th><th>Промо</th><th>Рис.</th><th>Статус</th><th>Отчёт</th></tr></thead>
-      <tbody>
-      {% for o in orders %}
-      <tr>
-        <td>{{ o.id }}</td><td style="white-space:nowrap">{{ o.created }}</td>
-        <td>{{ o.email }}</td><td>{{ o.child }}</td><td>{{ o.product }}</td>
-        <td style="white-space:nowrap">{{ o.rub }} ₽</td><td>{{ o.coupon }}</td><td>{{ o.drawings }}</td>
-        <td><span class="admin-status admin-status--{{ o.status }}">{{ o.status }}</span></td>
-        <td>{% if o.token %}<a href="/r/{{ o.token }}">открыть</a>{% endif %}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="10">Заказов за период нет</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    </div>
-
-    <h2>Последние события <span class="hint">(до 60)</span></h2>
-    <div class="admin-scroll">
-    <table>
-      <thead><tr><th>Время (UTC)</th><th>Событие</th><th>Кто</th><th>Данные</th></tr></thead>
-      <tbody>
-      {% for e in events %}
-      <tr><td style="white-space:nowrap">{{ e.time }}</td><td>{{ e.type }}</td>
-          <td><code>{{ e.who }}</code></td><td><code style="font-size:12px">{{ e.payload }}</code></td></tr>
-      {% else %}
-      <tr><td colspan="4">Событий за период нет</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    </div>
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Дашборд</h1>
+  <div class="admin-periods">
+    {% for val, label in periods %}
+    <a class="status-pill {% if p.days == val %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.dashboard') }}?days={{ val }}">{{ label }}</a>
+    {% endfor %}
   </div>
+</div>
+<p class="hint">Период {{ p.since_msk }}–{{ p.until_msk }} по московским дням; «{{ p.label }}» сравнивается
+  с таким же периодом до него. Считаются только настоящие визиты (браузер выполнил скрипт),
+  без ботов, без вашего браузера и без тестовых заказов. Данные визитов есть с {{ model_since }}.</p>
+{% if msg == 'ignored' %}<p class="admin-flash admin-flash--ok">Этот браузер больше не считается.</p>{% endif %}
+{% if msg == 'spend' %}<p class="admin-flash admin-flash--ok">Расход записан.</p>{% endif %}
+
+{# ---- 2. Проблемы — выше денег, потому что сломанное съедает деньги ---- #}
+<div class="dash-problems dash-problems--{{ 'ok' if not problems else 'bad' }}">
+  {% if not problems %}
+    <b>Всё работает.</b> Воркеры живы, зависших заказов нет, письма уходят.
+  {% else %}
+    <b>Требует внимания:</b>
+    {% for pr in problems %}
+      <a href="{{ pr.url }}" class="dash-problem dash-problem--{{ pr.level }}">{{ pr.n }} · {{ pr.label }}</a>
+    {% endfor %}
+  {% endif %}
+</div>
+
+{# ---- 1. Деньги ---- #}
+<h2>Заработали ли</h2>
+<div class="admin-kpis">
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.cur.net }} ₽ {{ dlt(money.d_net) }}</div>
+    <div class="admin-kpi__l">выручка{% if money.cur.refunds %} (минус возвраты {{ money.cur.refunds }} ₽){% endif %}<br><span class="hint">было {{ money.prev.net }} ₽</span></div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.cur.paid }} {{ dlt(money.d_paid) }}</div>
+    <div class="admin-kpi__l">оплат<br><span class="hint">было {{ money.prev.paid }}</span></div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.cur.avg }} ₽ {{ dlt(money.d_avg) }}</div>
+    <div class="admin-kpi__l">средний чек<br><span class="hint">было {{ money.prev.avg }} ₽</span></div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ traffic.conversion }}</div>
+    <div class="admin-kpi__l">визит с двери → оплата<br><span class="hint">{{ traffic.paid_from_visits }} из {{ traffic.doors }}</span></div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.abandoned }}</div>
+    <div class="admin-kpi__l">брошенных заказов с почтой<br><span class="hint"><a href="{{ url_for('admin.orders') }}?days={{ p.days if p.days != '90' else 'all' }}">написать им</a></span></div></div>
+</div>
+{% if money.by_channel %}
+<table class="dash-table">
+  <thead><tr><th>Выручка по каналам</th><th class="n">оплат</th><th class="n">₽</th></tr></thead>
+  <tbody>{% for c in money.by_channel %}<tr><td>{{ c.label }}</td><td class="n">{{ c.paid }}</td><td class="n">{{ c.net }} ₽</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+
+{# ---- 3. Трафик ---- #}
+<h2>Трафик: настоящий и откуда</h2>
+<div class="admin-kpis">
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ traffic.cur.n }} {{ dlt(traffic.d_n) }}</div>
+    <div class="admin-kpi__l">настоящих визитов<br><span class="hint">было {{ traffic.prev.n }}</span></div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{% if traffic.cur.n %}{{ (traffic.cur.engaged / traffic.cur.n * 100)|round|int }}%{% else %}—{% endif %}</div>
+    <div class="admin-kpi__l">задержались<br><span class="hint">скролл ≥25%, клик или 15 с</span></div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{% if traffic.cur.n %}{{ (traffic.cur.mobile / traffic.cur.n * 100)|round|int }}%{% else %}—{% endif %}</div>
+    <div class="admin-kpi__l">с телефона<br><span class="hint">{{ traffic.cur.mobile }} моб. / {{ traffic.cur.desktop }} деск.</span></div></div>
+  {% for label, key, n in traffic.channels[:3] %}
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ n }}</div><div class="admin-kpi__l">{{ label }}</div></div>
+  {% endfor %}
+</div>
+
+{# график 30 дней: столбики визитов (реклама/поиск/остальное), точки — оплаты #}
+{% set W = 900 %}{% set H = 150 %}{% set n = series.points|length %}{% set bw = (W / n) %}
+<div class="dash-chart">
+  <div class="dash-chart__legend">
+    <span><i class="sw sw--ads"></i>реклама</span><span><i class="sw sw--organic"></i>поиск</span>
+    <span><i class="sw sw--other"></i>остальное</span><span><i class="sw sw--paid"></i>оплата</span>
+    <span><i class="sw sw--free"></i>бесплатный разбор</span><span class="hint">последние 30 дней, визитов в день</span>
+  </div>
+  <svg viewBox="0 0 {{ W }} {{ H + 22 }}" preserveAspectRatio="none" role="img" aria-label="Визиты по дням">
+    {% for pt in series.points %}
+      {% set x = loop.index0 * bw %}
+      {% set a = pt.ads * H / series.peak %}{% set o = pt.organic * H / series.peak %}{% set r = pt.other * H / series.peak %}
+      <rect x="{{ x + 1 }}" y="{{ H - r }}" width="{{ bw - 2 }}" height="{{ r }}" class="bar-other"><title>{{ pt.label }}: остальное {{ pt.other }}</title></rect>
+      <rect x="{{ x + 1 }}" y="{{ H - r - o }}" width="{{ bw - 2 }}" height="{{ o }}" class="bar-organic"><title>{{ pt.label }}: поиск {{ pt.organic }}</title></rect>
+      <rect x="{{ x + 1 }}" y="{{ H - r - o - a }}" width="{{ bw - 2 }}" height="{{ a }}" class="bar-ads"><title>{{ pt.label }}: реклама {{ pt.ads }}</title></rect>
+      {% for k in range(pt.free) %}<circle cx="{{ x + bw / 2 }}" cy="{{ H - 8 - k * 10 }}" r="3.5" class="dot-free"><title>{{ pt.label }}: бесплатный разбор</title></circle>{% endfor %}
+      {% for k in range(pt.paid) %}<circle cx="{{ x + bw / 2 }}" cy="{{ 10 + k * 10 }}" r="4.5" class="dot-paid"><title>{{ pt.label }}: оплата</title></circle>{% endfor %}
+      {% if loop.index0 % 5 == 0 %}<text x="{{ x + bw / 2 }}" y="{{ H + 16 }}" class="ax">{{ pt.label }}</text>{% endif %}
+    {% endfor %}
+    <text x="4" y="12" class="ax">макс. {{ series.peak }}/день</text>
+  </svg>
+</div>
+<p class="hint">Входы за период: {% for path, n in traffic.cur.entries %}<code>{{ path }}</code> {{ n }}{% if not loop.last %} · {% endif %}{% endfor %}.
+  Подробно по каждому визиту — <a href="{{ url_for('admin.visits') }}?days={{ p.days if p.days != '90' else 'all' }}">Визиты</a>,
+  шаги по дверям — <a href="{{ url_for('admin.analytics') }}?days={{ p.days if p.days != '90' else 'all' }}">Воронки</a>.</p>
+
+{# ---- 4. Бесплатная дверь ---- #}
+<h2>Продаёт ли бесплатная дверь</h2>
+<p class="hint">Недельные когорты: кто в эту неделю прошёл анкету и что с ним стало потом
+  (покупка засчитывается в любую дату — по прямому переходу из разбора, той же почте или тому же
+  посетителю, как на странице «Фремиум»). Медиана от анкеты до заказа: <b>{{ free.median_lag }}</b>.</p>
+<div class="admin-scroll">
+<table class="dash-table">
+  <thead><tr><th>Неделя с</th><th class="n">анкет</th><th class="n">с почтой</th><th class="n">рисунок</th><th class="n">разбор готов</th><th class="n">заказов</th><th class="n">оплат</th><th class="n">анкета → оплата</th></tr></thead>
+  <tbody>
+  {% for c in free.cohorts %}
+  <tr class="{% if not c.n %}dash-dim{% endif %}"><td>{{ c.week }}</td><td class="n">{{ c.n }}</td><td class="n">{{ c.email }}</td><td class="n">{{ c.uploaded }}</td><td class="n">{{ c.done }}</td><td class="n">{{ c.orders }}</td><td class="n"><b>{{ c.paid }}</b></td><td class="n">{{ c.conv }}</td></tr>
+  {% endfor %}
+  <tr class="dash-total"><td>{{ free.weeks }} недель</td><td class="n">{{ free.total.n }}</td><td class="n">{{ free.total.email }}</td><td class="n">{{ free.total.uploaded }}</td><td class="n">{{ free.total.done }}</td><td class="n">{{ free.total.orders }}</td><td class="n"><b>{{ free.total.paid }}</b></td><td class="n">{{ free.total.conv }}</td></tr>
+  </tbody>
+</table>
+</div>
+
+{# ---- 5. Стоимость ---- #}
+<h2>Сколько это стоит</h2>
+<p class="hint">Расход вводится руками — из кабинета Директа или Meta, раз в неделю (наша база его
+  знать не может). Лид = анкета с почтой, канал лида — последний визит этого человека до анкеты.
+  Пока расход не введён, цены показываются прочерком, а не прячутся.</p>
+<div class="admin-scroll">
+<table class="dash-table">
+  <thead><tr><th>Канал</th><th class="n">расход</th><th class="n">визитов</th><th class="n">лидов</th><th class="n">оплат</th><th class="n">цена визита</th><th class="n">цена лида</th><th class="n">цена продажи</th></tr></thead>
+  <tbody>
+  {% for r in spend.table %}
+  <tr><td>{{ r.label }}</td><td class="n">{{ r.spend }} ₽</td><td class="n">{{ r.visits }}</td><td class="n">{{ r.leads }}</td><td class="n">{{ r.paid }}</td><td class="n">{{ r.cpv }}</td><td class="n">{{ r.cpl }}</td><td class="n"><b>{{ r.cpa }}</b></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="dash-spend">
+  <form method="post" action="{{ url_for('admin.spend_add') }}" class="admin-inline-form">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="days" value="{{ p.days }}">
+    <label>Дата <input class="input" type="date" name="day" value="{{ spend.today }}" required></label>
+    <label>Канал <select class="input" name="channel">{% for k, l in spend.channels %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></label>
+    <label>Расход, ₽ <input class="input" type="number" name="rub" min="0" step="1" required style="width:120px"></label>
+    <label>Заметка <input class="input" type="text" name="note" placeholder="кампания, период" style="width:200px"></label>
+    <button class="btn btn--primary" type="submit">Записать</button>
+  </form>
+  {% if spend.recent %}
+  <details><summary class="hint">Последние записи ({{ spend.recent|length }})</summary>
+    <table class="dash-table"><tbody>
+    {% for r in spend.recent %}
+    <tr><td>{{ r.day }}</td><td>{{ r.channel }}</td><td class="n">{{ r.rub|round|int }} ₽</td><td class="hint">{{ r.note or '' }}</td>
+      <td><form method="post" action="{{ url_for('admin.spend_delete', spend_id=r.id) }}" onsubmit="return confirm('Удалить запись?')">
+        <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="days" value="{{ p.days }}">
+        <button class="status-pill status-pill--warn" type="submit">удалить</button></form></td></tr>
+    {% endfor %}
+    </tbody></table>
+  </details>
+  {% endif %}
 </div>
 {% endblock %}

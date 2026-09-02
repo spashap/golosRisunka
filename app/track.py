@@ -35,8 +35,12 @@ NON_PAGE_PREFIXES = ("/static/", "/t/e", "/track/", "/free/status/", "/free/img/
                      "/favicon.ico", "/robots.txt", "/sitemap.xml")
 
 # Поисковики и соцсети для классификации канала по referer.
-_SEARCH_HOSTS = ("yandex.", "google.", "bing.com", "duckduckgo.com", "mail.ru",
+_SEARCH_HOSTS = ("yandex.", "ya.ru", "google.", "bing.com", "duckduckgo.com", "mail.ru",
                  "rambler.ru", "go.mail.ru", "search.")
+# Почтовые веб-интерфейсы: клик по ссылке из НАШЕГО письма (код входа, отчёт готов).
+# Раньше mail.google.com и e.mail.ru попадали в «поиск» через "google."/"mail.ru".
+_EMAIL_HOSTS = ("mail.google.com", "e.mail.ru", "mail.yandex.", "outlook.live.com",
+                "outlook.office", "mail.rambler.ru", "webmail.")
 _SOCIAL_HOSTS = ("vk.com", "vk.ru", "t.me", "telegram", "ok.ru", "instagram.",
                  "facebook.", "youtube.", "pinterest.", "dzen.ru", "zen.yandex")
 # Рекламные метки. yclid ставит сам Директ, поэтому он и есть точный признак «реклама».
@@ -66,6 +70,8 @@ def classify_channel(utm: dict | None, yclid: str | None,
     from config import settings
     if settings.SITE_DOMAIN and settings.SITE_DOMAIN in host:
         return "internal"
+    if any(s in host for s in _EMAIL_HOSTS):
+        return "email"
     if any(s in host for s in _SEARCH_HOSTS):
         return "organic"
     if any(s in host for s in _SOCIAL_HOSTS):
@@ -168,6 +174,17 @@ def _touch_visit(page: bool) -> None:
         ref = _clean(request.referrer, 300)
         utm_now = getattr(g, "utm_now", None)
         yclid = getattr(g, "yclid", None)
+        channel = classify_channel(utm_now, yclid, ref)
+        if channel == "internal" and not utm_now and not yclid:
+            # Вернулся после паузы >30 мин со страницы сайта: это тот же человек с тем же
+            # источником, а не «внутренний» переход. Наследуем канал и метки прошлого визита.
+            prev = db.execute(
+                "SELECT channel, utm_json, yclid FROM web_visits WHERE visitor_id = ?"
+                " ORDER BY started_at DESC LIMIT 1", (g.visitor_id,)).fetchone()
+            if prev and prev["channel"] and prev["channel"] != "internal":
+                channel = prev["channel"]
+                utm_now = json.loads(prev["utm_json"]) if prev["utm_json"] else None
+                yclid = prev["yclid"]
         db.execute(
             "INSERT INTO web_visits (visit_id, visitor_id, started_at, last_at,"
             " entry_path, exit_path, pages, device, channel, utm_json, yclid, referer,"
@@ -176,7 +193,7 @@ def _touch_visit(page: bool) -> None:
             " ON CONFLICT(visit_id) DO NOTHING",
             (g.visit_id, g.visitor_id, now(), now(), path, path, 1 if page else 0,
              parse_device(request.user_agent.string if request else None),
-             classify_channel(utm_now, yclid, ref),
+             channel,
              json.dumps(utm_now, ensure_ascii=False) if utm_now else None,
              yclid, ref, geo.get("country"), geo.get("region")))
         g.new_visit = False        # в пределах запроса второй INSERT не нужен

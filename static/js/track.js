@@ -56,9 +56,12 @@
   // --- Вовлечённость: один маяк при ПЕРВОМ из — взаимодействие ИЛИ 15 c ВИДИМОГО
   //     пребывания. Порог совпадает с «отказом» Метрики; фоновые и предзагруженные
   //     вкладки время не копят, поэтому prerender не превращается в посетителя.
+  // Правило (A7, 02.09): клик/клавиша, ИЛИ прокрутка ≥25%, ИЛИ 15 c видимого пребывания.
+  // touchstart и первый пиксель скролла убраны: на телефоне они срабатывали от первого
+  // касания, и половина «задержавшихся» визитов длилась две секунды.
   (function () {
     var sent = false, visibleSec = 0, THRESHOLD = 15, tick = null;
-    var EVENTS = ["scroll", "wheel", "click", "keydown", "touchstart"];
+    var EVENTS = ["click", "keydown"];
     function cleanup() {
       EVENTS.forEach(function (e) { document.removeEventListener(e, fire, true); });
       if (tick) { clearInterval(tick); tick = null; }
@@ -72,6 +75,7 @@
     EVENTS.forEach(function (e) {
       document.addEventListener(e, fire, { capture: true, passive: true });
     });
+    window.grEngage = fire;                 // зовёт глубина прокрутки на 25%
     tick = setInterval(function () {
       if (document.visibilityState === "visible" && ++visibleSec >= THRESHOLD) { fire(); }
     }, 1000);
@@ -96,6 +100,7 @@
       var pct = ((window.pageYOffset || document.documentElement.scrollTop) / max) * 100;
       while (next < MARKS.length && pct >= MARKS[next] - 1) {
         window.ymGoal("scroll_" + MARKS[next]);
+        if (MARKS[next] === 25 && window.grEngage) { window.grEngage(); }
         next += 1;
       }
       if (next >= MARKS.length) {
@@ -133,7 +138,10 @@
             timers[name] = null;
           }
         });
-      }, { threshold: 0.5 });
+      // threshold 0 + нижний отступ 40%: «блок виден», когда его верх вошёл в верхние 60%
+      // экрана. Половина блока (0.5) была недостижима для блоков выше двух экранов —
+      // sec_article не срабатывал никогда (A8).
+      }, { threshold: 0, rootMargin: "0px 0px -40% 0px" });
       nodes.forEach(function (n) { io.observe(n); });
     }
     if (document.readyState === "loading") {

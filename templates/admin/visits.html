@@ -6,106 +6,52 @@
   <h1 class="h2">Визиты</h1>
   {{ period_filter(periods, days, url_for("admin.visits")) }}
 </div>
-<p class="hint">{{ total }} уникальных посетителей-людей за период · <b>вовлечённых: {{ engaged }}</b> · отказы: {{ bounce }}{% if bots %} · ботов отфильтровано: {{ bots }}{% endif %}.<br>
-  «Вовлечённый» = был скролл/клик/нажатие или ≥15 c видимого пребывания (как «отказ» в Метрике). UTM — first-touch; устройство, origin и гео — из событий.</p>
-
-<div class="admin-cols admin-cols--3">
-  <div>
-    <h2>Устройства</h2>
-    <table>
-      <thead><tr><th>Тип</th><th>Посетителей</th></tr></thead>
-      <tbody>
-      {% for d in devices %}
-      <tr><td>{{ d.device }}</td><td><b>{{ d.n }}</b></td></tr>
-      {% else %}
-      <tr><td colspan="2">Пока пусто</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <div>
-    <h2>Источники (UTM)</h2>
-    <table>
-      <thead><tr><th>Источник</th><th>Посетителей</th></tr></thead>
-      <tbody>
-      {% for name, n in sources %}
-      <tr><td>{{ name }}</td><td><b>{{ n }}</b></td></tr>
-      {% else %}
-      <tr><td colspan="2">Пока пусто</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <div>
-    <h2>География</h2>
-    <table>
-      <thead><tr><th>Страна</th><th>Посетителей</th></tr></thead>
-      <tbody>
-      {% for gview in geo %}
-      <tr><td>{{ gview.country }}</td><td><b>{{ gview.n }}</b></td></tr>
-      {% else %}
-      <tr><td colspan="2">Гео-база ещё не собрана</td></tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
+<p class="hint">Единица — визит (сеанс с паузой не дольше 30 минут), из таблицы визитов, а не
+  события по людям. По умолчанию — только <b>настоящие</b> визиты (браузер выполнил скрипт);
+  «Все» добавляет заходы без скрипта: сканеры с браузерным UA, предзагрузка, отключённый JS.
+  Время — московское. Клик по строке — все события визита.</p>
+<div class="admin-periods" style="margin-bottom:12px">
+  <a class="status-pill {% if show != 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}" href="{{ url_for('admin.visits') }}?days={{ days }}">Настоящие · {{ real_n }}</a>
+  <a class="status-pill {% if show == 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}" href="{{ url_for('admin.visits') }}?days={{ days }}&show=all">Все · {{ all_n }}</a>
+  <span class="hint">ботов отсечено: {{ bots }} · владелец: {{ owner_n }}</span>
 </div>
 
-<div class="admin-head" style="margin-top:26px">
-  <h2 style="margin:0">Посетители <span class="hint">(показано {{ shown }}, до 200)</span></h2>
-  <div class="admin-periods">
-    <a class="status-pill {% if show != 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
-       href="{{ url_for('admin.visits') }}?days={{ days }}">Не вовлечённые</a>
-    <a class="status-pill {% if show == 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
-       href="{{ url_for('admin.visits') }}?days={{ days }}&show=all">Все</a>
-  </div>
-</div>
-<p class="hint">Кликните по строке — раскроется всё, что мы собрали по посетителю.</p>
-
-<div class="vis-list">
-  <div class="vis-head">
-    <span>Вовл.</span><span>Посетитель</span><span>Гео</span><span>Устройство</span>
-    <span>Источник</span><span>Событий</span><span>Клиент</span><span>Последний</span>
-  </div>
-  {% for v in visitors %}
-  <details class="vis">
-    <summary>
-      <span>{% if v.engaged %}✓{% else %}<span class="hint">—</span>{% endif %}</span>
-      <code>{{ v.id }}</code>
-      <span>{{ v.geo }}</span>
-      <span>{{ v.device }}</span>
-      <span>{{ v.utm }}</span>
-      <span>{{ v.events }}</span>
-      <span>{{ v.customer }}</span>
-      <span style="white-space:nowrap">{{ v.last }}</span>
-    </summary>
-    <div class="vis-body">
-      <p class="hint">
-        Первый визит: {{ v.first }} · Origin: <code>{{ v.referer }}</code>
-        {%- if v.orders %} · Заказы:
-          {% for o in v.orders %}<code>#{{ o.id }} {{ o.status }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
-        {%- endif %}
-      </p>
-      <table class="vis-events">
-        <thead><tr><th>Время</th><th>Событие</th><th>Устройство</th><th>Гео</th><th>Origin / payload</th></tr></thead>
-        <tbody>
-        {% for e in v.timeline %}
-        <tr>
-          <td style="white-space:nowrap">{{ e.time }}</td>
-          <td><code>{{ e.type }}</code></td>
-          <td>{{ e.device }}</td>
-          <td>{{ e.geo }}</td>
-          <td><code style="font-size:11px">{{ e.payload or e.referer }}</code></td>
-        </tr>
-        {% else %}
-        <tr><td colspan="5" class="hint">Событий нет</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </details>
-  {% else %}
-  <p class="hint">{% if show == 'all' %}Посетителей за период нет.{% else %}Невовлечённых посетителей за период нет — попробуйте «Все».{% endif %}</p>
+<div class="admin-kpis">
+  {% for label, n in summary %}
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ n }}</div><div class="admin-kpi__l">{{ label }}</div></div>
   {% endfor %}
 </div>
+
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Начало (МСК)</th><th>Канал</th><th>Вход</th><th>Выход</th><th class="n">стр.</th><th class="n">длит.</th><th class="n">скролл</th><th>Устр.</th><th>Гео</th><th>Заказ</th></tr></thead>
+  <tbody>
+  {% for v in visits %}
+  <tr class="vis-row" onclick="var d=this.nextElementSibling; d.hidden=!d.hidden">
+    <td style="white-space:nowrap">{{ v.started }}</td>
+    <td>{{ v.channel }}{% if v.campaign %}<br><span class="hint">{{ v.campaign }}</span>{% endif %}</td>
+    <td><code style="font-size:11px">{{ v.entry }}</code>{% if v.referer %}<br><span class="hint">{{ v.referer }}</span>{% endif %}</td>
+    <td><code style="font-size:11px">{{ v.exit }}</code></td>
+    <td class="n">{{ v.pages }}</td>
+    <td class="n">{{ v.duration }}</td>
+    <td class="n">{% if v.max_scroll %}{{ v.max_scroll }}%{% else %}—{% endif %}</td>
+    <td>{{ v.device }}{% if v.screen_w %} <span class="hint">{{ v.screen_w }}px</span>{% endif %}</td>
+    <td>{{ v.geo }}</td>
+    <td>{% for o in v.orders %}<b>#{{ o.id }}</b> <span class="hint">{{ 'оплачен' if o.paid else o.status }}</span>{% if not loop.last %}<br>{% endif %}{% endfor %}
+      {% if v.customer %}<span class="hint">c{{ v.customer }}</span>{% endif %}</td>
+  </tr>
+  <tr hidden><td colspan="10" class="vis-body">
+    {% if v.events %}
+    <table class="vis-events"><tbody>
+    {% for e in v.events %}<tr><td style="white-space:nowrap">{{ e.time }}</td><td>{{ e.type }}</td><td><code style="font-size:11px">{{ e.path or '' }}</code></td><td class="hint">{{ e.payload }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<span class="hint">событий нет</span>{% endif %}
+  </td></tr>
+  {% else %}
+  <tr><td colspan="10">Визитов за период нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if visits|length == cap %}<p class="hint">Показаны последние {{ cap }}.</p>{% endif %}
 {% endblock %}

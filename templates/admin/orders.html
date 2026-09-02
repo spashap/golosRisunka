@@ -19,7 +19,7 @@
   <a href="{{ url_for('admin.free') }}?days={{ days }}">Бета</a>.</p>
 <div class="admin-scroll">
 <table>
-  <thead><tr><th>№</th><th>Создан (UTC)</th><th>Email</th><th>Ребёнок</th><th>Тревога</th>
+  <thead><tr><th>№</th><th>Создан (МСК)</th><th>Email</th><th>Ребёнок</th><th>Тревога</th>
     <th>Что оставил</th><th>Статус</th><th>Разбор</th><th>Оценка</th><th>Купил</th></tr></thead>
   <tbody>
   {% for f in free_leads %}
@@ -54,7 +54,7 @@
 {% else %}
 <div class="admin-scroll">
 <table>
-  <thead><tr><th>№</th><th>Создан (UTC)</th><th>Email</th><th>Ребёнок</th><th>Продукт</th>
+  <thead><tr><th>№</th><th>Создан (МСК)</th><th>Email</th><th>Ребёнок</th><th>Продукт</th>
     <th>Сумма</th><th>Промо</th><th>Рис.</th><th>Источник</th><th>Статус</th><th>Отчёт</th><th>Оценка</th><th></th></tr></thead>
   <tbody>
   {% for o in orders %}

@@ -34,11 +34,13 @@ REAL_VISIT = "v.screen_w IS NOT NULL"
 PATH, GATE = "path", "gate"
 
 # (подпись, признак, вид). Признак: имя события либо префикс с '*'.
+# Наблюдения ПРИВЯЗАНЫ к странице («тип@путь»): скролл статьи блога или кабинета
+# раньше засчитывался как «прокрутил половину лендинга» (аудит 02.09, A3).
 PAID_STEPS: list[tuple[str, str, str]] = [
     ("Открыл лендинг", "landing_view", PATH),
-    ("Задержался (скролл/15 c)", "engaged", PATH),
-    ("Прокрутил половину", "click:scroll_50", PATH),
-    ("Досмотрел до цен", "click:sec_prices", PATH),
+    ("Задержался (скролл ≥25%/клик/15 c)", "engaged@/", PATH),
+    ("Прокрутил половину", "click:scroll_50@/", PATH),
+    ("Досмотрел до цен", "click:sec_prices@/", PATH),
     ("Открыл форму заказа", "order_form_view", GATE),
     ("Начал заполнять", "form_started", GATE),
     ("Создал заказ", "order_created", GATE),
@@ -60,15 +62,16 @@ COLD_STEPS: list[tuple[str, str, str]] = [
     ("Создал заказ", "order_created", GATE),
 ]
 
+# Бесплатная дверь заканчивается на «отправил рисунок»: разбор открывают и заказ
+# делают в ДРУГОМ визите (по ссылке из письма), и та же воронка показывала ноль
+# покупок, пока «Фремиум» показывал реальные. Покупки из фремиума — когорты на
+# дашборде и страница «Фремиум» (A4).
 FREE_STEPS: list[tuple[str, str, str]] = [
     ("Открыл /free", "free_view", GATE),
     ("Ввёл имя и возраст", "click:free_step1", GATE),
     ("Выбрал, что зацепило", "click:free_concern_*", GATE),
     ("Дошёл до вывода", "free_summary", GATE),
     ("Отправил рисунок", "free_upload", GATE),
-    ("Открыл готовый разбор", "free_result_view", GATE),
-    ("Нажал «заказать отчёт»", "click:free_to_order", GATE),
-    ("Создал заказ", "order_created", GATE),
 ]
 
 
@@ -84,11 +87,13 @@ def _visit_types(db, since: str) -> dict[str, dict]:
     if not out:
         return out
     for r in db.execute(
-            "SELECT DISTINCT visit_id, type FROM events"
+            "SELECT DISTINCT visit_id, type, path FROM events"
             " WHERE visit_id IS NOT NULL AND created_at >= ?", (since,)):
         v = out.get(r["visit_id"])
         if v is not None:
             v["types"].add(r["type"])
+            if r["path"]:
+                v["types"].add(f"{r['type']}@{r['path'].split('?')[0]}")
     return out
 
 
@@ -108,6 +113,7 @@ def _orders_by_visit(db, since: str) -> dict[str, dict]:
 
 
 def _has(types: set[str], marker: str) -> bool:
+    """marker: 'type', 'prefix*' или 'type@/путь' (событие именно на этой странице)."""
     if marker.endswith("*"):
         return any(t.startswith(marker[:-1]) for t in types)
     return marker in types
@@ -120,11 +126,13 @@ def _is_mobile(v: dict) -> bool:
     return (0 < sw < 640) if sw else (v["device"] == "mobile")
 
 
-def _funnel(visits: dict, orders: dict, steps: list, entry_marker: str) -> dict:
+def _funnel(visits: dict, orders: dict, steps: list, entry_marker: str,
+            with_paid: bool = True) -> dict:
     """Одна дверь. entry_marker — что делает визит частью этой воронки."""
     rows = [{"label": label, "kind": kind, "n": 0, "mobile": 0, "desktop": 0}
             for label, _m, kind in steps]
-    rows.append({"label": "Оплатил", "kind": GATE, "n": 0, "mobile": 0, "desktop": 0})
+    if with_paid:
+        rows.append({"label": "Оплатил", "kind": GATE, "n": 0, "mobile": 0, "desktop": 0})
     gate_idx = [i for i, (_l, _m, k) in enumerate(steps) if k == GATE]
     total, revenue = 0, 0
 
@@ -157,7 +165,7 @@ def _funnel(visits: dict, orders: dict, steps: list, entry_marker: str) -> dict:
             if i <= deepest:
                 hit(i)
         # 3. Оплата — только из заказа.
-        if o and o["paid"]:
+        if with_paid and o and o["paid"]:
             hit(len(rows) - 1)
             revenue += o["rub"]
 
@@ -193,7 +201,7 @@ def build(db, since: str) -> dict:
             ch["rub"] += o["rub"]
     return {
         "paid": _funnel(visits, orders, PAID_STEPS, "landing_view"),
-        "free": _funnel(visits, orders, FREE_STEPS, "free_view"),
+        "free": _funnel(visits, orders, FREE_STEPS, "free_view", with_paid=False),
         "cold": _funnel(visits, orders, COLD_STEPS, "free_check_view"),
         "visits_total": len(visits),
         "devices": sorted(devices.items(), key=lambda kv: -kv[1]),
