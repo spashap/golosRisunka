@@ -16,7 +16,9 @@ if grep -q "$MARK" "$CONF"; then
   exit 0
 fi
 
-cp "$CONF" "$CONF.bak-$(date +%Y%m%d%H%M%S)"
+# Бэкап НЕ в sites-enabled: nginx подхватывает оттуда всё подряд (дубль server_name).
+mkdir -p /etc/nginx/backups
+cp "$CONF" "/etc/nginx/backups/golosrisunka.bak-$(date +%Y%m%d%H%M%S)"
 
 python3 - "$CONF" "$MARK" <<'PY'
 import re, sys
