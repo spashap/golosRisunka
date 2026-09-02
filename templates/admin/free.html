@@ -61,7 +61,7 @@
       </details>
     </td>
     <td>
-      <form method="post" action="{{ url_for('admin.free_key_verdict', key=k.key) }}">
+      <form method="post" action="{{ url_for('admin.free_key_verdict', key=k.key) }}"><input type="hidden" name="csrf" value="{{ csrf }}">
         <select name="verdict" class="input">
           {% for v, label in verdicts %}
           <option value="{{ v }}" {% if k.verdict == v %}selected{% endif %}>{{ label }}</option>
@@ -109,11 +109,11 @@
         {% endfor %}
         {% if not it.image_deleted %}
         <form method="post" action="/admin/free/{{ it.id }}/delete-image"
-              onsubmit="return confirm('Удалить фото рисунка? Текст разбора останется.')">
+              onsubmit="return confirm('Удалить фото рисунка? Текст разбора останется.')"><input type="hidden" name="csrf" value="{{ csrf }}">
           <button class="status-pill status-pill--warn" type="submit">удалить фото</button>
         </form>
         {% else %}<span class="hint">фото удалено</span>{% endif %}
-        <form method="post" action="/admin/free/{{ it.id }}/allow-replace" style="margin-top:6px">
+        <form method="post" action="/admin/free/{{ it.id }}/allow-replace" style="margin-top:6px"><input type="hidden" name="csrf" value="{{ csrf }}">
           <button class="status-pill status-pill--wait" type="submit">разрешить повтор</button>
         </form>
       </details>

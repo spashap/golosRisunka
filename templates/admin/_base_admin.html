@@ -25,6 +25,9 @@
       <a href="{{ url_for(endpoint) }}" class="{% if endpoint == active %}is-active{% endif %}">{{ label }}</a>
       {% endfor %}
     </nav>
+    <a href="/admin/ignore-me" class="admin-side__ignore" title="Этот браузер — владелец: визиты пойдут как owner, заказы и разборы — как тестовые"
+       onclick="return confirm('Пометить этот браузер как владельческий? Его визиты, заказы и разборы перестанут попадать в статистику.')">
+      {% if request.cookies.get('gr_ignore') %}✓ Этот браузер не считается{% else %}Не считать этот браузер{% endif %}</a>
     <form method="post" action="/admin/logout" class="admin-side__logout">
       <button type="submit">Выйти</button>
     </form>

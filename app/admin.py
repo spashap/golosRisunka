@@ -58,32 +58,72 @@ PERIODS = [("1", "сегодня"), ("7", "7 дней"), ("30", "30 дней"), 
 # Аналитика показывает ТОЛЬКО людей: боты (device='bot', см. app/track.parse_device)
 # отсекаются во всех человеко-ориентированных запросах. device IS NULL — серверные
 # события воркера (оплата/доставка отчёта) — это не бот, оставляем.
-NOT_BOT = "(device IS NULL OR device <> 'bot')"
+# device='owner' — браузер владельца (кука gr_ignore, /admin/ignore-me): не бот, но и не клиент.
+NOT_BOT = "(device IS NULL OR device NOT IN ('bot', 'owner'))"
+# Тестовые заказы/клиенты/разборы (is_test) в KPI не считаются, в списках помечаются.
+REAL = "COALESCE(is_test, 0) = 0"
 
 
 # --- Авторизация ---
 
-def _admin_token() -> str:
-    return hmac.new(settings.ADMIN_PASS.encode(), b"gr-admin-v1",
-                    hashlib.sha256).hexdigest()
+ADMIN_TOKEN_DAYS = 30
+LOGIN_MAX_FAILS = 8          # неудачных попыток за окно...
+LOGIN_WINDOW_MIN = 15        # ...минут — дальше 429 (пароль — единственный секрет)
+
+
+def _sign(msg: str) -> str:
+    return hmac.new(settings.ADMIN_PASS.encode(), msg.encode(), hashlib.sha256).hexdigest()
+
+
+def _admin_token(issued: int | None = None) -> str:
+    """`<ts>.<hmac(ts)>`: раньше токен был константой от пароля — не истекал никогда и
+    не отзывался выходом (аудит 02.09, C7). Теперь у него срок и время выпуска."""
+    ts = str(issued if issued is not None else int(datetime.datetime.now(
+        datetime.timezone.utc).timestamp()))
+    return f"{ts}.{_sign('gr-admin-v2:' + ts)}"
 
 
 def _is_admin() -> bool:
     if not settings.ADMIN_PASS:
         return False
-    return hmac.compare_digest(request.cookies.get(ADMIN_COOKIE, ""), _admin_token())
+    raw = request.cookies.get(ADMIN_COOKIE, "")
+    ts, _, sig = raw.partition(".")
+    if not ts.isdigit() or not sig:
+        return False
+    if not hmac.compare_digest(sig, _sign("gr-admin-v2:" + ts)):
+        return False
+    age = datetime.datetime.now(datetime.timezone.utc).timestamp() - int(ts)
+    return 0 <= age <= ADMIN_TOKEN_DAYS * 24 * 3600
+
+
+def csrf_token() -> str:
+    """Скрытое поле для всех POST-форм админки: производная от текущей куки."""
+    return _sign("csrf:" + request.cookies.get(ADMIN_COOKIE, ""))
 
 
 def _guard():
-    """404 если админка выключена; редирект на пароль если не залогинен."""
+    """404 если админка выключена; редирект на пароль если не залогинен;
+    POST без верного csrf — 400 (перегенерация стоит денег, купоны/цены — бизнес)."""
     if not settings.ADMIN_PASS:
         abort(404)
     if not _is_admin():
         abort(redirect(url_for("admin.login_form")))
+    if request.method == "POST" and not hmac.compare_digest(
+            request.form.get("csrf", ""), csrf_token()):
+        abort(400)
+
+
+def _login_throttled(db) -> bool:
+    since = (datetime.datetime.now(datetime.timezone.utc)
+             - datetime.timedelta(minutes=LOGIN_WINDOW_MIN)).isoformat(timespec="seconds")
+    n = db.execute("SELECT COUNT(*) c FROM admin_logins WHERE ok = 0 AND created_at >= ?",
+                   (since,)).fetchone()["c"]
+    return n >= LOGIN_MAX_FAILS
 
 
 def _render(section_endpoint: str, template: str, **ctx):
-    return render_template(template, sections=SECTIONS, active=section_endpoint, **ctx)
+    return render_template(template, sections=SECTIONS, active=section_endpoint,
+                           csrf=csrf_token(), **ctx)
 
 
 @bp_admin.get("/login")
@@ -99,11 +139,30 @@ def login_form():
 def login_submit():
     if not settings.ADMIN_PASS:
         abort(404)
-    if not hmac.compare_digest(request.form.get("password", ""), settings.ADMIN_PASS):
+    db = get_db()
+    if _login_throttled(db):
+        return render_template("admin/login.html",
+                               error="Слишком много попыток. Подождите 15 минут."), 429
+    ok = hmac.compare_digest(request.form.get("password", ""), settings.ADMIN_PASS)
+    db.execute("INSERT INTO admin_logins (ok, created_at) VALUES (?, ?)", (1 if ok else 0, now()))
+    db.commit()
+    if not ok:
         return render_template("admin/login.html", error="Неверный пароль"), 401
     resp = redirect(url_for("admin.analytics"))
-    resp.set_cookie(ADMIN_COOKIE, _admin_token(), max_age=30 * 24 * 3600,
-                    httponly=True, samesite="Lax")
+    resp.set_cookie(ADMIN_COOKIE, _admin_token(), max_age=ADMIN_TOKEN_DAYS * 24 * 3600,
+                    httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
+    return resp
+
+
+@bp_admin.get("/ignore-me")
+def ignore_me():
+    """Пометить ЭТОТ браузер как владельческий: визиты/события идут как device='owner',
+    заказы и разборы — is_test. Иначе владелец сам себе портит воронку и выручку."""
+    _guard()
+    from app.track import IGNORE_COOKIE
+    resp = redirect(url_for("admin.analytics", msg="ignored"))
+    resp.set_cookie(IGNORE_COOKIE, "1", max_age=365 * 24 * 3600,
+                    httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
     return resp
 
 
@@ -227,10 +286,10 @@ def analytics():
         "SELECT COUNT(DISTINCT visitor_id) c FROM events"
         " WHERE visitor_id IS NOT NULL AND device = 'bot' AND created_at >= ?", (since,)).fetchone()["c"]
     orders_total = db.execute(
-        "SELECT COUNT(*) c FROM orders WHERE created_at >= ?", (since,)).fetchone()["c"]
+        f"SELECT COUNT(*) c FROM orders WHERE created_at >= ? AND {REAL}", (since,)).fetchone()["c"]
     paid = db.execute(
         "SELECT COUNT(*) c, COALESCE(SUM(price_kopecks), 0) s FROM orders"
-        " WHERE paid_at IS NOT NULL AND paid_at >= ?", (since,)).fetchone()
+        f" WHERE paid_at IS NOT NULL AND paid_at >= ? AND {REAL}", (since,)).fetchone()
     kpi = {
         "visitors": visitors, "orders": orders_total, "paid": paid["c"],
         "revenue_rub": paid["s"] // 100,
@@ -258,7 +317,7 @@ def analytics():
             lst.append(_drill_member(row))
     for row in db.execute(
             "SELECT utm_json, paid_at, price_kopecks FROM orders"
-            " WHERE created_at >= ?", (since,)):
+            f" WHERE created_at >= ? AND {REAL}", (since,)):
         s = sources.setdefault(_utm_label(row["utm_json"]),
                                {"visitors": 0, "orders": 0, "paid": 0, "rub": 0})
         s["orders"] += 1
@@ -640,7 +699,7 @@ def _free_leads(db, since: str) -> list[dict]:
         buys = bought.get(r["id"], [])
         out.append({
             "id": r["id"], "token": r["token"],
-            "feedback": rated.get(r["id"]),
+            "feedback": rated.get(r["id"]), "is_test": bool(r["is_test"]),
             "created": (r["created_at"] or "")[:16].replace("T", " "),
             "email": r["email"], "child": r["child_name"], "age": r["child_age"],
             "concern": fa.concern_label(r["concern_key"]),
@@ -679,7 +738,7 @@ def orders():
         child = json.loads(o["child_json"] or "{}")
         orders_view.append({
             "id": o["id"], "created": o["created_at"][:16].replace("T", " "),
-            "feedback": rated.get(o["id"]),
+            "feedback": rated.get(o["id"]), "is_test": bool(o["is_test"]),
             "email": o["email"], "child": child.get("name", ""),
             "product": o["product_code"], "rub": o["price_kopecks"] // 100,
             "coupon": o["coupon_code"] or "", "status": o["status"],
@@ -751,7 +810,7 @@ CLIENT_TABS = [("all", "Все"), ("buyers", "Покупатели"), ("free", "
 # Детей фремиум намеренно не заводит (у него полоса возраста, а не birth_ym), поэтому
 # имя ребёнка для таких строк берём из самих разборов.
 _CLIENTS_SQL = (
-    "SELECT c.id, c.email, c.created_at,"
+    "SELECT c.id, c.email, c.created_at, c.is_test,"
     " (SELECT GROUP_CONCAT(name, ', ') FROM children ch WHERE ch.customer_id = c.id) kids,"
     " (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id) n_orders,"
     " (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id"
@@ -915,6 +974,7 @@ def clients():
         # что мы ему выдали (ссылки на отчёт/разбор) и что он об этом сказал
         "products": products.get(r["id"], []),
         "feedback": feedbacks.get(r["id"], []),
+        "is_test": bool(r["is_test"]),
     } for r in rows]
     return _render("admin.clients", "admin/clients.html", clients=clients_view,
                    tab=tab, tabs_items=CLIENT_TABS,

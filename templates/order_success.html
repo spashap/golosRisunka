@@ -21,6 +21,7 @@
 </div>
 
 <script>
+  try { localStorage.removeItem("gr_order_draft"); } catch (e) {}
 // Цель «purchase» + выручка в электронную коммерцию Метрики.
 // Страница отдаётся только для ОПЛАЧЕННОГО заказа (см. order_success в routes.py),
 // поэтому цель не может сработать на неоплаченном/угаданном order_id.

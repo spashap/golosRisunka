@@ -1,10 +1,12 @@
 {% extends "_base.html" %}
 {% block title %}{{ title }} — Голос рисунка{% endblock %}
+{% block robots %}{% if noindex %}noindex, follow{% else %}{{ super() }}{% endif %}{% endblock %}
 {% block body %}
 <div class="section">
-  <div class="wrap" style="max-width: 760px">
-    <h2>{{ title }}</h2>
-    <p style="color: var(--muted); line-height: 1.6">{{ text }}</p>
+  <div class="wrap legal">
+    <h1 class="h2">{{ title }}</h1>
+    {% if published %}<p class="hint">Редакция от {{ published }}</p>{% endif %}
+    {% block legal %}{% endblock %}
   </div>
 </div>
 {% endblock %}

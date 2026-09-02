@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import datetime
+import hmac
 import json
 import logging
 import re
+import secrets
 from functools import lru_cache
 
 from flask import (Blueprint, Response, abort, g, jsonify, redirect,
@@ -289,7 +291,7 @@ def login_verify():
     track_event("login_success")
     resp = redirect(url_for("main.cabinet"))
     resp.set_cookie(SESSION_COOKIE, token, max_age=settings.SESSION_DAYS * 24 * 3600,
-                    httponly=True, samesite="Lax")
+                    httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
     return resp
 
 
@@ -297,7 +299,7 @@ def _logged_in_redirect(token: str):
     """Ставит session-cookie и ведёт в кабинет (общий хвост для всех входов)."""
     resp = redirect(url_for("main.cabinet"))
     resp.set_cookie(SESSION_COOKIE, token, max_age=settings.SESSION_DAYS * 24 * 3600,
-                    httponly=True, samesite="Lax")
+                    httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
     return resp
 
 
@@ -554,12 +556,18 @@ def order_submit():
     # visit_id — в каком ВИЗИТЕ оформлен заказ (per-visit воронка и связь с кампанией);
     # free_token — точная атрибуция «фремиум -> покупка». Пишем ПОСЛЕ создания заказа,
     # чтобы app/orders.py (валидация формы) не пришлось трогать вообще.
-    db.execute("UPDATE orders SET visit_id = ?, free_token = COALESCE(?, free_token)"
-               " WHERE id = ?",
-               (getattr(g, "visit_id", None), free_token or None, order_id))
+    access_token = secrets.token_urlsafe(24)
+    db.execute("UPDATE orders SET visit_id = ?, free_token = COALESCE(?, free_token),"
+               " access_token = ?, is_test = ? WHERE id = ?",
+               (getattr(g, "visit_id", None), free_token or None, access_token,
+                1 if (track.is_owner_browser()
+                      or (request.form.get("email") or "").strip().lower()
+                      in settings.TEST_EMAILS) else 0,
+                order_id))
     db.commit()
     order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
-    return redirect(create_payment(order_id, order["price_kopecks"]))
+    return _set_order_cookie(redirect(create_payment(order_id, order["price_kopecks"])),
+                             order_id, access_token)
 
 
 @bp.post("/track/form-started")
@@ -569,13 +577,56 @@ def track_form_started():
     return "", 204
 
 
+ORDER_COOKIE_DAYS = 30
+
+
+def _order_cookie(order_id: int) -> str:
+    return f"gr_o{order_id}"
+
+
+def _set_order_cookie(resp, order_id: int, token: str):
+    resp.set_cookie(_order_cookie(order_id), token, max_age=ORDER_COOKIE_DAYS * 24 * 3600,
+                    httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
+    return resp
+
+
+def _order_access(order) -> bool:
+    """Кому можно видеть заказ: браузеру, который его оформил (кука с access_token),
+    или вошедшему владельцу. Раньше /pay/<id>, статус оплаты и «заказ принят» были
+    доступны по порядковому номеру — с email покупателя внутри (аудит 02.09, C1)."""
+    tok = order["access_token"]
+    if tok and hmac.compare_digest(request.cookies.get(_order_cookie(order["id"]), ""), tok):
+        return True
+    customer = current_customer()
+    return bool(customer and order["customer_id"] and customer["id"] == order["customer_id"])
+
+
+def _load_order(order_id: int, settle_ok: bool = False):
+    """Заказ или 404. settle_ok=True — возврат с банка: доступ не требуем (кука могла
+    остаться в другом браузере), но email такой ответ и не показывает."""
+    order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if order is None or (not settle_ok and not _order_access(order)):
+        abort(404)
+    return order
+
+
+def _with_session(resp, order_id: int):
+    """Ставит сессионную куку по уже оплаченному заказу: mark_paid идемпотентен и
+    возвращает действующий session_token. Без этого «вход уже выполнен» на странице
+    успеха было ложью всякий раз, когда вебхук опережал браузер (аудит 02.09, C3)."""
+    result = mark_paid(order_id)
+    if result and result.get("session_token"):
+        resp.set_cookie(SESSION_COOKIE, result["session_token"],
+                        max_age=settings.SESSION_DAYS * 24 * 3600,
+                        httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
+    return resp
+
+
 @bp.get("/pay/<int:order_id>")
 def checkout(order_id: int):
     """Страница оплаты: встроенный виджет ЮKassa в модалке. Платёж создаётся
     отдельным AJAX-вызовом /pay/yookassa/create при открытии модалки."""
-    order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
-    if order is None:
-        abort(404)
+    order = _load_order(order_id)
     if order["status"] != "created":          # уже оплачен — на страницу «принято»
         return redirect(url_for("main.order_success", order_id=order_id))
     track_event("checkout_view", {"order_id": order_id})
@@ -600,9 +651,7 @@ def yookassa_create(order_id: int):
     СБП даёт выбор банка / переход в банк-приложение; embedded-виджет показывал бы только
     QR — бесполезный на телефоне). Десктоп/планшет -> встроенный виджет, как было."""
     db = get_db()
-    order = db.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
-    if order is None:
-        abort(404)
+    order = _load_order(order_id)
     if order["status"] != "created":
         return jsonify({"already_paid": True})
     if not settings.yukassa_enabled():
@@ -700,12 +749,9 @@ def yookassa_webhook():
 def yookassa_status(order_id: int):
     """Поллинг с фронта: оплачен ли заказ. Если webhook опоздал — проверяем сами
     и проводим оплату здесь же, выставляя сессионную куку (вход в кабинет)."""
-    order = get_db().execute(
-        "SELECT status, yookassa_payment_id FROM orders WHERE id = ?", (order_id,)).fetchone()
-    if order is None:
-        abort(404)
+    order = _load_order(order_id)
     if order["status"] != "created":          # любое не-created = оплата уже прошла
-        return jsonify({"payment_status": "paid"})
+        return _with_session(jsonify({"payment_status": "paid"}), order_id)
     if order["yookassa_payment_id"]:
         result = _settle_payment(order["yookassa_payment_id"])
         if result:
@@ -713,7 +759,7 @@ def yookassa_status(order_id: int):
             if result["session_token"]:
                 resp.set_cookie(SESSION_COOKIE, result["session_token"],
                                 max_age=settings.SESSION_DAYS * 24 * 3600,
-                                httponly=True, samesite="Lax")
+                                httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
             return resp
     return jsonify({"payment_status": "pending"})
 
@@ -724,13 +770,13 @@ def yookassa_return(order_id: int):
     Webhook мог опоздать — подтверждаем оплату здесь же и ведём на «принято»;
     если ещё не подтверждено (webhook в пути или клиент бросил оплату) — страница
     ожидания с поллингом. pay_return_pending = сигнал «возможна проблема у клиента»."""
-    order = get_db().execute(
-        "SELECT status, yookassa_payment_id FROM orders WHERE id = ?", (order_id,)).fetchone()
-    if order is None:
-        abort(404)
+    order = _load_order(order_id, settle_ok=True)
     if order["status"] != "created":          # уже оплачен (webhook успел)
         track_event("pay_return", {"order_id": order_id, "settled": True})
-        return redirect(url_for("main.order_success", order_id=order_id))
+        resp = redirect(url_for("main.order_success", order_id=order_id))
+        if order["access_token"]:
+            _set_order_cookie(resp, order_id, order["access_token"])
+        return _with_session(resp, order_id)
     result = _settle_payment(order["yookassa_payment_id"]) if order["yookassa_payment_id"] else None
     if result:
         track_event("pay_return", {"order_id": order_id, "settled": True})
@@ -738,7 +784,7 @@ def yookassa_return(order_id: int):
         if result.get("session_token"):
             resp.set_cookie(SESSION_COOKIE, result["session_token"],
                             max_age=settings.SESSION_DAYS * 24 * 3600,
-                            httponly=True, samesite="Lax")
+                            httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
         return resp
     track_event("pay_return_pending", {"order_id": order_id})
     return render_template("pay_wait.html", order_id=order_id)
@@ -748,6 +794,12 @@ def yookassa_return(order_id: int):
 def order_success(order_id: int):
     order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     if order is None:
+        abort(404)
+    if not _order_access(order):
+        # Оплаченный заказ без доступа — вошёл с другого устройства: ведём в кабинет,
+        # а не показываем чужой email. Неоплаченный чужой номер — просто 404.
+        if order["status"] != "created":
+            return redirect(url_for("main.login_form"))
         abort(404)
     if order["status"] == "created":
         # Не оплачен: webhook мог опоздать (ведём на поллинг), либо это чужой/
@@ -786,30 +838,30 @@ def blog_post(slug: str):
 
 # --- Юридические страницы (тексты-плейсхолдеры до Phase 9) ---
 
+# Юридические документы: тексты адаптированы с shepotzvezd.ru (та же ИП-исполнитель,
+# реквизиты — settings.LEGAL). /consent — noindex: на него ссылаются оферта и политика,
+# в выдаче ему делать нечего.
 LEGAL_PAGES = {
-    "privacy": ("Политика конфиденциальности",
-                "Текст политики конфиденциальности будет размещён до запуска. "
-                "Мы храним рисунки и данные только для подготовки отчёта; "
-                "рисунки вашего ребёнка не публикуются и не передаются третьим лицам. "
-                "Для веб-аналитики мы по IP-адресу определяем приблизительный регион "
-                "(страна/область) и сохраняем только эту производную метку — сам IP-адрес "
-                "не сохраняется."),
-    "terms": ("Пользовательское соглашение",
-              "Текст оферты будет размещён до запуска."),
-    "contacts": ("Контакты",
-                 "Поддержка: почта будет указана до запуска. Мы отвечаем в течение рабочего дня."),
+    "terms": ("legal_offer.html", "Публичная оферта", False),
+    "privacy": ("legal_privacy.html", "Политика конфиденциальности", False),
+    "consent": ("legal_consent.html", "Согласие на обработку персональных данных", True),
+    "contacts": ("legal_contacts.html", "Контакты", False),
 }
 
 
 @bp.get("/privacy")
 @bp.get("/terms")
+@bp.get("/consent")
 @bp.get("/contacts")
 def legal():
     key = request.path.strip("/")
-    title, text = LEGAL_PAGES[key]
+    template, title, noindex = LEGAL_PAGES[key]
     # Юридические страницы читают перед покупкой — это сигнал сомнения, а не шум.
     track_event("legal_view", {"page": key})
-    return render_template("legal.html", title=title, text=text)
+    return render_template(template, title=title, noindex=noindex,
+                           published=settings.LEGAL["offer_date"],
+                           legal=settings.LEGAL, support_email=settings.SUPPORT_EMAIL,
+                           site_domain=settings.SITE_DOMAIN)
 
 
 # --- SEO-служебное ---

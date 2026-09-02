@@ -4,11 +4,33 @@
 {% block body %}
 <section class="section">
   <div class="wrap" style="max-width:640px">
-  {% if r.status == 'rejected' %}
+  {% if reupload %}
     <div class="form-card">
       <h1 class="h2">Нужно другое фото</h1>
-      <p>{{ a.insufficient_reason }}</p>
-      <a class="btn btn--primary" href="/free" data-ym-goal="free_retry">Загрузить другое фото</a>
+      <p>{{ reject_text or 'По этому фото разобрать рисунок не получилось: слишком темно, размыто или это не рисунок.' }}</p>
+      <p>Ответы про {{ name_acc }} мы сохранили — пришлите другое фото прямо здесь, вопросы заново
+        проходить не нужно.</p>
+    </div>
+    {# Тот же блок загрузки, что в мастере: free.js находит его по id и работает без мастера. #}
+    <div class="offer" id="f-upload" data-token="{{ token }}" data-wait-hint="{{ wait_hint }}" data-standalone="1">
+      <div class="field offer__drop">
+        <label class="file-drop" for="f-file">
+          <img class="preview" hidden alt="">
+          <div class="fd-icon">🖼️</div>
+          <div class="fd-text">Нажмите и выберите фото — JPG, PNG или HEIC, до 15 МБ</div>
+          <input type="file" id="f-file" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*"
+                 data-ym-goal="free_add_drawing">
+        </label>
+        <div class="hint" style="margin-top: 6px">Снимите лист целиком при дневном свете, без бликов.</div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="f-email">Почта — на неё придёт разбор</label>
+        <div class="ctl"><input class="input" id="f-email" type="email" value="{{ email }}"
+             inputmode="email" autocomplete="email" placeholder="you@example.com"></div>
+      </div>
+      <button class="btn btn--primary offer__cta" id="f-go"
+              data-ym-goal="free_reupload_submit">Разобрать рисунок</button>
+      <p class="err" id="f-uperr" hidden></p>
     </div>
   {% else %}
     <div class="free-report">
@@ -95,4 +117,5 @@
 {% endblock %}
 {% block footer %}{{ super() }}
 <script src="{{ static }}/js/free_result.js?v={{ version }}" defer></script>
+{% if reupload %}<script src="{{ static }}/js/free_reupload.js?v={{ version }}" defer></script>{% endif %}
 {% endblock %}

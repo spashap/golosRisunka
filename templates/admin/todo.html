@@ -29,13 +29,13 @@
       <p class="hint">Без описания.</p>
       {% endif %}
       <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap">
-        <form method="post" action="{{ url_for('admin.todo_toggle', task_id=t.id) }}">
+        <form method="post" action="{{ url_for('admin.todo_toggle', task_id=t.id) }}"><input type="hidden" name="csrf" value="{{ csrf }}">
           <button class="status-pill {{ 'status-pill--wait' if t.done else 'status-pill--ready' }}"
                   type="submit">{{ 'вернуть в работу' if t.done else 'отметить сделанной' }}</button>
         </form>
         {% if not t.seeded %}
         <form method="post" action="{{ url_for('admin.todo_delete', task_id=t.id) }}"
-              onsubmit="return confirm('Удалить задачу «{{ t.title }}»?')">
+              onsubmit="return confirm('Удалить задачу «{{ t.title }}»?')"><input type="hidden" name="csrf" value="{{ csrf }}">
           <button class="status-pill status-pill--warn" type="submit">удалить</button>
         </form>
         {% endif %}
@@ -49,7 +49,7 @@
 
 <h2 class="h3" style="margin-top:26px">Добавить задачу</h2>
 <form method="post" action="{{ url_for('admin.todo_add') }}" class="form-card"
-      style="max-width:720px">
+      style="max-width:720px"><input type="hidden" name="csrf" value="{{ csrf }}">
   <div class="field">
     <label for="t-title">Название</label>
     <div class="ctl"><input class="input" id="t-title" name="title" type="text"

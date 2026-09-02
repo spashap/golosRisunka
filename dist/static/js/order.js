@@ -55,9 +55,8 @@
 
   form.addEventListener("input", saveDraft);
   form.addEventListener("change", saveDraft);
-  form.addEventListener("submit", function () {
-    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
-  });
+  // Черновик НЕ стираем на submit: «← Вернуться к форме» с оплаты открывал пустую
+  // форму. Стирает страница «заказ принят» (order_success.html).
 
   // ---------- блоки рисунков ----------
   function visibleCount() {
@@ -74,7 +73,11 @@
     var n = block.dataset.n;
     var missing = [];
     var file = block.querySelector('input[type="file"]');
-    if (!file || !file.files || !file.files.length) missing.push({ label: "фото рисунка", el: file });
+    // Рисунок из бесплатного разбора уже на сервере: у блока нет input[type=file],
+    // только превью. Раньше это считалось «фото не выбрано», и второй рисунок
+    // добавить было нельзя вообще (UseCase: free -> paid, 1–3 рисунка).
+    var reused = !file && block.querySelector("img.preview[src]");
+    if (!reused && (!file || !file.files || !file.files.length)) missing.push({ label: "фото рисунка", el: file });
     [["_theme", "тема рисунка"], ["_drawn_at_m", "месяц"], ["_drawn_at_y", "год"]].forEach(function (p) {
       var el = block.querySelector('[name="d' + n + p[0] + '"]');
       if (el && !el.value.trim()) missing.push({ label: p[1], el: el });

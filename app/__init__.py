@@ -40,7 +40,10 @@ def create_app() -> Flask:
     @app.errorhandler(404)
     def not_found(e):
         from app.track import track_event
-        track_event("error_404", {"path": request.path[:200]})
+        # Сканеры уязвимостей (/.env, /wp-login.php, /.git/…) — не «битые ссылки»,
+        # а шум: 7.5 тыс. error_404 за месяц забивали «Действия».
+        if not track.is_scanner_path(request.path):
+            track_event("error_404", {"path": request.path[:200]})
         return render_template("error.html", code=404,
                                message="Такой страницы нет"), 404
 

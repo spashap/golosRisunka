@@ -24,7 +24,7 @@
   <tbody>
   {% for f in free_leads %}
   <tr>
-    <td>{{ f.id }}</td>
+    <td>{{ f.id }}{% if f.is_test %} <span class="admin-test">тест</span>{% endif %}</td>
     <td style="white-space:nowrap">{{ f.created }}</td>
     <td>{{ f.email }}</td>
     <td>{{ f.child }}{% if f.age %}, {{ f.age }}{% endif %}</td>
@@ -59,7 +59,7 @@
   <tbody>
   {% for o in orders %}
   <tr>
-    <td>{{ o.id }}</td><td style="white-space:nowrap">{{ o.created }}</td>
+    <td>{{ o.id }}{% if o.is_test %} <span class="admin-test">тест</span>{% endif %}</td><td style="white-space:nowrap">{{ o.created }}</td>
     <td>{{ o.email }}</td><td>{{ o.child }}</td><td>{{ o.product }}</td>
     <td style="white-space:nowrap">{{ o.rub }} ₽</td><td>{{ o.coupon }}</td><td>{{ o.drawings }}</td>
     <td class="hint">{{ o.utm }}</td>
@@ -70,12 +70,12 @@
       {% else %}—{% endif %}</td>
     <td>{% if o.status in ("failed", "insufficient", "delivered") %}
       <form method="post" action="/admin/orders/{{ o.id }}/resend"
-            onsubmit="return confirm('Заказ {{ o.id }}: выслать отчёт заново? Если отчёта нет — будет перегенерирован.')">
+            onsubmit="return confirm('Заказ {{ o.id }}: выслать отчёт заново? Если отчёта нет — будет перегенерирован.')"><input type="hidden" name="csrf" value="{{ csrf }}">
         <input type="hidden" name="days" value="{{ days }}">
         <button class="status-pill status-pill--wait" type="submit">выслать заново</button>
       </form>
       <form method="post" action="/admin/orders/{{ o.id }}/regenerate" style="margin-top:6px"
-            onsubmit="return confirm('Заказ {{ o.id }}: перегенерировать отчёт заново (текущим промптом) на тех же изображениях и отправить? Текущий отчёт будет заменён.')">
+            onsubmit="return confirm('Заказ {{ o.id }}: перегенерировать отчёт заново (текущим промптом) на тех же изображениях и отправить? Текущий отчёт будет заменён.')"><input type="hidden" name="csrf" value="{{ csrf }}">
         <input type="hidden" name="days" value="{{ days }}">
         <button class="status-pill status-pill--warn" type="submit">перегенерировать</button>
       </form>

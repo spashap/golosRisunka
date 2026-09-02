@@ -10,7 +10,7 @@
 <p class="hint">Правки сохраняются в <code>data/products.json</code>. Лендинг, форма заказа и schema.org
 обновляются сразу после сохранения. Цены редактируются на странице <a href="/admin/prices">Цены</a>.</p>
 
-<form method="post" action="/admin/settings/products">
+<form method="post" action="/admin/settings/products"><input type="hidden" name="csrf" value="{{ csrf }}">
   <div class="admin-products">
     {% for code, p in products.items() %}
     <div class="form-card">

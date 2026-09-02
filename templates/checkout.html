@@ -23,7 +23,7 @@
       </p>
       {% endif %}
 
-      <p style="margin-top: 14px"><a href="/order" style="color: var(--soft)">← Вернуться к форме</a></p>
+      <p style="margin-top: 14px"><a href="{{ '/order?free=' ~ order.free_token if order.free_token else '/order' }}" style="color: var(--soft)">← Вернуться к форме</a></p>
     </div>
   </div>
 </div>

@@ -23,7 +23,7 @@ from config import free_texts as T
 CLICK = "click:"
 
 # Боты не считаются нигде (как и в остальной админ-аналитике).
-NOT_BOT = "(device IS NULL OR device <> 'bot')"
+NOT_BOT = "(device IS NULL OR device NOT IN ('bot', 'owner'))"
 
 # Статусы, означающие «рисунок загружен» (анкета дошла до разбора).
 UPLOADED = ("queued", "running", "done", "rejected", "failed")
@@ -51,7 +51,8 @@ def dashboard_counters(db, since: str) -> dict:
         " SUM(CASE WHEN status <> 'answers' THEN 1 ELSE 0 END) requested,"
         " SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) done,"
         " SUM(CASE WHEN status = 'answers' AND email IS NULL THEN 1 ELSE 0 END) dropped"
-        " FROM free_analyses WHERE created_at >= ?", (since,)).fetchone()
+        " FROM free_analyses WHERE created_at >= ? AND COALESCE(is_test, 0) = 0",
+        (since,)).fetchone()
     total = row["total"] or 0
     return {
         "total": total,
@@ -93,7 +94,8 @@ def _attribute_orders(db, rows) -> tuple[dict, list]:
 
     orders = db.execute(
         "SELECT id, email, visitor_id, free_token, product_code, price_kopecks,"
-        " status, created_at, paid_at FROM orders ORDER BY id").fetchall()
+        " status, created_at, paid_at FROM orders WHERE COALESCE(is_test, 0) = 0"
+        " ORDER BY id").fetchall()
 
     def _latest_before(candidates, when):
         pick = None

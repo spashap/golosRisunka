@@ -62,6 +62,8 @@ ACTIONS: list[tuple[str, str, str, bool, bool]] = [
     ("report_rate_submit", "Отчёт: оценил отчёт (звёзды)", "кабинет", False, False),
     ("cabinet_rate_report", "Кабинет: перешёл оценить отчёт", "кабинет", False, False),
     ("cabinet_rate_free", "Кабинет: перешёл оценить разбор", "кабинет", False, False),
+    ("contacts_email", "Контакты: нажал почту поддержки", "лендинг", False, False),
+    ("free_reupload_submit", "Фремиум: прислал другое фото после отказа", "фремиум", True, False),
     ("free_retry", "Фремиум: загрузить другое фото", "фремиум", False, False),
     ("free_coloring_again", "Фремиум: принести свой рисунок", "фремиум", False, False),
     ("free_limit_open", "Фремиум: открыл прошлый разбор (лимит)", "фремиум", False, False),

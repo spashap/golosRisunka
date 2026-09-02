@@ -17,7 +17,7 @@
   <tbody>
   {% for c in clients %}
   <tr>
-    <td>{{ c.id }}</td>
+    <td>{{ c.id }}{% if c.is_test %} <span class="admin-test">тест</span>{% endif %}</td>
     <td>{{ c.email }}</td>
     <td>{{ c.created }}</td>
     <td>{% if c.kids %}{{ c.kids }}

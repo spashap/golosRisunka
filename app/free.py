@@ -24,7 +24,7 @@ from app.auth import SESSION_COOKIE, login_link_for
 from app.db import get_db, new_token, now
 from app.mailer import render_email, send_email
 from app import feedback
-from app.track import track_event
+from app.track import is_owner_browser, track_event
 from config import free_keys, free_names, settings
 from config import free_texts as T
 
@@ -78,9 +78,12 @@ def _link_customer(db, addr: str, name_norm: str) -> tuple[int, int | None]:
     """
     cust = db.execute("SELECT id FROM customers WHERE email = ?", (addr,)).fetchone()
     if cust is None:
-        db.execute("INSERT INTO customers (email, created_at) VALUES (?, ?)",
-                   (addr, now()))
+        db.execute("INSERT INTO customers (email, created_at, is_test) VALUES (?, ?, ?)",
+                   (addr, now(), 1 if addr in settings.TEST_EMAILS else 0))
         cust = db.execute("SELECT id FROM customers WHERE email = ?", (addr,)).fetchone()
+    if addr in settings.TEST_EMAILS or is_owner_browser():
+        db.execute("UPDATE free_analyses SET is_test = 1 WHERE child_name_norm = ?"
+                   " AND (email = ? OR customer_id = ?)", (name_norm, addr, cust["id"]))
     child_id = None
     for c in db.execute("SELECT id, name FROM children WHERE customer_id = ?",
                         (cust["id"],)).fetchall():
@@ -152,11 +155,11 @@ def summary():
     db.execute(
         "INSERT INTO free_analyses (token, visitor_id, limit_key, child_name,"
         " child_name_norm, child_age, address_form, concern_key, duration_key,"
-        " parent_text, ask_variant, status, created_at)"
-        " VALUES (?,?,?,?,?,?,?,?,?,?,?,'answers',?)",
+        " parent_text, ask_variant, status, created_at, is_test)"
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?,'answers',?,?)",
         (token, getattr(g, "visitor_id", None), _limit_key(), name, _norm_name(name),
          age, address, concern, duration or None, parent_text or None,
-         s["ask_variant"], now()))
+         s["ask_variant"], now(), 1 if is_owner_browser() else 0))
     db.commit()
     track_event("free_summary", {"concern": concern, "age": age})
 
@@ -172,7 +175,7 @@ def summary():
     resp = Response(html)
     if not request.cookies.get(FREE_COOKIE):
         resp.set_cookie(FREE_COOKIE, new_token(9), max_age=365 * 24 * 3600,
-                        httponly=True, samesite="Lax")
+                        httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
     return resp
 
 
@@ -210,8 +213,23 @@ def upload(token: str):
                        " WHERE status IN ('queued','running','done')"
                        "   AND created_at >= ?", (today,)).fetchone()["c"]
         if n >= settings.FREE_DAILY_CAP:
+            # Раньше интерфейс обещал «оставьте почту — пришлём завтра», а сервер
+            # отвечал 429 до чтения почты и ничего не слал. Теперь почту сохраняем
+            # и отправляем письмо со ссылкой на этот шаг — как в ветке «нет рисунка».
             track_event("free_cap_hit")
-            return jsonify({"error": "cap"}), 429
+            addr_cap = (request.form.get("email") or "").strip().lower()
+            saved = False
+            if EMAIL_RE.match(addr_cap):
+                cust_id, child_id = _link_customer(db, addr_cap, row["child_name_norm"])
+                db.execute("UPDATE free_analyses SET email = ?, customer_id = ?, child_id = ?"
+                           " WHERE id = ?", (addr_cap, cust_id, child_id, row["id"]))
+                db.commit()
+                try:
+                    send_free_email(db, row["id"])
+                    saved = True
+                except Exception as e:
+                    log.warning("free: cap email failed: %s", e)
+            return jsonify({"error": "cap", "saved": saved}), 429
 
     # Почта собирается ВМЕСТЕ с фотографией — как «куда прислать», а не стеной после
     # сорока секунд ожидания. Заодно закрывает старую дыру: резервный выход обещал
@@ -242,9 +260,9 @@ def upload(token: str):
     db.execute(
         "UPDATE free_analyses SET file_path = ?, status = 'queued', stage = 'prepare',"
         " reject_reason = NULL, started_at = NULL, email = ?, customer_id = ?,"
-        " child_id = ? WHERE id = ?",
+        " child_id = ?, is_test = CASE WHEN ? THEN 1 ELSE is_test END WHERE id = ?",
         (path.relative_to(settings.BASE_DIR).as_posix(), addr, cust_id, child_id,
-         row["id"]))
+         1 if (addr in settings.TEST_EMAILS or is_owner_browser()) else 0, row["id"]))
     db.commit()
     track_event("free_upload", {"concern": row["concern_key"]})
 
@@ -253,7 +271,7 @@ def upload(token: str):
     if token not in scope:
         scope.append(token)
     resp.set_cookie(FREE_SCOPE_COOKIE, json.dumps(scope[-20:]),
-                    max_age=365 * 24 * 3600, httponly=True, samesite="Lax")
+                    max_age=365 * 24 * 3600, httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
     return resp
 
 
@@ -288,6 +306,19 @@ def status(token: str):
 
 # --- Разбор -------------------------------------------------------------------------
 
+def _reject_text(row) -> str | None:
+    """Человеческое объяснение отказа — его пишет модель (free_worker кладёт в JSON)."""
+    try:
+        # free_worker кладёт analysis.json в каталог разбора, но путь в строке не обновляет
+        p = (settings.BASE_DIR / row["analysis_json_path"] if row["analysis_json_path"]
+             else settings.FREE_DIR / str(row["id"]) / "analysis.json")
+        if p.exists():
+            return json.loads(p.read_text(encoding="utf-8")).get("insufficient_reason") or None
+    except Exception:
+        pass
+    return None
+
+
 @bp_free.get("/r/<token>")
 def result(token: str):
     """Доступ по прямой ссылке БЕЗ входа — как у /r/<token> платных отчётов.
@@ -296,6 +327,20 @@ def result(token: str):
     row = db.execute("SELECT * FROM free_analyses WHERE token = ?", (token,)).fetchone()
     if row is None:
         abort(404)
+    if row["status"] in ("rejected", "failed"):
+        # Отказ по фото: раньше «Загрузить другое фото» вело в начало мастера, хотя
+        # письмо обещало «вопросы заново проходить не придётся». Теперь другое фото
+        # принимается прямо здесь, на том же токене (upload() это уже умел).
+        name, address = row["child_name"], row["address_form"] or "он"
+        track_event("free_result_view", {"concern": row["concern_key"],
+                                         "state": row["status"]})
+        return render_template(
+            "free_result.html", r=row, a={"insufficient_reason": row["reject_reason"]},
+            token=token, name=name, name_gen=T.genitive(name, address),
+            name_acc=T.accusative(name, address), reupload=True,
+            email=row["email"] or "", texts=T,
+            wait_hint=T.wait_hint(row["concern_key"], address),
+            reject_text=_reject_text(row))
     if row["status"] != "done":
         # Ожидание — тоже состояние воронки: сюда попадают те, кто вернулся по ссылке
         # раньше, чем разбор готов, и не увидел результата.
@@ -402,7 +447,7 @@ def email(token: str):
     if token not in scope:
         scope.append(token)
         resp.set_cookie(FREE_SCOPE_COOKIE, json.dumps(scope[-20:]),
-                        max_age=365 * 24 * 3600, httponly=True, samesite="Lax")
+                        max_age=365 * 24 * 3600, httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
     return resp
 
 
@@ -443,7 +488,7 @@ def send_free_reject_email(db, analysis_id: int, reason: str) -> bool:
         return False
     html = render_email("free_reject.html", child_name=row["child_name"],
                         reason=reason,
-                        retry_url=f"{settings.PUBLIC_BASE_URL}/free")
+                        retry_url=f"{settings.PUBLIC_BASE_URL}/free/r/{row['token']}")
     send_email(row["email"], f"Нужно другое фото — {settings.SITE_NAME}", html,
                kind="free_reject")
     return True

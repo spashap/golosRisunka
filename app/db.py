@@ -325,6 +325,36 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "visit_id" not in ocols:
         conn.execute("ALTER TABLE orders ADD COLUMN visit_id TEXT")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_orders_visit ON orders(visit_id)")
+    # Доступ к заказу без входа: /pay/<id>, статус оплаты и «заказ принят» отдавались
+    # ЛЮБОМУ по порядковому номеру (с email покупателя внутри). Теперь у заказа есть
+    # случайный access_token, он живёт в куке браузера, который оформлял заказ.
+    if "access_token" not in ocols:
+        conn.execute("ALTER TABLE orders ADD COLUMN access_token TEXT")
+    # Тестовые данные владельца/партнёров: 91% «выручки» в админке были тесты.
+    # is_test выставляется по списку settings.TEST_EMAILS и по куке владельца
+    # (gr_ignore); KPI/воронки/выручка такие строки не считают, списки их помечают.
+    from config import settings
+    for table, cols in (("orders", ocols), ("customers", ccols)):
+        if "is_test" not in cols:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN is_test INTEGER DEFAULT 0")
+    fcols = {r["name"] for r in conn.execute("PRAGMA table_info(free_analyses)")}
+    if "is_test" not in fcols:
+        conn.execute("ALTER TABLE free_analyses ADD COLUMN is_test INTEGER DEFAULT 0")
+    if settings.TEST_EMAILS:
+        q = ",".join("?" * len(settings.TEST_EMAILS))
+        emails = sorted(settings.TEST_EMAILS)
+        conn.execute(f"UPDATE customers SET is_test = 1 WHERE lower(email) IN ({q})", emails)
+        conn.execute(f"UPDATE orders SET is_test = 1 WHERE lower(email) IN ({q})"
+                     f" OR customer_id IN (SELECT id FROM customers WHERE is_test = 1)"
+                     f" OR coupon_code = 'YULATEST'", emails)
+        conn.execute(f"UPDATE free_analyses SET is_test = 1 WHERE lower(email) IN ({q})"
+                     f" OR customer_id IN (SELECT id FROM customers WHERE is_test = 1)"
+                     f" OR child_name_norm IN ('oleg', 'тестина')", emails)
+    # Тестовый купон партнёра (99%) — выключаем, чтобы им не оформили боевой заказ.
+    conn.execute("UPDATE coupons SET active = 0 WHERE code = 'YULATEST'")
+    # Попытки входа в админку: пароль — единственный секрет, без лимита его подбирают.
+    conn.execute("CREATE TABLE IF NOT EXISTS admin_logins (id INTEGER PRIMARY KEY,"
+                 " ok INTEGER DEFAULT 0, created_at TEXT NOT NULL)")
 
 
 def get_db() -> sqlite3.Connection:

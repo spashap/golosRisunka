@@ -6,7 +6,7 @@
 <div class="form-card" style="max-width: 560px">
   <h3>Новый промокод</h3>
   {% if error %}<p class="err" style="color:#C0392B; font-weight:600">{{ error }}</p>{% endif %}
-  <form method="post" action="/admin/coupons/create" class="admin-inline-form">
+  <form method="post" action="/admin/coupons/create" class="admin-inline-form"><input type="hidden" name="csrf" value="{{ csrf }}">
     <input class="input" name="code" placeholder="КОД (латиница/цифры)" required maxlength="24">
     <input class="input" name="percent" type="number" min="1" max="100" placeholder="Скидка %" required style="max-width: 110px">
     <label class="hint" style="white-space:nowrap"><input type="checkbox" name="multi_use" checked> многоразовый</label>
@@ -24,7 +24,7 @@
     <td>{{ c.uses_count }} раз</td>
     <td><span class="admin-status admin-status--{{ 'delivered' if c.active else 'failed' }}">{{ "активен" if c.active else "выключен" }}</span></td>
     <td>
-      <form method="post" action="/admin/coupons/{{ c.code }}/toggle">
+      <form method="post" action="/admin/coupons/{{ c.code }}/toggle"><input type="hidden" name="csrf" value="{{ csrf }}">
         <button class="status-pill status-pill--wait" type="submit">{{ "выключить" if c.active else "включить" }}</button>
       </form>
     </td>

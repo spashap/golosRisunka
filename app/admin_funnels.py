@@ -26,7 +26,10 @@
 """
 from __future__ import annotations
 
-NOT_BOT = "(v.device IS NULL OR v.device <> 'bot')"
+NOT_BOT = "(v.device IS NULL OR v.device NOT IN ('bot', 'owner'))"
+# «Настоящий» визит — браузер выполнил track.js (прислал ширину экрана). Сканеры с
+# Mozilla-UA открывают главную и попадали в «Открыл лендинг»: 596 вместо ~231 (аудит 02.09).
+REAL_VISIT = "v.screen_w IS NOT NULL"
 
 PATH, GATE = "path", "gate"
 
@@ -74,7 +77,7 @@ def _visit_types(db, since: str) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for r in db.execute(
             "SELECT v.visit_id, v.device, v.channel, v.screen_w FROM web_visits v"
-            f" WHERE v.started_at >= ? AND {NOT_BOT}", (since,)):
+            f" WHERE v.started_at >= ? AND {NOT_BOT} AND {REAL_VISIT}", (since,)):
         out[r["visit_id"]] = {"types": set(), "device": r["device"] or "—",
                               "channel": r["channel"] or "direct",
                               "screen_w": r["screen_w"]}
@@ -98,7 +101,7 @@ def _orders_by_visit(db, since: str) -> dict[str, dict]:
             " SUM(CASE WHEN paid_at IS NOT NULL THEN 1 ELSE 0 END) paid,"
             " COALESCE(SUM(CASE WHEN paid_at IS NOT NULL THEN price_kopecks ELSE 0 END), 0) k"
             " FROM orders WHERE visit_id IS NOT NULL AND created_at >= ?"
-            " GROUP BY visit_id", (since,)):
+            " AND COALESCE(is_test, 0) = 0 GROUP BY visit_id", (since,)):
         out[r["visit_id"]] = {"n": r["n"], "paid": r["paid"] or 0,
                               "rub": (r["k"] or 0) // 100}
     return out

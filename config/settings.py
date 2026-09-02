@@ -168,6 +168,30 @@ OUTBOX_DIR = DATA_DIR / "outbox"       # backend 'outbox': письма как H
 # Отправитель транзакционных писем (домен golosrisunka.ru, DKIM настраивается в Unisender).
 MAIL_FROM_EMAIL = os.getenv("MAIL_FROM_EMAIL", "sales@golosrisunka.ru")
 MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", SITE_NAME)
+# Почта поддержки в оферте/политике/контактах. По умолчанию = адрес отправителя
+# писем (sales@): он точно существует. Если заведут support@ — SUPPORT_EMAIL в .env.
+SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", MAIL_FROM_EMAIL)
+
+# Реквизиты исполнителя — та же ИП, что у shepotzvezd.ru (партнёр заказчика).
+# Единственный источник для оферты, политики, согласия и страницы контактов.
+LEGAL = {
+    "name": "ИП Семеш Александр Яковлевич",
+    "short": "ИП Семеш А. Я.",
+    "ogrnip": "318784700069865",
+    "inn": "781104605531",
+    "address": "197022, г. Санкт-Петербург, пер. Клочков, д. 6, к. 1, лит. А, кв. 47",
+    "offer_date": "2 сентября 2026 г.",
+}
+
+# Secure-флаг кук: на проде сайт только по https; на localhost флаг сломал бы вход.
+COOKIE_SECURE = PUBLIC_BASE_URL.startswith("https://")
+
+# Тестовые/владельческие адреса: заказы, клиенты и разборы с ними помечаются is_test
+# при миграции и исключаются из KPI (UseCase: 91% «выручки» в админке были тесты).
+TEST_EMAILS = {e.strip().lower() for e in os.getenv(
+    "TEST_EMAILS",
+    "spashap@gmail.com,semesh21@gmail.com,jsemesh@gmail.com,astrometricapro@gmail.com"
+).split(",") if e.strip()}
 # Транзакционный API Unisender Go. Аккаунт golosrisunka — регион go2 (EU); go1 даёт
 # 401 "User ... not found". Переопределяемо через env, если аккаунт сменит регион.
 UNISENDER_GO_API_URL = os.getenv(

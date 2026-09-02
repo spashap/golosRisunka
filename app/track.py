@@ -14,9 +14,12 @@
 from __future__ import annotations
 
 import json
+import re
 import secrets
 
 from flask import g, request
+
+from config import settings
 
 VISITOR_COOKIE = "gr_v"
 VISIT_COOKIE = "gr_s"
@@ -70,6 +73,24 @@ def classify_channel(utm: dict | None, yclid: str | None,
     return "referral"
 
 
+# Пути, по которым ходят только сканеры уязвимостей. 404 по ним — не событие сайта.
+_SCANNER_RE = re.compile(
+    r"(^/\.(?!well-known)|/\.(env|git|aws|ssh|svn|hg|docker)|/wp-|/xmlrpc\.php|\.php$|\.asp$|\.aspx$|"
+    r"/phpmyadmin|/cgi-bin|/vendor/|/console$|/actuator|/telescope|/_ignition|/\.well-known/(?!acme))",
+    re.I)
+
+
+def is_scanner_path(path: str) -> bool:
+    return bool(_SCANNER_RE.search(path or ""))
+
+
+IGNORE_COOKIE = "gr_ignore"   # браузер владельца: device='owner', заказы/разборы is_test
+
+
+def is_owner_browser() -> bool:
+    return bool(request and request.cookies.get(IGNORE_COOKIE))
+
+
 def before_request() -> None:
     """Назначает visitor_id/visit_id, ловит UTM первого касания и метки этого визита."""
     g.visitor_id = request.cookies.get(VISITOR_COOKIE) or secrets.token_urlsafe(12)
@@ -107,21 +128,26 @@ def _is_page_view(response) -> bool:
 def after_request(response):
     if getattr(g, "new_visitor", False):
         response.set_cookie(VISITOR_COOKIE, g.visitor_id, max_age=COOKIE_MAX_AGE,
-                            httponly=True, samesite="Lax")
+                            httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
     if getattr(g, "utm_is_new", False) and g.utm:
         response.set_cookie(UTM_COOKIE, json.dumps(g.utm, ensure_ascii=False),
-                            max_age=COOKIE_MAX_AGE, httponly=True, samesite="Lax")
+                            max_age=COOKIE_MAX_AGE, httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
     # Куку визита продлеваем на КАЖДОМ запросе: 30 минут неактивности = новый визит.
     # Статику пропускаем целиком: одна страница тянет с десяток файлов, и каждый из них
     # писал бы в базу отметку времени — визит от этого не становится живее.
     if (getattr(g, "visit_id", None) and not request.path.startswith("/admin")
             and not request.path.startswith(("/static/", "/favicon"))):
-        response.set_cookie(VISIT_COOKIE, g.visit_id, max_age=VISIT_MAX_AGE,
-                            httponly=True, samesite="Lax")
-        try:
-            _touch_visit(page=_is_page_view(response))
-        except Exception:          # аналитика никогда не роняет ответ
-            pass
+        page = _is_page_view(response)
+        # НОВЫЙ визит начинается только со СТРАНИЦЫ. Раньше строку визита создавал любой
+        # первый запрос — 404 на /.env, robots.txt, маяк без куки — и 90% «людей» в
+        # админке были сканерами (UseCase: аудит 02.09). Такому запросу и куку не ставим.
+        if page or not getattr(g, "new_visit", False):
+            response.set_cookie(VISIT_COOKIE, g.visit_id, max_age=VISIT_MAX_AGE,
+                                httponly=True, samesite="Lax", secure=settings.COOKIE_SECURE)
+            try:
+                _touch_visit(page=page)
+            except Exception:          # аналитика никогда не роняет ответ
+                pass
     return response
 
 
@@ -213,6 +239,10 @@ def parse_device(ua: str | None) -> str:
     Боты складываются в device='bot' и отсекаются в админ-аналитике (только люди).
     Яндекс.Браузер популярен в RU — он шлёт обычный Mozilla-UA и НЕ помечается ботом."""
     s = (ua or "").lower().strip()
+    if is_owner_browser():
+        return "owner"
+    if not s:
+        return "bot"               # пустой UA шлют только утилиты и сканеры
     if not s:
         return "unknown"
     if "+http" in s:                       # самоидентифицирующийся краулер/монитор
