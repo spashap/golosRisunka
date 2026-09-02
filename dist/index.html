@@ -31,7 +31,7 @@
 
 <link rel="preload" as="image" href="/static/img/hero-800.webp" type="image/webp" media="(max-width: 600px)" fetchpriority="high">
 <link rel="preload" as="image" href="/static/img/hero.webp" type="image/webp" media="(min-width: 601px)" fetchpriority="high">
-<link rel="stylesheet" href="/static/css/fonts.css?v=1.077">
+<link rel="stylesheet" href="/static/css/fonts.css?v=1.078">
 
 <style>/* ============================================================
    ДИЗАЙН-ТОКЕНЫ — ЕДИНСТВЕННЫЙ источник цветов/шрифтов/размеров.
@@ -1350,6 +1350,35 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 .dash-summary { margin-bottom: 18px; }
 .dash-summary .admin-kpi__n { font-size: 24px; }
+
+/* Статья блога: крошки, мета, призыв внутри, финал, «читайте также»; хаб блога */
+.post { max-width: 760px; }
+.crumbs { font-size: var(--fs-small); color: var(--muted); margin-bottom: 10px; }
+.crumbs a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.post-meta { font-size: var(--fs-small); color: var(--muted); margin: -6px 0 18px; }
+.post-cta {
+  margin: 26px 0; padding: 18px 20px; border-radius: var(--radius-card);
+  background: var(--bg-soft); border: 1px solid var(--line); border-left: 4px solid var(--accent2);
+}
+.post-cta__t { font-family: var(--font-head); font-weight: 800; font-size: var(--fs-h3); margin: 0 0 6px; }
+.post-cta__b { margin: 0 0 12px; }
+.post-end {
+  margin-top: 36px; padding: 24px 22px; text-align: center;
+  background: var(--paper); border: 2px solid var(--accent); border-radius: var(--radius-card); box-shadow: var(--shadow-hard);
+}
+.post-end__t { font-family: var(--font-head); font-weight: 900; font-size: var(--fs-h3); margin: 0 0 10px; }
+.post-end__btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 12px 0 8px; }
+.post-related { margin-top: 36px; }
+.blog-grid--3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.blog-card__cat { display: block; font-size: var(--fs-micro); font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--accent2); margin-bottom: 4px; }
+.blog-hub { max-width: 980px; }
+.blog-hub__intro { max-width: 720px; margin: 14px 0 18px; }
+.blog-hub__nav { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 22px; }
+.blog-hub__nav a { font-size: var(--fs-small); font-weight: 600; color: var(--ink); padding: 5px 12px;
+  border-radius: var(--radius-pill); background: color-mix(in srgb, var(--badge) 18%, var(--paper)); }
+.blog-hub__group { margin-top: 26px; }
+.blog-hub__group > h2 { margin-bottom: 12px; }
 </style>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Organization", "name": "Голос рисунка", "url": "https://golosrisunka.ru/", "logo": "https://golosrisunka.ru/static/img/og-default.png", "description": "Анализ детского рисунка по фото: персональный отчёт о том, что рисунок говорит о ребёнке — его характер, темы, внутренний мир, интересы и как его поддержать. Бережно, по методикам Пиаже, Ловенфельда, Выготского — наблюдение и подсказка, без гаданий и диагнозов.", "knowsLanguage": "ru"}, {"@context": "https://schema.org", "@type": "WebSite", "name": "Голос рисунка", "url": "https://golosrisunka.ru/", "inLanguage": "ru"}, {"@context": "https://schema.org", "@type": "Product", "name": "Персональный отчёт по рисункам ребёнка", "description": "Тёплый персональный PDF-отчёт по рисункам ребёнка: что его волнует и влечёт, какой у него характер и внутренний мир, какие темы он выбирает — и как его понять и поддержать. 7 направлений (личность ведёт, навыки поддерживают) с понятными объяснениями. Бережное образовательное наблюдение и подсказка, без гаданий и диагнозов.", "brand": {"@type": "Brand", "name": "Голос рисунка"}, "offers": [{"@type": "Offer", "name": "Персональный отчёт о рисунках вашего ребёнка", "price": 2999, "priceCurrency": "RUB", "url": "https://golosrisunka.ru/order?product=snapshot", "availability": "https://schema.org/InStock"}]}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Что интересного я могу узнать о ребёнке из отчёта?", "acceptedAnswer": {"@type": "Answer", "text": "Вы увидите, что волнует вашего ребёнка и к чему его тянет, какие темы и сюжеты он выбирает снова и снова, какой у него характер и подход к миру, какое настроение живёт в его рисунках — и как его понять и поддержать. А ещё — сильные стороны в рисовании. Всё бережно, по видимым деталям и методикам детского развития: как наблюдение и гипотеза, а не гадание и не диагноз."}}, {"@type": "Question", "name": "Какой возраст ребёнка подходит?", "acceptedAnswer": {"@type": "Answer", "text": "От 3 до 12 лет. В отчёте учитывается возрастной этап развития рисунка: то, что типично для трёх лет, читается иначе, чем для девяти."}}, {"@type": "Question", "name": "Что нужно прислать?", "acceptedAnswer": {"@type": "Answer", "text": "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, материалы, тема, было ли задание. Ничего специально рисовать не нужно."}}, {"@type": "Question", "name": "Как быстро придёт отчёт?", "acceptedAnswer": {"@type": "Answer", "text": "Обычно в течение часа после оплаты. PDF придёт на почту и будет доступен в личном кабинете."}}, {"@type": "Question", "name": "Это психологическая диагностика? Это не диагноз?", "acceptedAnswer": {"@type": "Answer", "text": "Это бережное наблюдение и подсказки для родителя, а не клинический диагноз. Мы помогаем понять характер, темы и внутренний мир ребёнка — опираясь на видимые детали рисунка и методики детского развития (Пиаже, Ловенфельд, Выготский), всегда в формате гипотезы, которую лучше проверить в разговоре с самим ребёнком. Это не гадание по цветам и символам и не постановка диагноза. Если вас что-то серьёзно тревожит — обратитесь к профильному специалисту."}}, {"@type": "Question", "name": "Что означают оценки 6/10, 8/10 или 9/10?", "acceptedAnswer": {"@type": "Answer", "text": "Оценки — вспомогательный слой: они относятся к конкретному рисунку или серии, а не к ребёнку как личности. Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете (например, если на рисунке один объект без персонажей)."}}, {"@type": "Question", "name": "Как понять, что отчёт не общий шаблон?", "acceptedAnswer": {"@type": "Answer", "text": "Каждое наблюдение привязано к конкретным деталям именно этого рисунка: цвету, линиям, сюжету, выбранным темам и героям, материалам и возрасту ребёнка. Поэтому отчёт не выглядит как текст «про любого ребёнка» — и поэтому мы просим не только фото, но и короткий контекст."}}, {"@type": "Question", "name": "А если рисунок меня тревожит?", "acceptedAnswer": {"@type": "Answer", "text": "Отчёт поможет спокойно увидеть, что ребёнок выражает рисунком, и отделить наблюдения от популярных мифов («тёмный цвет = тревога» и подобных). Мы не ставим диагнозов и не пугаем. Но если вас серьёзно беспокоит состояние, поведение или безопасность ребёнка, лучше обратиться к профильному специалисту — отчёт не заменяет консультацию."}}, {"@type": "Question", "name": "А если отчёт мне не понравится?", "acceptedAnswer": {"@type": "Answer", "text": "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов."}}, {"@type": "Question", "name": "Кто увидит рисунки моего ребёнка?", "acceptedAnswer": {"@type": "Answer", "text": "Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам."}}, {"@type": "Question", "name": "Как понять рисунок ребёнка 4–5 лет?", "acceptedAnswer": {"@type": "Answer", "text": "В 4–5 лет ребёнок часто переходит от «головоногов» к более полным фигурам, у него появляются любимые сюжеты и цвета. Понять рисунок — значит увидеть, что ребёнок выражает, что ему сейчас важно и на каком этапе развития он находится, а не искать «тайный смысл» по цветам. Именно это бережно показывает наш отчёт — по возрастным особенностям и видимым деталям, как наблюдение, а не диагноз."}}, {"@type": "Question", "name": "Как интерпретировать детский рисунок дома самому?", "acceptedAnswer": {"@type": "Answer", "text": "Дома полезно смотреть не на «значения цветов», а на то, что ребёнок выбирает рисовать: какие темы и сюжеты повторяются, какие герои ему важны, как уверенно он ведёт линию, как использует лист. И главное — расспрашивать самого ребёнка о его рисунке. Это бережное наблюдение за тем, что он выражает, а не гадание и не психологический диагноз."}}]}]</script>
 
@@ -1376,7 +1405,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 
-<script src="/static/js/track.js?v=1.077"></script>
+<script src="/static/js/track.js?v=1.078"></script>
 </head>
 <body>
 
@@ -1906,8 +1935,26 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Анализ детского рисунка: 7 признаков развития, на которые стоит смотреть</h3>
-            <p class="blog-card__descr">Анализ детского рисунка по делу: 7 наблюдаемых признаков развития — линия и нажим, композиция, детали, фигура человека, цвет как навык, сюжет, процесс. Образовательный разбор для родителей, без диагноза.</p>
+            <h3 class="blog-card__title">На что смотреть в рисунке ребёнка: чек-лист из 7 пунктов</h3>
+            <p class="blog-card__descr">На что смотреть в рисунке ребёнка? Практический чек-лист для родителей, который поможет лучше понять развитие, интересы и настроение момента без догадок и.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/analiz-detskogo-risunka-onlajn-besplatno" data-ym-goal="landing_blog_open_analiz-detskogo-risunka-onlajn-besplatno">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="40" y="18" width="120" height="76" rx="8" fill="none" stroke="var(--ink)" stroke-width="5"/>
+  <path d="M70 102 h60" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M60 70 C72 44 84 80 96 56 C108 36 120 70 138 48" fill="none" stroke="var(--accent2)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="150" cy="30" r="12" fill="var(--accent)"/>
+  <path d="M144 30 l4 4 8 -8" fill="none" stroke="var(--paper)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Анализ детского рисунка онлайн бесплатно: что можно узнать</h3>
+            <p class="blog-card__descr">Бесплатный анализ детского рисунка онлайн — как это работает, что вы узнаете о ребёнке по одной работе и чем это отличается от полного отчёта.</p>
           </div>
         </a>
         
@@ -1924,8 +1971,78 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Это не диагноз: образовательный анализ детского рисунка простыми словами</h3>
-            <p class="blog-card__descr">Анализ детского рисунка — это не диагноз. Чем образовательное наблюдение за развитием отличается от проективной «диагностики по рисунку», почему таблицы «значений» ненадёжны и что действительно полезно знать родителю.</p>
+            <h3 class="blog-card__title">Насколько точны тесты по детскому рисунку: что правда, а</h3>
+            <p class="blog-card__descr">Насколько точны тесты по детскому рисунку? Разбираем, что можно узнать о ребёнке надёжно (этап развития), а что — лишь гипотеза (эмоции, характер).</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/chto-risuet-rebenok-v-3-goda" data-ym-goal="landing_blog_open_chto-risuet-rebenok-v-3-goda">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M30 70 C50 20 70 110 90 50 C105 20 120 95 135 45 C145 25 160 80 172 55" fill="none" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round"/>
+  <text x="150" y="104" font-family="var(--font-head)" font-weight="900" font-size="30" fill="var(--ink)">3</text>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Что рисует ребёнок в 3 года: норма, каракули и головоноги</h3>
+            <p class="blog-card__descr">Что рисует ребёнок в 3 года и что считать нормой? Разбираемся в каракулях, кругах и первых человечках-головоногах. Советы, как поддержать юного художника.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/chto-risuet-rebenok-v-4-goda" data-ym-goal="landing_blog_open_chto-risuet-rebenok-v-4-goda">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <circle cx="80" cy="52" r="26" fill="none" stroke="var(--ink)" stroke-width="5"/>
+  <circle cx="70" cy="46" r="3" fill="var(--ink)"/><circle cx="90" cy="46" r="3" fill="var(--ink)"/>
+  <path d="M70 60 q10 8 20 0" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M62 76 l-14 26 M98 76 l14 26 M54 54 l-22 -6 M106 54 l22 -6" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  <text x="150" y="104" font-family="var(--font-head)" font-weight="900" font-size="30" fill="var(--accent)">4</text>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Что рисует ребёнок в 4 года: головоног — это нормально?</h3>
+            <p class="blog-card__descr">Ваш ребёнок в 4 года рисует головонога? Узнайте, почему это нормальный этап развития, что ещё типично для этого возраста и как бережно обсудить рисунки с.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/chto-risuet-rebenok-v-5-let" data-ym-goal="landing_blog_open_chto-risuet-rebenok-v-5-let">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M20 96 h160" stroke="var(--accent2)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M50 96 v-34 l20 -18 l20 18 v34 Z" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="150" cy="30" r="12" fill="none" stroke="var(--accent)" stroke-width="4"/>
+  <path d="M150 12 v-6 M150 48 v6 M132 30 h-6 M168 30 h6" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
+  <text x="112" y="90" font-family="var(--font-head)" font-weight="900" font-size="26" fill="var(--ink)">5</text>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Рисунок ребёнка 5 лет: что норма, а что нет</h3>
+            <p class="blog-card__descr">Рисунок ребёнка 5 лет — это уже целая история. Узнайте, что должен уметь рисовать пятилетний ребёнок, как понять его рисунки и поддержать развитие.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/chto-risuet-rebenok-v-6-7-let" data-ym-goal="landing_blog_open_chto-risuet-rebenok-v-6-7-let">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M20 96 h160" stroke="var(--accent2)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M40 96 v-40 M40 56 l16 20 M40 56 l-14 20" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="40" cy="44" r="10" fill="none" stroke="var(--ink)" stroke-width="5"/>
+  <path d="M78 96 v-46 M78 50 l18 22 M78 50 l-16 22" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="78" cy="36" r="12" fill="none" stroke="var(--ink)" stroke-width="5"/>
+  <text x="122" y="88" font-family="var(--font-head)" font-weight="900" font-size="26" fill="var(--accent)">6–7</text>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Рисунок ребёнка 6–7 лет: что норма, а что нет</h3>
+            <p class="blog-card__descr">Рисунок ребёнка 6–7 лет кажется вам слишком простым? Узнайте, что такое схематическая стадия, почему дети в этом возрасте часто „плохо рисуют“ и как.</p>
           </div>
         </a>
         
@@ -1943,8 +2060,8 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Что можно узнать по рисунку ребёнка (и чего по нему узнать нельзя)</h3>
-            <p class="blog-card__descr">Что на самом деле можно узнать по рисунку ребёнка — этап развития навыков, а не «скрытые» эмоции. Честный разбор: что рисунок показывает, чего не показывает и на какие признаки смотреть родителю.</p>
+            <h3 class="blog-card__title">Что можно узнать по рисунку ребёнка: честный гид для</h3>
+            <p class="blog-card__descr">Что можно узнать по рисунку ребёнка? Этап развития — надёжно. Интересы, настроение и манеру — как гипотезы. Объясняем, на что смотреть, а чего не стоит.</p>
           </div>
         </a>
         
@@ -1959,8 +2076,25 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Как понять рисунок ребёнка без психолога: спокойная инструкция для родителей</h3>
-            <p class="blog-card__descr">Как понять рисунок ребёнка дома, без психолога: на что смотреть по возрастам, какие вопросы задавать и каких трактовок избегать. Образовательный подход — наблюдения за навыками, без диагноза.</p>
+            <h3 class="blog-card__title">Как понять рисунок ребёнка: пошаговая инструкция для родителей</h3>
+            <p class="blog-card__descr">Как понять рисунок ребёнка самостоятельно? Подробная инструкция для родителей: на что смотреть, какие вопросы задавать и как читать рисунки по возрастам.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/malenkie-risunki-v-uglu-lista" data-ym-goal="landing_blog_open_malenkie-risunki-v-uglu-lista">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="24" y="14" width="152" height="92" rx="5" fill="none" stroke="var(--ink)" stroke-width="4"/>
+  <circle cx="46" cy="86" r="6" fill="none" stroke="var(--accent)" stroke-width="3"/>
+  <path d="M46 92 v10 M40 98 h12 M42 104 l-4 6 M50 104 l4 6" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M120 40 a12 12 0 1 0 0.1 0" fill="none" stroke="var(--soft)" stroke-width="2" stroke-dasharray="3 5"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Ребёнок рисует маленькие рисунки в углу: что это значит</h3>
+            <p class="blog-card__descr">Ребёнок рисует маленькие рисунки в углу листа, и вас это беспокоит? Разбираемся, почему так бывает и как мягко поговорить с ребёнком о его работе.</p>
           </div>
         </a>
         
@@ -1978,8 +2112,8 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">PDF-отчёт по детскому рисунку: что внутри и как это работает</h3>
-            <p class="blog-card__descr">PDF-отчёт по детскому рисунку «Голос рисунка»: что внутри, как загрузить рисунок по фото и получить тёплый разбор по 7 направлениям развития с занятиями. На основе методик Пиаже, Ловенфельда, Выготского. Без диагноза.</p>
+            <h3 class="blog-card__title">Отчёт по детскому рисунку: что внутри и как он помогает</h3>
+            <p class="blog-card__descr">Что входит в полный отчёт по детскому рисунку от «Голоса рисунка». Подробный разбор по 7 направлениям, примеры и объяснения. Без диагнозов.</p>
           </div>
         </a>
         
@@ -1998,8 +2132,8 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Почему ребёнок рисует одно и то же: нормально ли это</h3>
-            <p class="blog-card__descr">Ребёнок рисует одно и то же — одного героя, дом или сюжет снова и снова? Почему повторение в детском рисунке нормально и даже полезно, что это говорит о развитии и когда стоит присмотреться.</p>
+            <h3 class="blog-card__title">Ребёнок рисует одно и то же: почему это нормально и полезно</h3>
+            <p class="blog-card__descr">Ребёнок рисует одно и то же снова и снова? Разбираемся, почему повторение в детском рисунке — признак развития, а не проблема, и как мягко поддержать.</p>
           </div>
         </a>
         
@@ -2017,27 +2151,8 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Развивающие задания по рисунку: 10 игр, которые поддержат развитие ребёнка</h3>
-            <p class="blog-card__descr">Развивающие задания по рисунку ребёнка: 10 простых игр по возрастам на линию, композицию, детали и воображение. По 10 минут, без давления — для родителей, на основе методик развития рисунка.</p>
-          </div>
-        </a>
-        
-        <a class="blog-card" href="/blog/risunok-semi-rebenka" data-ym-goal="landing_blog_open_risunok-semi-rebenka">
-          <div class="blog-card__thumb">
-
-<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-  <path d="M100 16 c-5 -7 -16 -3 -16 5 c0 8 16 16 16 16 c0 0 16 -8 16 -16 c0 -8 -11 -12 -16 -5 Z" fill="var(--accent2)"/>
-  <g fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
-    <circle cx="48" cy="52" r="13"/><path d="M48 65 V92 M48 72 L34 84 M48 72 L62 84 M48 92 L39 108 M48 92 L57 108"/>
-    <circle cx="100" cy="60" r="11"/><path d="M100 71 V94 M100 77 L88 88 M100 77 L112 88 M100 94 L92 108 M100 94 L108 108"/>
-    <circle cx="150" cy="68" r="9"/><path d="M150 77 V96 M150 82 L140 90 M150 82 L160 90 M150 96 L143 108 M150 96 L157 108"/>
-  </g>
-</svg>
-
-</div>
-          <div class="blog-card__body">
-            <h3 class="blog-card__title">Что означает рисунок семьи ребёнка: что правда, а что миф</h3>
-            <p class="blog-card__descr">Что означает рисунок семьи ребёнка — кто больше, кого «забыл», кто с краю? Спокойный разбор популярных трактовок «рисунка семьи»: что действительно видно, а что домыслы. Образовательный взгляд, без диагноза.</p>
+            <h3 class="blog-card__title">Упражнения по рисованию для детей 4-5-6 лет: 12 простых игр</h3>
+            <p class="blog-card__descr">Упражнения по рисованию для детей 4, 5 и 6 лет для развития моторики, воображения и речи. 12 простых игр, которые помогут ребёнку рисовать с удовольствием.</p>
           </div>
         </a>
         
@@ -2055,8 +2170,24 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Почему ребёнок рисует людей без лица, рук или глаз</h3>
-            <p class="blog-card__descr">Человечки без лица, рук, ушей или тела («головоноги») — что это значит на самом деле. Возрастные этапы рисунка человека, когда пропуски деталей — норма, и что они говорят о развитии навыков.</p>
+            <h3 class="blog-card__title">Ребёнок рисует людей без лица и рук: что это значит</h3>
+            <p class="blog-card__descr">Ребёнок рисует людей без лица, рук или глаз? Разбираем, почему это нормальный этап развития, а не тревожный знак. Что делать родителям, чтобы помочь.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/rebenok-perestal-risovat" data-ym-goal="landing_blog_open_rebenok-perestal-risovat">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="30" y="22" width="90" height="76" rx="6" fill="none" stroke="var(--soft)" stroke-width="3" stroke-dasharray="6 6"/>
+  <g transform="rotate(-25 150 70)"><rect x="128" y="64" width="46" height="13" rx="4" fill="var(--ink)"/><path d="M174 64 L187 70.5 L174 77 Z" fill="var(--ink)"/></g>
+  <path d="M44 60 C52 54 60 66 68 60" fill="none" stroke="var(--accent2)" stroke-width="4" stroke-linecap="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Ребёнок перестал рисовать: что делать и как вернуть интерес</h3>
+            <p class="blog-card__descr">Ребёнок перестал рисовать, и вы беспокоитесь? Разбираем причины по возрастам, даём спокойные советы, что делать, чтобы вернуть радость творчества.</p>
           </div>
         </a>
         
@@ -2075,8 +2206,8 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Ребёнок рисует только чёрным цветом: тревожиться или нет?</h3>
-            <p class="blog-card__descr">Почему ребёнок выбирает чёрный фломастер или карандаш, что об этом известно из исследований детского рисунка, что типично по возрастам и когда действительно стоит присмотреться.</p>
+            <h3 class="blog-card__title">Ребёнок рисует чёрным цветом: что это значит на самом деле</h3>
+            <p class="blog-card__descr">Ребёнок рисует только чёрным цветом, и вас это беспокоит? Разбираем 8 причин, почему дети выбирают тёмные тона, что нормально по возрасту и как поговорить.</p>
           </div>
         </a>
         
@@ -2092,8 +2223,47 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Ребёнок рисует себя одного, без семьи и друзей: стоит ли волноваться?</h3>
-            <p class="blog-card__descr">На рисунках ребёнок всегда один — без родителей, братьев и друзей. Когда это обычная особенность рисования, а когда повод присмотреться. Возрастные нормы и спокойные вопросы для разговора.</p>
+            <h3 class="blog-card__title">Ребёнок рисует себя одного: когда это норма, а когда — сигнал</h3>
+            <p class="blog-card__descr">Ваш ребёнок рисует себя одного, без семьи и друзей? Разбираемся, почему это чаще всего нормально и связано с этапами рисования, а не с одиночеством.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/rebenok-zakrashivaet-lica" data-ym-goal="landing_blog_open_rebenok-zakrashivaet-lica">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <circle cx="70" cy="46" r="20" fill="none" stroke="var(--ink)" stroke-width="5"/>
+  <path d="M70 66 v34 M50 80 h40" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M54 32 l32 30 M86 32 l-32 30" stroke="var(--accent)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="140" cy="46" r="20" fill="none" stroke="var(--ink)" stroke-width="5"/>
+  <path d="M140 66 v34 M120 80 h40" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="133" cy="42" r="2.5" fill="var(--ink)"/><circle cx="147" cy="42" r="2.5" fill="var(--ink)"/>
+  <path d="M132 53 q8 6 16 0" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Ребёнок закрашивает лица на рисунке: что это значит?</h3>
+            <p class="blog-card__descr">Ребёнок закрашивает лица или зачёркивает людей на рисунках? Разбираем 7 причин: от игры и недовольства результатом до выражения сложных чувств.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/risunok-semi-rebenka" data-ym-goal="landing_blog_open_risunok-semi-rebenka">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M100 16 c-5 -7 -16 -3 -16 5 c0 8 16 16 16 16 c0 0 16 -8 16 -16 c0 -8 -11 -12 -16 -5 Z" fill="var(--accent2)"/>
+  <g fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round">
+    <circle cx="48" cy="52" r="13"/><path d="M48 65 V92 M48 72 L34 84 M48 72 L62 84 M48 92 L39 108 M48 92 L57 108"/>
+    <circle cx="100" cy="60" r="11"/><path d="M100 71 V94 M100 77 L88 88 M100 77 L112 88 M100 94 L92 108 M100 94 L108 108"/>
+    <circle cx="150" cy="68" r="9"/><path d="M150 77 V96 M150 82 L140 90 M150 82 L160 90 M150 96 L143 108 M150 96 L157 108"/>
+  </g>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Что означает рисунок семьи ребёнка: как понять без домыслов</h3>
+            <p class="blog-card__descr">Что означает рисунок семьи вашего ребёнка на самом деле? Разбираем популярные мифы о размерах, расположении и «забытых» фигурах. Спокойный взгляд на то.</p>
           </div>
         </a>
         
@@ -2112,8 +2282,8 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Ребёнок рисует монстров, войну и страшное: это тревожный знак?</h3>
-            <p class="blog-card__descr">Монстры, драки, кровь и взрывы в детских рисунках — когда это нормальная игра, а когда повод присмотреться. Возрастные нормы, типичные сюжеты и спокойные вопросы вместо допроса.</p>
+            <h3 class="blog-card__title">Ребёнок рисует монстров и страшное: это тревожный знак?</h3>
+            <p class="blog-card__descr">Монстры, кровь и взрывы в детских рисунках — что это значит на самом деле. Разбираем, когда это нормальная игра, а когда стоит присмотреться к поведению.</p>
           </div>
         </a>
         
@@ -2132,8 +2302,67 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">Анализ детского рисунка по цветам: что значат тёмные цвета на самом деле</h3>
-            <p class="blog-card__descr">Анализ детского рисунка по цветам без мифов: почему «психология цвета» — миф, что значат чёрный, серый, тёмно-синий по возрастам и какие признаки в рисунке действительно информативны. Образовательный разбор для родителей.</p>
+            <h3 class="blog-card__title">Значение цветов в детском рисунке: что говорит выбор цвета</h3>
+            <p class="blog-card__descr">Значение цветов в детском рисунке — красный, чёрный, жёлтый. Разбираемся, почему популярные трактовки не работают и на что смотреть на самом деле.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/test-dom-derevo-chelovek-nesushchestvuyushchee-zhivotnoe" data-ym-goal="landing_blog_open_test-dom-derevo-chelovek-nesushchestvuyushchee-zhivotnoe">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <path d="M24 94 v-30 l18 -16 l18 16 v30 Z" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M92 94 v-30" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="92" cy="50" r="18" fill="none" stroke="var(--accent2)" stroke-width="5"/>
+  <path d="M132 92 c0 -18 10 -30 26 -30 c14 0 22 10 22 22 c0 6 -4 8 -8 8 h-30 Z" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="166" cy="66" r="2.5" fill="var(--accent)"/>
+  <path d="M146 62 l-6 -12 M156 60 l2 -14" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Тест Дом-Дерево-Человек и Несуществующее животное</h3>
+            <p class="blog-card__descr">Тест «Дом-Дерево-Человек» и «Несуществующее животное» для детей. Что эти рисунки говорят о ребёнке, а что — нет. Как провести тест дома и о чём поговорить.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/test-narisuj-cheloveka-rasshifrovka" data-ym-goal="landing_blog_open_test-narisuj-cheloveka-rasshifrovka">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <g stroke="var(--ink)" stroke-width="5" stroke-linecap="round" fill="none">
+    <circle cx="90" cy="30" r="16"/><path d="M90 46 v36 M64 60 h52 M90 82 l-16 26 M90 82 l16 26"/>
+  </g>
+  <g stroke="var(--accent)" stroke-width="3" stroke-dasharray="4 5" fill="none">
+    <path d="M120 30 h40 M120 60 h40 M120 82 h40"/>
+  </g>
+  <circle cx="166" cy="30" r="4" fill="var(--accent2)"/><circle cx="166" cy="60" r="4" fill="var(--accent2)"/><circle cx="166" cy="82" r="4" fill="var(--accent2)"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Тест «Нарисуй человека»: расшифровка для родителей</h3>
+            <p class="blog-card__descr">Тест «Нарисуй человека» — что он покажет? Расшифровка для детей 3–12 лет: как оценить развитие и что значат детали рисунка без домыслов.</p>
+          </div>
+        </a>
+        
+        <a class="blog-card" href="/blog/test-risunok-semi-rasshifrovka" data-ym-goal="landing_blog_open_test-risunok-semi-rasshifrovka">
+          <div class="blog-card__thumb">
+
+<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <g stroke="var(--ink)" stroke-width="5" stroke-linecap="round" fill="none">
+    <circle cx="50" cy="40" r="14"/><path d="M50 54 v40 M34 72 h32"/>
+    <circle cx="100" cy="44" r="12"/><path d="M100 56 v38 M86 72 h28"/>
+    <circle cx="146" cy="58" r="9"/><path d="M146 67 v27 M136 80 h20"/>
+  </g>
+  <path d="M20 100 h160" stroke="var(--accent2)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M160 22 l6 12 13 2 -9 9 2 13 -12 -6 -12 6 2 -13 -9 -9 13 -2 Z" fill="var(--accent)"/>
+</svg>
+
+</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">Тест «Рисунок семьи»: расшифровка для родителей без диагнозов</h3>
+            <p class="blog-card__descr">Как провести тест «Рисунок семьи» дома и что он может рассказать о ребёнке. Расшифровка деталей, частые вопросы и что спросить у маленького художника.</p>
           </div>
         </a>
         
@@ -2153,8 +2382,8 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 
 </div>
           <div class="blog-card__body">
-            <h3 class="blog-card__title">«Злые» рисунки: ребёнок черкает, давит на карандаш, рвёт бумагу</h3>
-            <p class="blog-card__descr">Ребёнок рисует со злостью — продавливает бумагу, яростно зачёркивает, рвёт рисунки? Где граница между нормальной разрядкой, перфекционизмом и поводом присмотреться. Спокойный разбор для родителей.</p>
+            <h3 class="blog-card__title">Ребёнок сильно давит на карандаш и рвёт рисунки: что делать</h3>
+            <p class="blog-card__descr">Ребёнок сильно давит на карандаш, рвёт бумагу, яростно зачёркивает рисунки? Разбираем причины: от моторики до перфекционизма. Советы родителям.</p>
           </div>
         </a>
         
@@ -2174,7 +2403,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.077</span>
+    <span class="foot-ver">V1.078</span>
   </div>
 </footer>
 

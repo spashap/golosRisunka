@@ -1,24 +1,61 @@
 {% extends "_base.html" %}
 {% from "_blog_thumb.html" import thumb %}
-{% block title %}Блог — Голос рисунка{% endblock %}
-{% block description %}Статьи о детском рисунке и развитии: этапы, наблюдения, занятия для родителей.{% endblock %}
+{% block title %}Блог о детском рисунке: что рисунок говорит о ребёнке{% endblock %}
+{% block description %}Статьи для родителей о детском рисунке: тревожные сюжеты, чёрный цвет, рисунок семьи, что типично по возрастам, тесты и расшифровки — спокойно и без диагнозов.{% endblock %}
+{% block og %}
+<link rel="canonical" href="https://{{ site_domain }}/blog">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ self.title() }}">
+<meta property="og:description" content="{{ self.description() }}">
+<meta property="og:url" content="https://{{ site_domain }}/blog">
+<meta property="og:site_name" content="Голос рисунка">
+<meta property="og:image" content="https://{{ site_domain }}/static/img/og-default.png">
+{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "CollectionPage",
+ "name": "Блог о детском рисунке", "url": "https://{{ site_domain }}/blog", "inLanguage": "ru",
+ "mainEntity": {"@type": "ItemList", "itemListElement": [
+ {% for p in posts %}{"@type": "ListItem", "position": {{ loop.index }}, "url": "https://{{ site_domain }}/blog/{{ p.slug }}", "name": {{ p.title | tojson }}}{% if not loop.last %},{% endif %}{% endfor %}]}}
+</script>
+{% endblock %}
 {% block body %}
 <div class="section">
-  <div class="wrap" style="max-width: 980px">
+  <div class="wrap blog-hub">
     <h1 class="h2">Блог о детском рисунке</h1>
-    <p class="sub" style="margin-top: 8px">Спокойные ответы на родительские вопросы о детском рисунке</p>
-    {% if posts %}
-    <div class="blog-grid">
-      {% for p in posts %}
-      <a class="blog-card" href="/blog/{{ p.slug }}" data-ym-goal="blog_open_{{ p.slug }}">
-        <div class="blog-card__thumb">{{ thumb(p.slug) }}</div>
-        <div class="blog-card__body">
-          <h3 class="blog-card__title">{{ p.title }}</h3>
-          <p class="blog-card__descr">{{ p.description }}</p>
-        </div>
-      </a>
-      {% endfor %}
+    <p class="sub" style="margin-top: 8px">Что рисунок говорит о ребёнке — и чего не говорит. Без гаданий и диагнозов.</p>
+    <div class="blog-hub__intro prose">
+      <p>Родители приходят к детскому рисунку с вопросом: «это нормально?». Ребёнок рисует только чёрным,
+        монстров, себя одного, людей без лиц — или перестал рисовать вовсе. Здесь мы разбираем такие
+        ситуации спокойно: что об этом говорит традиция анализа детского рисунка, что действительно
+        типично для возраста, а что стоит просто спросить у самого ребёнка.</p>
+      <p>Статьи сгруппированы по рубрикам: тревоги родителей, что типично по возрастам, как читать
+        рисунок самому, популярные тесты и их честные границы, игры для рисования. В каждой — чек-лист
+        «что сделать сегодня» и вопросы, которые можно задать ребёнку. А если рисунок под рукой —
+        <a href="/free/#name" data-ym-goal="blog_hub_free">загрузите его и получите бесплатный разбор</a>.</p>
     </div>
+    {% if groups %}
+    <nav class="blog-hub__nav" aria-label="Рубрики">
+      {% for key, label, items in groups %}<a href="#{{ key }}">{{ label }} · {{ items|length }}</a>{% endfor %}
+    </nav>
+    {% for key, label, items in groups %}
+    <section class="blog-hub__group" id="{{ key }}">
+      <h2 class="h3">{{ label }}</h2>
+      <div class="blog-grid">
+        {% for p in items %}
+        <a class="blog-card" href="/blog/{{ p.slug }}" data-ym-goal="blog_open_{{ p.slug }}">
+          <div class="blog-card__thumb">{{ thumb(p.slug) }}</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">{{ p.title }}</h3>
+            <p class="blog-card__descr">{{ p.description }}</p>
+            <span class="blog-card__date">{{ p.modified.strftime('%d.%m.%Y') }} · {{ (p.words / 180) | round | int }} мин</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
     {% else %}
       <p class="sub">Статьи скоро появятся.</p>
     {% endif %}

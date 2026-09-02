@@ -876,7 +876,9 @@ def order_success(order_id: int):
 @bp.get("/blog")
 def blog_index():
     track_event("blog_index_view")
-    return render_template("blog_index.html", posts=get_posts())
+    posts = get_posts()
+    from app.blog import by_category
+    return render_template("blog_index.html", posts=posts, groups=by_category(posts))
 
 
 @bp.get("/blog/<slug>")
@@ -887,7 +889,12 @@ def blog_post(slug: str):
     # Статьи — целый SEO-канал, и до сих пор их чтение не фиксировалось никак:
     # были видны только исходящие клики, то есть лишь те, кто дочитал и ушёл дальше.
     track_event("blog_post_view", {"slug": slug})
-    return render_template("blog_post.html", post=post)
+    from app.blog import MID_CTA_MARKER, related_posts
+    posts = get_posts()
+    mid_cta = render_template("_blog_mid_cta.html", post=post)
+    html = post.html.replace(MID_CTA_MARKER, mid_cta)
+    return render_template("blog_post.html", post=post, post_html=html,
+                           related=related_posts(post, posts))
 
 
 # --- Юридические страницы (тексты-плейсхолдеры до Phase 9) ---
@@ -955,7 +962,7 @@ def sitemap():
             ("/privacy", "0.2", None), ("/terms", "0.2", None),
             ("/contacts", "0.3", None)]
     urls += [(f"/primer/{s.token}", "0.8", None) for s in get_samples()]
-    urls += [(f"/blog/{p.slug}", "0.7", p.date.isoformat()) for p in get_posts()]
+    urls += [(f"/blog/{p.slug}", "0.7", p.modified.isoformat()) for p in get_posts()]
     items = "\n".join(
         f"<url><loc>{base}{path}</loc>"
         + (f"<lastmod>{lastmod}</lastmod>" if lastmod else "")

@@ -102,6 +102,11 @@ ACTIONS: list[tuple[str, str, str, bool, bool]] = [
 
     # Контент
     ("blogpost_order", "Статья: к заказу", "блог", True, False),
+    ("blogpost_free", "Статья: к бесплатному разбору (конец)", "блог", True, True),
+    ("blogpost_free_mid", "Статья: к бесплатному разбору (середина)", "блог", True, False),
+    ("blogpost_crumb_home", "Статья: крошки → главная", "блог", False, False),
+    ("blog_related_open", "Статья: открыл «Читайте также»", "блог", False, False),
+    ("blog_hub_free", "Блог-хаб: к бесплатному разбору", "блог", True, False),
     ("blogpost_sample", "Статья: к примеру отчёта", "блог", True, False),
     ("blogpost_sample_btn", "Статья: кнопка примера", "блог", False, False),
     ("blogpost_back_blog", "Статья: назад в блог", "блог", False, False),

@@ -1,5 +1,6 @@
 {% extends "_base.html" %}
-{% block title %}{{ post.title }} — Голос рисунка{% endblock %}
+{% from "_blog_thumb.html" import thumb %}
+{% block title %}{{ post.seo_title or post.title }}{% endblock %}
 {% block description %}{{ post.description }}{% endblock %}
 {% block og %}
 <link rel="canonical" href="https://{{ site_domain }}/blog/{{ post.slug }}">
@@ -11,6 +12,9 @@
 <meta property="og:site_name" content="Голос рисунка">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:image" content="https://{{ site_domain }}/static/img/og-default.png">
+<meta property="article:published_time" content="{{ post.date.isoformat() }}">
+<meta property="article:modified_time" content="{{ post.modified.isoformat() }}">
+<meta property="article:section" content="{{ post.category_label }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ post.title }}">
 <meta name="twitter:description" content="{{ post.description }}">
@@ -22,28 +26,74 @@
  "headline": {{ post.title | tojson }},
  "description": {{ post.description | tojson }},
  "datePublished": "{{ post.date.isoformat() }}",
- "dateModified": "{{ post.date.isoformat() }}",
+ "dateModified": "{{ post.modified.isoformat() }}",
  "inLanguage": "ru",
+ "articleSection": {{ post.category_label | tojson }},
+ "wordCount": {{ post.words }},
+ "image": "https://{{ site_domain }}/static/img/og-default.png",
  "mainEntityOfPage": {"@type": "WebPage", "@id": "https://{{ site_domain }}/blog/{{ post.slug }}"},
- "author": {"@type": "Organization", "name": "Голос рисунка"},
- "publisher": {"@type": "Organization", "name": "Голос рисунка"}}
+ "author": {"@type": "Person", "name": "Редакция «Голос рисунка»", "url": "https://{{ site_domain }}/contacts"},
+ "publisher": {"@type": "Organization", "name": "Голос рисунка",
+   "logo": {"@type": "ImageObject", "url": "https://{{ site_domain }}/static/img/logo-strip.png"}}}
 </script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+ {"@type": "ListItem", "position": 1, "name": "Главная", "item": "https://{{ site_domain }}/"},
+ {"@type": "ListItem", "position": 2, "name": "Блог", "item": "https://{{ site_domain }}/blog"},
+ {"@type": "ListItem", "position": 3, "name": {{ post.title | tojson }}}]}
+</script>
+{% if post.faq %}
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+ {% for q, a in post.faq %}{"@type": "Question", "name": {{ q | tojson }},
+  "acceptedAnswer": {"@type": "Answer", "text": {{ a | tojson }}}}{% if not loop.last %},{% endif %}
+ {% endfor %}]}
+</script>
+{% endif %}
 {% endblock %}
 {% block body %}
 <div class="section">
-  <article class="wrap prose" style="max-width: 760px" data-track-section="article">
-    <p class="hint" style="margin-bottom: 6px"><a href="/blog" data-ym-goal="blogpost_back_blog">Блог</a></p>
+  <article class="wrap prose post" data-track-section="article">
+    <nav class="crumbs" aria-label="Хлебные крошки">
+      <a href="/" data-ym-goal="blogpost_crumb_home">Главная</a> › <a href="/blog" data-ym-goal="blogpost_back_blog">Блог</a>
+      › <span>{{ post.category_label }}</span>
+    </nav>
     <h1 class="h2">{{ post.title }}</h1>
-    {{ post.html | safe }}
-    <div class="form-card" style="margin-top: 36px; text-align: center">
-      <p style="margin-top: 0">Хотите спокойно понять, что рисунки говорят о вашем ребёнке —
-        по видимым деталям, без диагноза? Посмотрите <a href="/#primery" data-ym-goal="blogpost_sample">пример анализа детского рисунка</a>
-        или закажите отчёт по фото.</p>
-      <p style="margin-bottom: 0; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
-        <a class="btn btn--primary" href="/order" data-ym-goal="blogpost_order">Получить отчёт по рисунку</a>
-        <a class="btn btn--ghost" href="/#primery" data-ym-goal="blogpost_sample_btn">Посмотреть пример</a>
+    <p class="post-meta">
+      <time datetime="{{ post.date.isoformat() }}">{{ post.date.strftime('%d.%m.%Y') }}</time>
+      {% if post.updated and post.updated != post.date %} · обновлено <time datetime="{{ post.updated.isoformat() }}">{{ post.updated.strftime('%d.%m.%Y') }}</time>{% endif %}
+      · {{ (post.words / 180) | round | int }} мин чтения
+      · Редакция «Голос рисунка»
+    </p>
+    {{ post_html | safe }}
+
+    <div class="post-end">
+      <p class="post-end__t">Хотите понять, что говорит рисунок именно вашего ребёнка?</p>
+      <p>Загрузите фото — бесплатный разбор одного рисунка займёт около минуты: что в нём видно,
+        о чём спросить ребёнка. Полный отчёт по 1–3 рисункам — если захочется глубже.</p>
+      <p class="post-end__btns">
+        <a class="btn btn--primary" href="/free/#name" data-ym-goal="blogpost_free">Проверить свой рисунок бесплатно</a>
+        <a class="btn btn--ghost" href="/order" data-ym-goal="blogpost_order">Заказать полный отчёт</a>
       </p>
+      <p class="hint"><a href="/#primery" data-ym-goal="blogpost_sample">Посмотреть примеры отчётов</a></p>
     </div>
+
+    {% if related %}
+    <section class="post-related" aria-label="Читайте также">
+      <h2 class="h3">Читайте также</h2>
+      <div class="blog-grid blog-grid--3">
+        {% for p in related %}
+        <a class="blog-card" href="/blog/{{ p.slug }}" data-ym-goal="blog_related_open">
+          <div class="blog-card__thumb">{{ thumb(p.slug) }}</div>
+          <div class="blog-card__body">
+            <span class="blog-card__cat">{{ p.category_label }}</span>
+            <h3 class="blog-card__title">{{ p.title }}</h3>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
   </article>
 </div>
 {% endblock %}
