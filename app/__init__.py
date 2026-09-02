@@ -17,6 +17,8 @@ def create_app() -> Flask:
     app.config["MAX_CONTENT_LENGTH"] = settings.UPLOAD_MAX_BYTES * 3 + 1_000_000
 
     init_db()
+    # /blog и /blog/ — одна страница: варианты со слешем отвечали 404 (аудит 02.09, I7).
+    app.url_map.strict_slashes = False
     app.before_request(track.before_request)
     app.after_request(track.after_request)
 

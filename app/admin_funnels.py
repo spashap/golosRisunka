@@ -26,6 +26,8 @@
 """
 from __future__ import annotations
 
+import json
+
 NOT_BOT = "(v.device IS NULL OR v.device NOT IN ('bot', 'owner'))"
 # «Настоящий» визит — браузер выполнил track.js (прислал ширину экрана). Сканеры с
 # Mozilla-UA открывают главную и попадали в «Открыл лендинг»: 596 вместо ~231 (аудит 02.09).
@@ -109,6 +111,40 @@ def _orders_by_visit(db, since: str) -> dict[str, dict]:
             " AND COALESCE(is_test, 0) = 0 GROUP BY visit_id", (since,)):
         out[r["visit_id"]] = {"n": r["n"], "paid": r["paid"] or 0,
                               "rub": (r["k"] or 0) // 100}
+    return out
+
+
+def _order_channel_by_utm(utm_json: str | None, free_token: str | None) -> str:
+    """Канал заказа, у которого нет визита (создан до модели визитов 14.08 или
+    оформлен без куки): по UTM самого заказа. Иначе единственная реальная продажа
+    в «Каналах» показывала 0, а строкой ниже «yandex / cpc» — 1 490 ₽."""
+    try:
+        u = json.loads(utm_json) if utm_json else {}
+    except ValueError:
+        u = {}
+    medium = (u.get("utm_medium") or "").lower()
+    source = (u.get("utm_source") or "").lower()
+    if medium in ("cpc", "ppc", "paid", "cpm", "banner", "ads") or "yclid" in (utm_json or ""):
+        return "ads"
+    if source in ("yandex", "google", "ya", "bing"):
+        return "organic"
+    if source == "email":
+        return "email"
+    if source:
+        return "referral"
+    return "direct"
+
+
+def _orders_without_visit(db, since: str, seen_visits: set[str]) -> list[tuple[str, int, int]]:
+    out = []
+    for r in db.execute(
+            "SELECT visit_id, utm_json, free_token, paid_at, price_kopecks FROM orders"
+            " WHERE created_at >= ? AND COALESCE(is_test, 0) = 0", (since,)):
+        if r["visit_id"] and r["visit_id"] in seen_visits:
+            continue
+        out.append((_order_channel_by_utm(r["utm_json"], r["free_token"]),
+                    1 if r["paid_at"] else 0,
+                    (r["price_kopecks"] // 100) if r["paid_at"] else 0))
     return out
 
 
@@ -199,6 +235,12 @@ def build(db, since: str) -> dict:
             ch["orders"] += o["n"]
             ch["paid"] += o["paid"]
             ch["rub"] += o["rub"]
+    # Заказы без визита в этом периоде — по UTM заказа, чтобы деньги не пропадали.
+    for ch_key, paid, rub in _orders_without_visit(db, since, set(visits)):
+        ch = channels.setdefault(ch_key, {"visits": 0, "orders": 0, "paid": 0, "rub": 0})
+        ch["orders"] += 1
+        ch["paid"] += paid
+        ch["rub"] += rub
     return {
         "paid": _funnel(visits, orders, PAID_STEPS, "landing_view"),
         "free": _funnel(visits, orders, FREE_STEPS, "free_view", with_paid=False),

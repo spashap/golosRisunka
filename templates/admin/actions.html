@@ -26,7 +26,7 @@
   <thead><tr><th>Событие</th><th>Срабатываний</th><th>Уникальных</th><th>Последнее (UTC)</th></tr></thead>
   <tbody>
   {% for s in summary %}
-  <tr><td>{{ s.type }}</td><td><b>{{ s.n }}</b></td><td>{{ s.users }}</td>
+  <tr><td>{{ s.type }}{% if s.label %}<br><span class="hint">{{ s.label }}</span>{% endif %}</td><td><b>{{ s.n }}</b></td><td>{{ s.users }}</td>
       <td style="white-space:nowrap">{{ s.last }}</td></tr>
   {% else %}
   <tr><td colspan="4">Событий за период нет</td></tr>

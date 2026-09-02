@@ -22,7 +22,6 @@
 <meta name="twitter:image" content="https://golosrisunka.ru/static/img/og-default.png">
 <link rel="canonical" href="https://golosrisunka.ru/">
 <link rel="icon" type="image/png" href="/static/img/favico/favicon-96x96.png" sizes="96x96">
-<link rel="icon" type="image/svg+xml" href="/static/img/favico/favicon.svg">
 <link rel="shortcut icon" href="/static/img/favico/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favico/apple-touch-icon.png">
 <link rel="manifest" href="/static/img/favico/site.webmanifest">
@@ -32,7 +31,7 @@
 
 <link rel="preload" as="image" href="/static/img/hero-800.webp" type="image/webp" media="(max-width: 600px)" fetchpriority="high">
 <link rel="preload" as="image" href="/static/img/hero.webp" type="image/webp" media="(min-width: 601px)" fetchpriority="high">
-<link rel="stylesheet" href="/static/css/fonts.css">
+<link rel="stylesheet" href="/static/css/fonts.css?v=1.077">
 
 <style>/* ============================================================
    ДИЗАЙН-ТОКЕНЫ — ЕДИНСТВЕННЫЙ источник цветов/шрифтов/размеров.
@@ -327,8 +326,10 @@ html.dk .btn { color: #241A12; }
   .logo__img { height: 44px; }
   .site-header .btn { padding: 9px 16px; font-size: 14px; }
 }
+.site-header__free { display: none; }
 @media (max-width: 880px) {
   .site-nav { display: none; }           /* мобайл: лого + Войти + CTA, без JS-бургера */
+  .site-header__free { display: inline; font-weight: 600; font-size: 14px; color: var(--accent2); }
   .site-header__row { gap: 10px; padding-left: 14px; padding-right: 14px; }
   .site-header .logo { font-size: 21px; white-space: nowrap; }
   .logo__img { height: 44px; }
@@ -350,7 +351,7 @@ html.dk .btn { color: #241A12; }
 /* --- Форма (заказ, вход) --- */
 .field { margin-bottom: 18px; }
 .field label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 6px; }
-.field .hint { color: var(--soft); font-size: 13px; margin-top: 4px; }
+.field .hint { color: var(--muted); font-size: 13px; margin-top: 4px; }   /* --soft давал 2.9:1 */
 .field .err { color: #C0392B; font-size: 13px; margin-top: 4px; font-weight: 600; }
 
 /* --- Свой комбобокс (тема/материалы): надёжный выбор подсказки на мобильных --- */
@@ -1341,6 +1342,14 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 .dash-spend label { font-size: var(--fs-small); color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 .vis-row { cursor: pointer; }
 .vis-row:hover td { background: color-mix(in srgb, var(--badge) 8%, transparent); }
+
+/* Способы оплаты на чекауте — текстовые пилюли (логотипов у нас нет, а ЮKassa ждёт список) */
+.pay-methods { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 16px; }
+.pay-methods span { font-size: var(--fs-micro); font-weight: 700; letter-spacing: .04em; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+
+.dash-summary { margin-bottom: 18px; }
+.dash-summary .admin-kpi__n { font-size: 24px; }
 </style>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Organization", "name": "Голос рисунка", "url": "https://golosrisunka.ru/", "logo": "https://golosrisunka.ru/static/img/og-default.png", "description": "Анализ детского рисунка по фото: персональный отчёт о том, что рисунок говорит о ребёнке — его характер, темы, внутренний мир, интересы и как его поддержать. Бережно, по методикам Пиаже, Ловенфельда, Выготского — наблюдение и подсказка, без гаданий и диагнозов.", "knowsLanguage": "ru"}, {"@context": "https://schema.org", "@type": "WebSite", "name": "Голос рисунка", "url": "https://golosrisunka.ru/", "inLanguage": "ru"}, {"@context": "https://schema.org", "@type": "Product", "name": "Персональный отчёт по рисункам ребёнка", "description": "Тёплый персональный PDF-отчёт по рисункам ребёнка: что его волнует и влечёт, какой у него характер и внутренний мир, какие темы он выбирает — и как его понять и поддержать. 7 направлений (личность ведёт, навыки поддерживают) с понятными объяснениями. Бережное образовательное наблюдение и подсказка, без гаданий и диагнозов.", "brand": {"@type": "Brand", "name": "Голос рисунка"}, "offers": [{"@type": "Offer", "name": "Персональный отчёт о рисунках вашего ребёнка", "price": 2999, "priceCurrency": "RUB", "url": "https://golosrisunka.ru/order?product=snapshot", "availability": "https://schema.org/InStock"}]}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Что интересного я могу узнать о ребёнке из отчёта?", "acceptedAnswer": {"@type": "Answer", "text": "Вы увидите, что волнует вашего ребёнка и к чему его тянет, какие темы и сюжеты он выбирает снова и снова, какой у него характер и подход к миру, какое настроение живёт в его рисунках — и как его понять и поддержать. А ещё — сильные стороны в рисовании. Всё бережно, по видимым деталям и методикам детского развития: как наблюдение и гипотеза, а не гадание и не диагноз."}}, {"@type": "Question", "name": "Какой возраст ребёнка подходит?", "acceptedAnswer": {"@type": "Answer", "text": "От 3 до 12 лет. В отчёте учитывается возрастной этап развития рисунка: то, что типично для трёх лет, читается иначе, чем для девяти."}}, {"@type": "Question", "name": "Что нужно прислать?", "acceptedAnswer": {"@type": "Answer", "text": "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, материалы, тема, было ли задание. Ничего специально рисовать не нужно."}}, {"@type": "Question", "name": "Как быстро придёт отчёт?", "acceptedAnswer": {"@type": "Answer", "text": "Обычно в течение часа после оплаты. PDF придёт на почту и будет доступен в личном кабинете."}}, {"@type": "Question", "name": "Это психологическая диагностика? Это не диагноз?", "acceptedAnswer": {"@type": "Answer", "text": "Это бережное наблюдение и подсказки для родителя, а не клинический диагноз. Мы помогаем понять характер, темы и внутренний мир ребёнка — опираясь на видимые детали рисунка и методики детского развития (Пиаже, Ловенфельд, Выготский), всегда в формате гипотезы, которую лучше проверить в разговоре с самим ребёнком. Это не гадание по цветам и символам и не постановка диагноза. Если вас что-то серьёзно тревожит — обратитесь к профильному специалисту."}}, {"@type": "Question", "name": "Что означают оценки 6/10, 8/10 или 9/10?", "acceptedAnswer": {"@type": "Answer", "text": "Оценки — вспомогательный слой: они относятся к конкретному рисунку или серии, а не к ребёнку как личности. Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете (например, если на рисунке один объект без персонажей)."}}, {"@type": "Question", "name": "Как понять, что отчёт не общий шаблон?", "acceptedAnswer": {"@type": "Answer", "text": "Каждое наблюдение привязано к конкретным деталям именно этого рисунка: цвету, линиям, сюжету, выбранным темам и героям, материалам и возрасту ребёнка. Поэтому отчёт не выглядит как текст «про любого ребёнка» — и поэтому мы просим не только фото, но и короткий контекст."}}, {"@type": "Question", "name": "А если рисунок меня тревожит?", "acceptedAnswer": {"@type": "Answer", "text": "Отчёт поможет спокойно увидеть, что ребёнок выражает рисунком, и отделить наблюдения от популярных мифов («тёмный цвет = тревога» и подобных). Мы не ставим диагнозов и не пугаем. Но если вас серьёзно беспокоит состояние, поведение или безопасность ребёнка, лучше обратиться к профильному специалисту — отчёт не заменяет консультацию."}}, {"@type": "Question", "name": "А если отчёт мне не понравится?", "acceptedAnswer": {"@type": "Answer", "text": "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов."}}, {"@type": "Question", "name": "Кто увидит рисунки моего ребёнка?", "acceptedAnswer": {"@type": "Answer", "text": "Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам."}}, {"@type": "Question", "name": "Как понять рисунок ребёнка 4–5 лет?", "acceptedAnswer": {"@type": "Answer", "text": "В 4–5 лет ребёнок часто переходит от «головоногов» к более полным фигурам, у него появляются любимые сюжеты и цвета. Понять рисунок — значит увидеть, что ребёнок выражает, что ему сейчас важно и на каком этапе развития он находится, а не искать «тайный смысл» по цветам. Именно это бережно показывает наш отчёт — по возрастным особенностям и видимым деталям, как наблюдение, а не диагноз."}}, {"@type": "Question", "name": "Как интерпретировать детский рисунок дома самому?", "acceptedAnswer": {"@type": "Answer", "text": "Дома полезно смотреть не на «значения цветов», а на то, что ребёнок выбирает рисовать: какие темы и сюжеты повторяются, какие герои ему важны, как уверенно он ведёт линию, как использует лист. И главное — расспрашивать самого ребёнка о его рисунке. Это бережное наблюдение за тем, что он выражает, а не гадание и не психологический диагноз."}}]}]</script>
 
@@ -1367,7 +1376,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 
-<script src="/static/js/track.js?v=1.076"></script>
+<script src="/static/js/track.js?v=1.077"></script>
 </head>
 <body>
 
@@ -1392,6 +1401,8 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
       <a href="/blog" data-ym-goal="header_nav_blog">Блог</a>
     </nav>
     <div class="site-header__actions">
+      
+      <a class="site-header__free" href="/free-check" data-ym-goal="header_free_mobile">Бесплатно</a>
       <a class="site-nav__login" href="/login" data-ym-goal="header_login">Войти</a>
       <a class="btn" href="/order" data-ym-goal="header_order">Получить отчёт</a>
     </div>
@@ -1409,7 +1420,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
         рисунком его характер, важные для него темы и внутренний мир — и подсказываем, как понять и поддержать
         именно его. Бережно, по методикам, без гаданий.</p>
       <div class="cta-zone">
-        <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order">Получить отчёт — 2999 ₽</a><a class="hero__worry" href="/free" data-ym-goal="landing_hero_free">Тревожит рисунок ребёнка?</a><span class="cta-info" tabindex="0" role="button" aria-label="Что входит в отчёт">что входит <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order">Получить отчёт — 2999 ₽</a><a class="hero__worry" href="/free/" data-ym-goal="landing_hero_free">Тревожит рисунок ребёнка?</a><span class="cta-info" tabindex="0" role="button" aria-label="Что входит в отчёт">что входит <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <div class="cta-pop">
           <div class="note">
             <svg width="34" height="22" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -1519,7 +1530,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
         <b>Похожая история?</b>
         Добавьте один рисунок — покажем, что в нём видно. Бесплатно, за минуту.
       </div>
-      <a class="btn btn--primary" href="/free"
+      <a class="btn btn--primary" href="/free/"
          data-ym-goal="landing_cases_free">Разобрать рисунок бесплатно</a>
     </div>
   </div>
@@ -1832,7 +1843,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
         себя одного — за этим почти всегда что-то стоит, и почти никогда то, чего боятся
         родители. Расскажите, что вы заметили, добавьте один рисунок — и мы покажем, что
         на нём видно.</p>
-      <a class="btn btn--primary" href="/free"
+      <a class="btn btn--primary" href="/free/"
          data-ym-goal="landing_worry_free">Разобрать рисунок бесплатно</a>
       <p class="worry-band__note">Бесплатно, за минуту, без карты и регистрации.</p>
     </div>
@@ -2163,7 +2174,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.076</span>
+    <span class="foot-ver">V1.077</span>
   </div>
 </footer>
 

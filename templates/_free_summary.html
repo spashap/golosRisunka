@@ -66,7 +66,7 @@
   <h3 class="h3 offer__how">{{ texts.UPLOAD_TITLE }}</h3>
   <p>{{ texts.UPLOAD_BODY }}</p>
   <div class="field">
-    <div class="ctl"><input class="input" id="f-email" type="email"
+    <div class="ctl"><input class="input" id="f-email" type="email" aria-label="Почта, куда прислать разбор"
          inputmode="email" autocomplete="email" placeholder="you@example.com"></div>
   </div>
 
@@ -83,8 +83,8 @@
   {# Памятка настоящая: в письмо уходит возрастной якорь полосы. #}
   <p>{{ texts.NO_DRAWING_BONUS.format(band=band) }}</p>
   <div class="field"><div class="ctl">
-    <input class="input" id="f-nodraw-email" type="email" inputmode="email"
-           placeholder="you@example.com"></div></div>
+    <input class="input" id="f-nodraw-email" type="email" inputmode="email" aria-label="Почта, куда прислать ссылку"
+           autocomplete="email" placeholder="you@example.com"></div></div>
   <button class="btn btn--ghost" id="f-nodraw-btn" data-token="{{ token }}"
           data-ym-goal="free_no_drawing">Сохранить и вернуться позже</button>
   <p class="hint" id="f-nodraw-ok" hidden>Готово. Ссылку отправили на почту —

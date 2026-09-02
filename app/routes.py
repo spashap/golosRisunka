@@ -204,7 +204,8 @@ def hosted_report(token: str):
     sample = get_sample_by_token(token)
     if sample and sample.html_path.exists():
         track_event("sample_view", {"token": token})
-        return Response(sample.html_path.read_text(encoding="utf-8"), mimetype="text/html")
+        return Response(_report_page(sample.html_path.read_text(encoding="utf-8")),
+                        mimetype="text/html")
     db = get_db()
     row = db.execute(
         "SELECT order_id, html_path FROM reports WHERE public_token = ?",
@@ -220,9 +221,22 @@ def hosted_report(token: str):
             widget = feedback.widget_html(
                 "order", token, feedback.get_one(db, "order", row["order_id"]))
             return Response(
-                feedback.inject_into_report(path.read_text(encoding="utf-8"), widget),
+                _report_page(feedback.inject_into_report(path.read_text(encoding="utf-8"), widget)),
                 mimetype="text/html")
     abort(404)
+
+
+def _report_page(html: str) -> str:
+    """Готовый HTML отчёта/образца при отдаче: версия на css (кэш статики 30 дней —
+    иначе вернувшиеся получают старые стили) и аналитика (самые просматриваемые
+    страницы конверсии были не измерены вовсе; аудит 02.09, I5)."""
+    v = settings.APP_VERSION
+    for css in ("fonts", "tokens", "components", "report"):
+        html = html.replace(f'/css/{css}.css"', f'/css/{css}.css?v={v}"')
+    tail = render_template("_metrika.html") + \
+        f'<script src="/static/js/track.js?v={v}"></script>'
+    i = html.rfind("</body>")
+    return html[:i] + tail + html[i:] if i >= 0 else html + tail
 
 
 # --- Вход по email-коду + кабинет (Phase 7) ---
@@ -471,8 +485,24 @@ def cabinet_report_pdf(order_id: int):
 
 # --- Заказ (Phase 5) ---
 
+def _order_defaults(values: dict) -> dict:
+    """Умолчания, снимающие два обязательных выбора у первого рисунка: тема «свободная»
+    и дата рисунка «сейчас». Пользователь их видит и может поменять (аудит 02.09, I3)."""
+    values = dict(values)
+    today = datetime.date.today()
+    theme_presets = next((f["presets"] for f in DRAWING_FIELDS if f["key"] == "theme"), [])
+    if theme_presets and not values.get("d1_theme"):
+        values["d1_theme"] = theme_presets[0]
+    if not values.get("d1_drawn_at_m"):
+        values["d1_drawn_at_m"] = f"{today.month:02d}"
+    if not values.get("d1_drawn_at_y"):
+        values["d1_drawn_at_y"] = str(today.year)
+    return values
+
+
 def _render_order_form(values: dict, errors: dict, status: int = 200,
                        reused=None):
+    values = _order_defaults(values)
     products = settings.get_products()
     code = request.args.get("product", values.get("product", "snapshot"))
     if code not in products or not products[code]["enabled"]:
@@ -919,16 +949,17 @@ def robots():
 @bp.get("/sitemap.xml")
 def sitemap():
     base = f"https://{settings.SITE_DOMAIN}"
-    today = datetime.date.today().isoformat()
-    # (path, priority, lastmod)
-    urls = [("/", "1.0", today), ("/free-check", "0.9", today), ("/blog", "0.7", today),
-            ("/privacy", "0.2", today), ("/terms", "0.2", today),
-            ("/contacts", "0.3", today)]
-    urls += [(f"/primer/{s.token}", "0.8", today) for s in get_samples()]
+    # lastmod только там, где дата настоящая (статьи). «Сегодня» на всех URL поисковики
+    # игнорируют и заодно перестают верить настоящим датам (аудит 02.09, I7).
+    urls = [("/", "1.0", None), ("/free-check", "0.9", None), ("/blog", "0.7", None),
+            ("/privacy", "0.2", None), ("/terms", "0.2", None),
+            ("/contacts", "0.3", None)]
+    urls += [(f"/primer/{s.token}", "0.8", None) for s in get_samples()]
     urls += [(f"/blog/{p.slug}", "0.7", p.date.isoformat()) for p in get_posts()]
     items = "\n".join(
-        f"<url><loc>{base}{path}</loc><lastmod>{lastmod}</lastmod>"
-        f"<priority>{prio}</priority></url>"
+        f"<url><loc>{base}{path}</loc>"
+        + (f"<lastmod>{lastmod}</lastmod>" if lastmod else "")
+        + f"<priority>{prio}</priority></url>"
         for path, prio, lastmod in urls
     )
     xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'

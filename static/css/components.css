@@ -190,8 +190,10 @@ html.dk .btn { color: #241A12; }
   .logo__img { height: 44px; }
   .site-header .btn { padding: 9px 16px; font-size: 14px; }
 }
+.site-header__free { display: none; }
 @media (max-width: 880px) {
   .site-nav { display: none; }           /* мобайл: лого + Войти + CTA, без JS-бургера */
+  .site-header__free { display: inline; font-weight: 600; font-size: 14px; color: var(--accent2); }
   .site-header__row { gap: 10px; padding-left: 14px; padding-right: 14px; }
   .site-header .logo { font-size: 21px; white-space: nowrap; }
   .logo__img { height: 44px; }
@@ -213,7 +215,7 @@ html.dk .btn { color: #241A12; }
 /* --- Форма (заказ, вход) --- */
 .field { margin-bottom: 18px; }
 .field label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 6px; }
-.field .hint { color: var(--soft); font-size: 13px; margin-top: 4px; }
+.field .hint { color: var(--muted); font-size: 13px; margin-top: 4px; }   /* --soft давал 2.9:1 */
 .field .err { color: #C0392B; font-size: 13px; margin-top: 4px; font-weight: 600; }
 
 /* --- Свой комбобокс (тема/материалы): надёжный выбор подсказки на мобильных --- */
@@ -1204,3 +1206,11 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
 .dash-spend label { font-size: var(--fs-small); color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 .vis-row { cursor: pointer; }
 .vis-row:hover td { background: color-mix(in srgb, var(--badge) 8%, transparent); }
+
+/* Способы оплаты на чекауте — текстовые пилюли (логотипов у нас нет, а ЮKassa ждёт список) */
+.pay-methods { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 16px; }
+.pay-methods span { font-size: var(--fs-micro); font-weight: 700; letter-spacing: .04em; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+
+.dash-summary { margin-bottom: 18px; }
+.dash-summary .admin-kpi__n { font-size: 24px; }

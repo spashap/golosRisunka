@@ -26,6 +26,8 @@
       <a href="/blog" data-ym-goal="header_nav_blog">Блог</a>
     </nav>
     <div class="site-header__actions">
+      {# На телефоне навигации нет вовсе — а с ней и бесплатного входа с /order, /login, блога. #}
+      <a class="site-header__free" href="/free-check" data-ym-goal="header_free_mobile">Бесплатно</a>
       <a class="site-nav__login" href="/login" data-ym-goal="header_login">Войти</a>
       <a class="btn" href="{{ cta.href }}" data-ym-goal="{{ cta.goal }}">{{ cta.text }}</a>
     </div>

@@ -37,6 +37,7 @@
             ' <span class="dots-wait"><i></i><i></i><i></i></span>';
           document.getElementById("w-bar").style.width =
             Math.round(s.step / s.steps * 100) + "%";
+          if (n === 45) { var late = document.getElementById("w-late"); if (late) late.hidden = false; }
           if (n < 240) setTimeout(function () { poll(n + 1); }, 2000);
         }).catch(function () { if (n < 240) setTimeout(function () { poll(n + 1); }, 3000); });
     })(0);

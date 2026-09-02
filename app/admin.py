@@ -535,8 +535,10 @@ def actions():
     summary = db.execute(
         f"SELECT type, COUNT(*) n, COUNT(DISTINCT visitor_id) u, MAX(created_at) last"
         f" FROM events WHERE {where} GROUP BY type ORDER BY n DESC", params).fetchall()
+    from config import goals as G
     summary_view = [{
-        "type": r["type"], "n": r["n"], "users": r["u"],
+        "type": r["type"], "label": G.label_for(r["type"][6:]) if r["type"].startswith("click:") else "",
+        "n": r["n"], "users": r["u"],
         "last": r["last"][:16].replace("T", " ") if r["last"] else "",
     } for r in summary]
     total = sum(r["n"] for r in summary)

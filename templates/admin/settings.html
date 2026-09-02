@@ -35,7 +35,7 @@
   <tr><td>Яндекс.Метрика</td>
       <td>{% if metrika_id %}<span class="admin-status admin-status--delivered">подключена (ID {{ metrika_id }})</span>
           {% else %}<span class="admin-status admin-status--created">нет ID</span> — добавьте <code>YANDEX_METRIKA_ID</code> в <code>.env</code>{% endif %}</td></tr>
-  <tr><td>ЮKassa</td><td><span class="admin-status admin-status--created">stub</span> — реальный аккаунт подключается в Phase 8 (<code>.env</code>)</td></tr>
+  <tr><td>ЮKassa</td><td><span class="admin-status admin-status--delivered">live</span> — боевые ключи в серверном <code>.env</code>, вебхук оплат и возвратов</td></tr>
   <tr><td>Почта (Unisender&nbsp;Go)</td>
       <td>{% if mail_backend == 'unisender' %}
             {% if unisender_go_key %}<span class="admin-status admin-status--delivered">Unisender Go</span> — отправка с <code>{{ mail_from }}</code>{% else %}<span class="admin-status admin-status--failed">нет ключа</span> — добавьте <code>UNISENDER_GO_API_KEY</code> в <code>.env</code>{% endif %}

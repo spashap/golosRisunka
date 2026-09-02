@@ -6,24 +6,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Заказ отчёта — Голос рисунка</title>
 <link rel="icon" type="image/png" href="/static/img/favico/favicon-96x96.png" sizes="96x96">
-<link rel="icon" type="image/svg+xml" href="/static/img/favico/favicon.svg">
 <link rel="shortcut icon" href="/static/img/favico/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/img/favico/apple-touch-icon.png">
 <link rel="manifest" href="/static/img/favico/site.webmanifest">
-<meta name="description" content="Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей, без диагноза.">
+<meta name="description" content="Закажите персональный отчёт по рисункам ребёнка: загрузите 1–3 рисунка, ответьте на несколько вопросов — отчёт придёт на почту в течение часа.">
 
 <link rel="canonical" href="https://golosrisunka.ru/order">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Заказ отчёта — Голос рисунка">
-<meta property="og:description" content="Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей, без диагноза.">
+<meta property="og:description" content="Закажите персональный отчёт по рисункам ребёнка: загрузите 1–3 рисунка, ответьте на несколько вопросов — отчёт придёт на почту в течение часа.">
 <meta property="og:url" content="https://golosrisunka.ru/order">
 <meta property="og:site_name" content="Голос рисунка">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:image" content="https://golosrisunka.ru/static/img/og-default.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Заказ отчёта — Голос рисунка">
-<meta name="twitter:description" content="Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей, без диагноза.">
+<meta name="twitter:description" content="Закажите персональный отчёт по рисункам ребёнка: загрузите 1–3 рисунка, ответьте на несколько вопросов — отчёт придёт на почту в течение часа.">
 <meta name="twitter:image" content="https://golosrisunka.ru/static/img/og-default.png">
 
 
@@ -31,7 +30,7 @@
 [{"@context":"https://schema.org","@type":"Organization",
   "name":"Голос рисунка","url":"https://golosrisunka.ru/",
   "logo":"https://golosrisunka.ru/static/img/og-default.png",
-  "description":"Анализ детского рисунка по фото: персональный отчёт о том, что рисунки расскажут о ребёнке — сильные стороны, интересы и навыки. На основе методик Пиаже, Ловенфельда, Выготского. Без диагнозов.",
+  "description":"Анализ детского рисунка по фото: персональный отчёт о том, что рисунок говорит о характере, темах и внутреннем мире ребёнка — бережно, по методикам, без диагнозов и гаданий.",
   "knowsLanguage":"ru"},
  {"@context":"https://schema.org","@type":"WebSite",
   "name":"Голос рисунка","url":"https://golosrisunka.ru/","inLanguage":"ru"}]
@@ -40,9 +39,9 @@
 <link rel="preload" href="/static/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
 
-<link rel="stylesheet" href="/static/css/fonts.css?v=1.076">
-<link rel="stylesheet" href="/static/css/tokens.css?v=1.076">
-<link rel="stylesheet" href="/static/css/components.css?v=1.076">
+<link rel="stylesheet" href="/static/css/fonts.css?v=1.077">
+<link rel="stylesheet" href="/static/css/tokens.css?v=1.077">
+<link rel="stylesheet" href="/static/css/components.css?v=1.077">
 
 
 
@@ -68,7 +67,7 @@
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 
-<script src="/static/js/track.js?v=1.076"></script>
+<script src="/static/js/track.js?v=1.077"></script>
 </head>
 <body>
 
@@ -92,6 +91,8 @@
       <a href="/blog" data-ym-goal="header_nav_blog">Блог</a>
     </nav>
     <div class="site-header__actions">
+      
+      <a class="site-header__free" href="/free-check" data-ym-goal="header_free_mobile">Бесплатно</a>
       <a class="site-nav__login" href="/login" data-ym-goal="header_login">Войти</a>
       <a class="btn" href="/order" data-ym-goal="header_order">Получить отчёт</a>
     </div>
@@ -100,7 +101,7 @@
 
 <div class="section">
   <div class="wrap" style="max-width: 720px">
-    <h2>Заказ отчёта</h2>
+    <h1 class="h2">Заказ отчёта</h1>
     <p class="sub">Персональный отчёт о рисунках вашего ребёнка — до 3 рисунков одного периода ·
       <s style="color:var(--soft)">4900 ₽</s>
       <b style="color:var(--accent)">2999 ₽</b></p>
@@ -285,7 +286,7 @@
       
       <option value="08" >8</option>
       
-      <option value="09" >9</option>
+      <option value="09" selected>9</option>
       
       <option value="10" >10</option>
       
@@ -331,7 +332,7 @@
   
   
   <input class="input" type="text" id="d1_theme" name="d1_theme"
-         value="" placeholder="Выберите или напишите своё"
+         value="Свободная тема — рисовал(а) что хотел(а)" placeholder="Выберите или напишите своё"
          data-combo="d1_theme_list" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" title="Что попросили нарисовать — или ребёнок выбрал тему сам?">
   <datalist id="d1_theme_list">
     <option value="Свободная тема — рисовал(а) что хотел(а)"><option value="Нарисовать семью"><option value="Нарисовать человека"><option value="Любимый герой или персонаж мультфильма"><option value="Животное"><option value="Дом"><option value="Природа, пейзаж"><option value="Задание в школе или садике"><option value="Срисовывал(а) с образца или с натуры">
@@ -850,7 +851,7 @@
     </form>
   </div>
 </div>
-<script src="/static/js/order.js?v=1.076" defer></script>
+<script src="/static/js/order.js?v=1.077" defer></script>
 
 <footer class="foot">
   <div class="wrap">
@@ -859,7 +860,7 @@
     Образовательное наблюдение, не медицинская диагностика · golosrisunka.ru<br>
     <a href="/privacy">Политика</a> · <a href="/terms">Оферта</a> · <a href="/contacts">Контакты</a>
     
-    <span class="foot-ver">V1.076</span>
+    <span class="foot-ver">V1.077</span>
   </div>
 </footer>
 </body>

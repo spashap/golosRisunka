@@ -343,13 +343,47 @@ def spend(db, p: dict) -> dict:
 
 # --- Сборка --------------------------------------------------------------------------
 
+def summary(db, p: dict, m: dict, t: dict) -> list[dict]:
+    """Верхний ряд кубиков: общие числа периода, каждое с предыдущим периодом."""
+    def _cnt(sql: str, a: str, b: str) -> int:
+        return db.execute(sql, (a, b)).fetchone()["c"]
+
+    actions_sql = ("SELECT COUNT(*) c FROM events e WHERE e.type LIKE 'click:%'"
+                   " AND e.created_at >= ? AND e.created_at < ?"
+                   " AND (e.device IS NULL OR e.device NOT IN ('bot','owner'))"
+                   " AND e.type NOT LIKE 'click:scroll_%' AND e.type NOT LIKE 'click:sec_%'")
+    forms_sql = ("SELECT COUNT(*) c FROM free_analyses WHERE created_at >= ? AND created_at < ?"
+                 " AND COALESCE(is_test,0) = 0")
+    created_sql = ("SELECT COUNT(*) c FROM orders o WHERE o.created_at >= ? AND o.created_at < ?"
+                   f" AND {REAL_ORDER}")
+    cur = {"actions": _cnt(actions_sql, p["since"], p["until"]),
+           "forms": _cnt(forms_sql, p["since"], p["until"]),
+           "created": _cnt(created_sql, p["since"], p["until"])}
+    prev = {"actions": _cnt(actions_sql, p["prev_since"], p["prev_until"]),
+            "forms": _cnt(forms_sql, p["prev_since"], p["prev_until"]),
+            "created": _cnt(created_sql, p["prev_since"], p["prev_until"])}
+    return [
+        {"n": t["cur"]["n"], "label": "визитов", "sub": f"было {t['prev']['n']}", "d": delta(t["cur"]["n"], t["prev"]["n"])},
+        {"n": t["cur"]["engaged"], "label": "задержались", "sub": f"было {t['prev']['engaged']}", "d": delta(t["cur"]["engaged"], t["prev"]["engaged"])},
+        {"n": cur["actions"], "label": "действий (клики по целям)", "sub": f"было {prev['actions']}", "d": delta(cur["actions"], prev["actions"])},
+        {"n": cur["forms"], "label": "анкет фремиума", "sub": f"было {prev['forms']}", "d": delta(cur["forms"], prev["forms"])},
+        {"n": cur["created"], "label": "заказов создано", "sub": f"было {prev['created']}", "d": delta(cur["created"], prev["created"])},
+        {"n": m["cur"]["paid"], "label": "оплат", "sub": f"было {m['prev']['paid']}", "d": m["d_paid"]},
+        {"n": f"{m['cur']['net']} ₽", "label": "выручка", "sub": f"было {m['prev']['net']} ₽", "d": m["d_net"]},
+        {"n": t["conversion"], "label": "визит → оплата", "sub": f"{t['paid_from_visits']} из {t['doors']} с дверей", "d": {"pct": "", "dir": "flat"}},
+    ]
+
+
 def build(db, days: str, heartbeats: list[dict]) -> dict:
     p = period(days)
+    m = money(db, p)
+    t = traffic(db, p)
     return {
         "p": p,
-        "money": money(db, p),
+        "summary": summary(db, p, m, t),
+        "money": m,
         "problems": problems(db, heartbeats),
-        "traffic": traffic(db, p),
+        "traffic": t,
         "series": daily_series(db, 30),
         "free": free_cohorts(db),
         "spend": spend(db, p),

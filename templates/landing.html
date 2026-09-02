@@ -21,7 +21,6 @@
 <meta name="twitter:image" content="https://golosrisunka.ru/static/img/og-default.png">
 <link rel="canonical" href="https://golosrisunka.ru/">
 <link rel="icon" type="image/png" href="{{ static }}/img/favico/favicon-96x96.png" sizes="96x96">
-<link rel="icon" type="image/svg+xml" href="{{ static }}/img/favico/favicon.svg">
 <link rel="shortcut icon" href="{{ static }}/img/favico/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ static }}/img/favico/apple-touch-icon.png">
 <link rel="manifest" href="{{ static }}/img/favico/site.webmanifest">
@@ -32,7 +31,7 @@
    Браузеры без webp пропустят (type) и возьмут jpg при разборе CSS. #}
 <link rel="preload" as="image" href="{{ static }}/img/hero-800.webp" type="image/webp" media="(max-width: 600px)" fetchpriority="high">
 <link rel="preload" as="image" href="{{ static }}/img/hero.webp" type="image/webp" media="(min-width: 601px)" fetchpriority="high">
-<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+<link rel="stylesheet" href="{{ static }}/css/fonts.css?v={{ version }}">
 {# Критический CSS инлайном: токены + компоненты (перфоманс, spec §4.2) #}
 <style>{{ inline_css | safe }}</style>
 <script type="application/ld+json">{{ schema_jsonld | safe }}</script>
@@ -57,7 +56,7 @@
         рисунком его характер, важные для него темы и внутренний мир — и подсказываем, как понять и поддержать
         именно его. Бережно, по методикам, без гаданий.</p>
       <div class="cta-zone">
-        <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order">Получить отчёт — {{ min_price }} ₽</a><a class="hero__worry" href="/free" data-ym-goal="landing_hero_free">Тревожит рисунок ребёнка?</a><span class="cta-info" tabindex="0" role="button" aria-label="Что входит в отчёт">что входит <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <a class="btn btn--primary" href="/order" data-ym-goal="landing_hero_order">Получить отчёт — {{ min_price }} ₽</a><a class="hero__worry" href="/free/" data-ym-goal="landing_hero_free">Тревожит рисунок ребёнка?</a><span class="cta-info" tabindex="0" role="button" aria-label="Что входит в отчёт">что входит <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <div class="cta-pop">
           <div class="note">
             <svg width="34" height="22" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -168,7 +167,7 @@
         <b>Похожая история?</b>
         Добавьте один рисунок — покажем, что в нём видно. Бесплатно, за минуту.
       </div>
-      <a class="btn btn--primary" href="/free"
+      <a class="btn btn--primary" href="/free/"
          data-ym-goal="landing_cases_free">Разобрать рисунок бесплатно</a>
     </div>
   </div>
@@ -332,7 +331,7 @@
         себя одного — за этим почти всегда что-то стоит, и почти никогда то, чего боятся
         родители. Расскажите, что вы заметили, добавьте один рисунок — и мы покажем, что
         на нём видно.</p>
-      <a class="btn btn--primary" href="/free"
+      <a class="btn btn--primary" href="/free/"
          data-ym-goal="landing_worry_free">Разобрать рисунок бесплатно</a>
       <p class="worry-band__note">Бесплатно, за минуту, без карты и регистрации.</p>
     </div>

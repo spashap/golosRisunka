@@ -1,4 +1,5 @@
 {% extends "_base.html" %}
+{% block description %}Закажите персональный отчёт по рисункам ребёнка: загрузите 1–3 рисунка, ответьте на несколько вопросов — отчёт придёт на почту в течение часа.{% endblock %}
 {% block title %}Заказ отчёта — Голос рисунка{% endblock %}
 
 {% macro render_field(f, prefix, values, errors) %}
@@ -56,7 +57,7 @@
 {% block body %}
 <div class="section">
   <div class="wrap" style="max-width: 720px">
-    <h2>Заказ отчёта</h2>
+    <h1 class="h2">Заказ отчёта</h1>
     <p class="sub">{{ product.title }} — до {{ product.drawings_max }} рисунков одного периода ·
       {% if product.old_price_rub %}<s style="color:var(--soft)">{{ product.old_price_rub }} ₽</s>{% endif %}
       <b style="color:var(--accent)">{{ product.price_rub }} ₽</b></p>

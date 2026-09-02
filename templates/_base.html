@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Голос рисунка{% endblock %}</title>
 <link rel="icon" type="image/png" href="{{ static }}/img/favico/favicon-96x96.png" sizes="96x96">
-<link rel="icon" type="image/svg+xml" href="{{ static }}/img/favico/favicon.svg">
 <link rel="shortcut icon" href="{{ static }}/img/favico/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ static }}/img/favico/apple-touch-icon.png">
 <link rel="manifest" href="{{ static }}/img/favico/site.webmanifest">
-<meta name="description" content="{% block description %}Образовательный анализ детского рисунка по фото: PDF-отчёт о развитии ребёнка для родителей, без диагноза.{% endblock %}">
+<meta name="description" content="{% block description %}Анализ детского рисунка по фото: что рисунок говорит о характере, темах и внутреннем мире ребёнка. Бережный персональный отчёт по методикам, без диагнозов и гаданий.{% endblock %}">
 {% block og %}
 <link rel="canonical" href="https://{{ site_domain }}{{ request.path }}">
 <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
@@ -39,7 +38,7 @@
 {# Своя аналитика (цели, вовлечённость, глубина прокрутки, видимость блоков).
    БЕЗ defer и до тела страницы: инлайн-скрипты страниц зовут window.ymGoal по ходу
    разбора документа. Счётчик Метрики выше — track.js подхватывает его, если он есть. #}
-<script src="{{ static }}/js/track.js?v={{ version }}"></script>
+{% if not request.path.startswith('/admin') %}<script src="{{ static }}/js/track.js?v={{ version }}"></script>{% endif %}
 </head>
 <body>
 {% include "_header.html" %}

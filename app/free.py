@@ -306,6 +306,16 @@ def status(token: str):
 
 # --- Разбор -------------------------------------------------------------------------
 
+def _sample_url() -> str | None:
+    """Ссылка «посмотреть пример отчёта» в продающем блоке разбора."""
+    try:
+        from app.samples import get_samples
+        s = get_samples()
+        return f"/primer/{s[0].token}" if s else None
+    except Exception:
+        return None
+
+
 def _reject_text(row) -> str | None:
     """Человеческое объяснение отказа — его пишет модель (free_worker кладёт в JSON)."""
     try:
@@ -375,7 +385,12 @@ def result(token: str):
         has_email=bool(row["email"]),
         # виджет оценки (_feedback_widget.html)
         kind="free", existing=feedback.get_one(db, "free", row["id"]),
-        star_labels=feedback.STAR_LABELS, version=settings.APP_VERSION)
+        star_labels=feedback.STAR_LABELS, version=settings.APP_VERSION,
+        # Шапка ведёт в заказ С ЭТИМ рисунком: две кнопки «купить» на одном экране, одна
+        # из которых теряла рисунок (аудит 02.09, I1).
+        header_cta={"href": f"/order?free={token}", "text": "Собрать портрет",
+                    "goal": "header_order"},
+        sample_url=_sample_url())
 
 
 @bp_free.get("/img/<token>")

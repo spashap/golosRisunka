@@ -21,7 +21,15 @@
 {% if msg == 'ignored' %}<p class="admin-flash admin-flash--ok">Этот браузер больше не считается.</p>{% endif %}
 {% if msg == 'spend' %}<p class="admin-flash admin-flash--ok">Расход записан.</p>{% endif %}
 
-{# ---- 2. Проблемы — выше денег, потому что сломанное съедает деньги ---- #}
+{# ---- Сводка: общие кубики периода, детали ниже ---- #}
+<div class="admin-kpis dash-summary">
+  {% for k in summary %}
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ k.n }} {{ dlt(k.d) }}</div>
+    <div class="admin-kpi__l">{{ k.label }}<br><span class="hint">{{ k.sub }}</span></div></div>
+  {% endfor %}
+</div>
+
+{# ---- Проблемы ---- #}
 <div class="dash-problems dash-problems--{{ 'ok' if not problems else 'bad' }}">
   {% if not problems %}
     <b>Всё работает.</b> Воркеры живы, зависших заказов нет, письма уходят.
@@ -34,16 +42,12 @@
 </div>
 
 {# ---- 1. Деньги ---- #}
-<h2>Заработали ли</h2>
+<h2>Деньги подробнее</h2>
 <div class="admin-kpis">
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.cur.net }} ₽ {{ dlt(money.d_net) }}</div>
-    <div class="admin-kpi__l">выручка{% if money.cur.refunds %} (минус возвраты {{ money.cur.refunds }} ₽){% endif %}<br><span class="hint">было {{ money.prev.net }} ₽</span></div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.cur.paid }} {{ dlt(money.d_paid) }}</div>
-    <div class="admin-kpi__l">оплат<br><span class="hint">было {{ money.prev.paid }}</span></div></div>
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.cur.avg }} ₽ {{ dlt(money.d_avg) }}</div>
     <div class="admin-kpi__l">средний чек<br><span class="hint">было {{ money.prev.avg }} ₽</span></div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ traffic.conversion }}</div>
-    <div class="admin-kpi__l">визит с двери → оплата<br><span class="hint">{{ traffic.paid_from_visits }} из {{ traffic.doors }}</span></div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.cur.refunds }} ₽</div>
+    <div class="admin-kpi__l">возвраты<br><span class="hint">{{ money.cur.refunded_n }} шт.</span></div></div>
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ money.abandoned }}</div>
     <div class="admin-kpi__l">брошенных заказов с почтой<br><span class="hint"><a href="{{ url_for('admin.orders') }}?days={{ p.days if p.days != '90' else 'all' }}">написать им</a></span></div></div>
 </div>
@@ -55,15 +59,11 @@
 {% endif %}
 
 {# ---- 3. Трафик ---- #}
-<h2>Трафик: настоящий и откуда</h2>
+<h2>Трафик подробнее</h2>
 <div class="admin-kpis">
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ traffic.cur.n }} {{ dlt(traffic.d_n) }}</div>
-    <div class="admin-kpi__l">настоящих визитов<br><span class="hint">было {{ traffic.prev.n }}</span></div></div>
-  <div class="form-card admin-kpi"><div class="admin-kpi__n">{% if traffic.cur.n %}{{ (traffic.cur.engaged / traffic.cur.n * 100)|round|int }}%{% else %}—{% endif %}</div>
-    <div class="admin-kpi__l">задержались<br><span class="hint">скролл ≥25%, клик или 15 с</span></div></div>
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{% if traffic.cur.n %}{{ (traffic.cur.mobile / traffic.cur.n * 100)|round|int }}%{% else %}—{% endif %}</div>
     <div class="admin-kpi__l">с телефона<br><span class="hint">{{ traffic.cur.mobile }} моб. / {{ traffic.cur.desktop }} деск.</span></div></div>
-  {% for label, key, n in traffic.channels[:3] %}
+  {% for label, key, n in traffic.channels[:4] %}
   <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ n }}</div><div class="admin-kpi__l">{{ label }}</div></div>
   {% endfor %}
 </div>

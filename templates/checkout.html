@@ -12,9 +12,11 @@
       </p>
 
       {% if yukassa_enabled %}
-      <p class="hint" style="margin-bottom: 18px">
-        Оплата картой в защищённом окне ЮKassa — вы останетесь на этой странице.
+      <p class="hint" style="margin-bottom: 10px">
+        Оплата картой или через СБП на защищённой странице ЮKassa. После оплаты вы
+        вернётесь на сайт, отчёт придёт на почту в течение часа.
       </p>
+      <p class="pay-methods" aria-label="Способы оплаты"><span>Мир</span><span>Visa</span><span>Mastercard</span><span>СБП</span></p>
       <button id="pay-btn" class="btn btn--primary" style="width: 100%"
               data-ym-goal="checkout_pay">Оплатить — {{ order.price_kopecks // 100 }} ₽</button>
       {% else %}
