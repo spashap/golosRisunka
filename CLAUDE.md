@@ -38,6 +38,9 @@ venv\Scripts\python.exe scripts\build_hero_image.py             # оптимиз
 venv\Scripts\python.exe scripts\build_logos.py                  # оптимизир. лого из data/Images/{StripLogo,logo}.png -> static/img/logo-{strip,icon}.{png,webp}
 venv\Scripts\python.exe scripts\build_geoip.py CSV.gz           # сборка гео-базы data/geoip.db из DB-IP City Lite (строить НА сервере)
 venv\Scripts\python.exe scripts\hello_pdf.py                    # smoke-тест WeasyPrint+кириллица
+venv\Scripts\python.exe scripts\blog_gen.py --slug SLUG        # статья блога через Gemini (PLAN внутри; --all --skip-done — все)
+venv\Scripts\python.exe scripts\blog_fix_drafts.py              # дожать черновики data/tmp/blog_draft_*.md после 3 неудач
+venv\Scripts\python.exe scripts\blog_check.py                   # QA блога: длины, ссылки, сироты, противоречия продукту
 venv\Scripts\python.exe scripts\bump_version.py                 # минор +1 (ПЕРЕД каждым git push)
 venv\Scripts\python.exe scripts\bump_version.py --major         # мажор +1 (ТОЛЬКО по команде заказчика)
 release.bat "msg"                                               # релиз одной командой: bump -> export dist -> commit -> push (в PowerShell: .\release.bat)
@@ -115,6 +118,12 @@ release.bat "msg"                                               # релиз о�
   на css/js идут с `?v={{ version }}` (`_base.html`). Без версии правка дизайна НЕ доезжает до тех,
   кто уже был на сайте, и выглядит как «сломанная вёрстка». Если пользователь описывает вёрстку,
   которой не может быть по коду, — СНАЧАЛА сверить, что реально отдаётся браузеру.
+- **БЛОГ — ИНСТРУМЕНТ УЖЕ ЕСТЬ, НЕ СТРОИТЬ ЗАНОВО.** Статья = `content/blog/<slug>.md` (frontmatter
+  `title/description/date/updated/category/related/seo_title`) + ветка SVG-миниатюры в
+  `templates/_blog_thumb.html`. Тексты пишет **`scripts/blog_gen.py`** (Gemini 2.5 Pro; список статей
+  `PLAN` внутри — добавить запись и запустить `--slug`; линтер HARD-банов + автопоправки + 3 попытки);
+  черновики после провала — `scripts/blog_fix_drafts.py`; итоговая проверка — `scripts/blog_check.py`.
+  Разметка (FAQ, крошки, призывы, «читайте также») — в `app/blog.py` + `blog_post.html`, править не нужно.
 - **ФРЕМИУМ `/free` (см. память [[freemium-beta]])**: своя схема/промпт/линтер (`pipeline/free_*`),
   платный путь ими НЕ затрагивается. Не переоткрывать: email НЕ выдаёт сессию покупателя (скоуп-cookie
   + magic-link); фремиум НЕ создаёт строк `children`; генерация — в отдельном юните
