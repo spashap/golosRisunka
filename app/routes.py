@@ -10,7 +10,7 @@ from functools import lru_cache
 from flask import (Blueprint, Response, abort, g, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 
-from app import yookassa
+from app import feedback, yookassa
 from app.auth import (SESSION_COOKIE, AuthError, current_customer,
                       destroy_session, login_with_token, recover_login,
                       request_code, verify_code)
@@ -203,7 +203,8 @@ def hosted_report(token: str):
     if sample and sample.html_path.exists():
         track_event("sample_view", {"token": token})
         return Response(sample.html_path.read_text(encoding="utf-8"), mimetype="text/html")
-    row = get_db().execute(
+    db = get_db()
+    row = db.execute(
         "SELECT order_id, html_path FROM reports WHERE public_token = ?",
         (token,)).fetchone()
     if row and row["html_path"]:
@@ -212,7 +213,13 @@ def hosted_report(token: str):
             # Открытие СВОЕГО отчёта — момент получения ценности; без события
             # «дошёл до отчёта» и «отчёт прочитан» были неразличимы.
             track_event("report_view", {"order_id": row["order_id"]})
-            return Response(path.read_text(encoding="utf-8"), mimetype="text/html")
+            # Оценка отчёта (звёзды + текст) дописывается при отдаче: отчёт лежит
+            # готовым файлом, а форма — не часть документа (в PDF её нет).
+            widget = feedback.widget_html(
+                "order", token, feedback.get_one(db, "order", row["order_id"]))
+            return Response(
+                feedback.inject_into_report(path.read_text(encoding="utf-8"), widget),
+                mimetype="text/html")
     abort(404)
 
 
@@ -357,6 +364,9 @@ def cabinet():
         " WHERE o.customer_id = ? AND o.status != 'created'"
         " ORDER BY o.id DESC", (customer["id"],)).fetchall()
     products = settings.get_products()
+    # Оценки: «★★★★☆» на карточке или ссылка «оценить» — родитель видит, что его
+    # мнение записано, а мы получаем второй заход к форме без письма.
+    fb_orders = feedback.index_for(db, "order", [o["id"] for o in orders])
     groups: dict[str, dict] = {}    # имя ребёнка -> {name, orders[], delivered_n}
 
     def _group(display_name: str) -> dict:
@@ -391,12 +401,14 @@ def cabinet():
             "ready": ready,
             "report_url": f"/r/{o['public_token']}" if o["public_token"] else None,
             "drawing_ids": [d["id"] for d in drawings],
+            "feedback": fb_orders.get(o["id"]),
         })
     # Бесплатные разборы — в те же группы по ребёнку. До покупки это и есть
     # «недоделанная корзина», которая продаёт сама.
     free_rows = db.execute(
         "SELECT * FROM free_analyses WHERE customer_id = ? AND status = 'done'"
         " ORDER BY id DESC", (customer["id"],)).fetchall()
+    fb_free = feedback.index_for(db, "free", [f["id"] for f in free_rows])
     for f in free_rows:
         grp = _group(f["child_name"] or "Без имени")
         grp["free"].append({
@@ -405,6 +417,7 @@ def cabinet():
             "age": f["child_age"],
             "image_deleted": bool(f["deleted_at"]),
             "order_url": f"/order?free={f['token']}",
+            "feedback": fb_free.get(f["id"]),
         })
 
     track_event("cabinet_view", customer_id=customer["id"])

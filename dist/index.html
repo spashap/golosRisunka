@@ -1253,6 +1253,38 @@ html.dk .btn { color: #241A12; }
   font-size: var(--fs-small); font-weight: 600; color: var(--accent);
 }
 @media (max-width: 480px) { .offer { padding: 22px 17px 18px; } }
+
+/* Оценка результата (звёзды 1–5 + текст): один компонент на бесплатный разбор и
+   платный отчёт — сравнивать ответы можно только если они собраны одинаково. */
+.rate {
+  margin: 26px 0 10px; padding: 20px 22px 18px;
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+}
+.rate__title {
+  font-family: var(--font-head); font-weight: 800; font-size: var(--fs-h3);
+  color: var(--ink); margin: 0 0 8px;
+}
+.rate__stars { display: inline-flex; flex-direction: row-reverse; gap: 2px; }
+.rate__input { position: absolute; opacity: 0; width: 0; height: 0; }
+.rate__star {
+  font-size: 34px; line-height: 1; cursor: pointer; padding: 2px 3px;
+  color: var(--line); transition: color .12s, transform .12s; user-select: none;
+}
+/* Заливка «до выбранной включительно» — через row-reverse + ~ соседей. */
+.rate__star:hover, .rate__star:hover ~ .rate__star,
+.rate__input:checked ~ .rate__star { color: var(--accent2); }
+.rate__star:hover { transform: scale(1.12); }
+.rate__input:focus-visible + .rate__star { outline: 2px solid var(--accent); border-radius: 6px; }
+.rate__label { font-size: var(--fs-small); color: var(--muted); min-height: 1.4em; margin: 2px 0 10px; }
+.rate__text { width: 100%; resize: vertical; min-height: 72px; }
+.rate__actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+.rate__stars--shake { animation: rate-shake .3s; }
+@keyframes rate-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+/* Внутри платного отчёта: ширина колонки отчёта, отступ от дисклеймера. */
+body.report .rate { max-width: 640px; margin: 28px auto 40px; }
+/* Строка оценки в кабинете и админке */
+.stars { color: var(--accent2); letter-spacing: 1px; white-space: nowrap; }
 </style>
 <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Organization", "name": "Голос рисунка", "url": "https://golosrisunka.ru/", "logo": "https://golosrisunka.ru/static/img/og-default.png", "description": "Анализ детского рисунка по фото: персональный отчёт о том, что рисунок говорит о ребёнке — его характер, темы, внутренний мир, интересы и как его поддержать. Бережно, по методикам Пиаже, Ловенфельда, Выготского — наблюдение и подсказка, без гаданий и диагнозов.", "knowsLanguage": "ru"}, {"@context": "https://schema.org", "@type": "WebSite", "name": "Голос рисунка", "url": "https://golosrisunka.ru/", "inLanguage": "ru"}, {"@context": "https://schema.org", "@type": "Product", "name": "Персональный отчёт по рисункам ребёнка", "description": "Тёплый персональный PDF-отчёт по рисункам ребёнка: что его волнует и влечёт, какой у него характер и внутренний мир, какие темы он выбирает — и как его понять и поддержать. 7 направлений (личность ведёт, навыки поддерживают) с понятными объяснениями. Бережное образовательное наблюдение и подсказка, без гаданий и диагнозов.", "brand": {"@type": "Brand", "name": "Голос рисунка"}, "offers": [{"@type": "Offer", "name": "Персональный отчёт о рисунках вашего ребёнка", "price": 2999, "priceCurrency": "RUB", "url": "https://golosrisunka.ru/order?product=snapshot", "availability": "https://schema.org/InStock"}]}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Что интересного я могу узнать о ребёнке из отчёта?", "acceptedAnswer": {"@type": "Answer", "text": "Вы увидите, что волнует вашего ребёнка и к чему его тянет, какие темы и сюжеты он выбирает снова и снова, какой у него характер и подход к миру, какое настроение живёт в его рисунках — и как его понять и поддержать. А ещё — сильные стороны в рисовании. Всё бережно, по видимым деталям и методикам детского развития: как наблюдение и гипотеза, а не гадание и не диагноз."}}, {"@type": "Question", "name": "Какой возраст ребёнка подходит?", "acceptedAnswer": {"@type": "Answer", "text": "От 3 до 12 лет. В отчёте учитывается возрастной этап развития рисунка: то, что типично для трёх лет, читается иначе, чем для девяти."}}, {"@type": "Question", "name": "Что нужно прислать?", "acceptedAnswer": {"@type": "Answer", "text": "Фото 1–3 рисунков, которые ребёнок уже нарисовал, и короткие ответы о контексте: возраст, материалы, тема, было ли задание. Ничего специально рисовать не нужно."}}, {"@type": "Question", "name": "Как быстро придёт отчёт?", "acceptedAnswer": {"@type": "Answer", "text": "Обычно в течение часа после оплаты. PDF придёт на почту и будет доступен в личном кабинете."}}, {"@type": "Question", "name": "Это психологическая диагностика? Это не диагноз?", "acceptedAnswer": {"@type": "Answer", "text": "Это бережное наблюдение и подсказки для родителя, а не клинический диагноз. Мы помогаем понять характер, темы и внутренний мир ребёнка — опираясь на видимые детали рисунка и методики детского развития (Пиаже, Ловенфельд, Выготский), всегда в формате гипотезы, которую лучше проверить в разговоре с самим ребёнком. Это не гадание по цветам и символам и не постановка диагноза. Если вас что-то серьёзно тревожит — обратитесь к профильному специалисту."}}, {"@type": "Question", "name": "Что означают оценки 6/10, 8/10 или 9/10?", "acceptedAnswer": {"@type": "Answer", "text": "Оценки — вспомогательный слой: они относятся к конкретному рисунку или серии, а не к ребёнку как личности. Средний балл не означает проблему — иногда направление просто меньше видно в выбранном сюжете (например, если на рисунке один объект без персонажей)."}}, {"@type": "Question", "name": "Как понять, что отчёт не общий шаблон?", "acceptedAnswer": {"@type": "Answer", "text": "Каждое наблюдение привязано к конкретным деталям именно этого рисунка: цвету, линиям, сюжету, выбранным темам и героям, материалам и возрасту ребёнка. Поэтому отчёт не выглядит как текст «про любого ребёнка» — и поэтому мы просим не только фото, но и короткий контекст."}}, {"@type": "Question", "name": "А если рисунок меня тревожит?", "acceptedAnswer": {"@type": "Answer", "text": "Отчёт поможет спокойно увидеть, что ребёнок выражает рисунком, и отделить наблюдения от популярных мифов («тёмный цвет = тревога» и подобных). Мы не ставим диагнозов и не пугаем. Но если вас серьёзно беспокоит состояние, поведение или безопасность ребёнка, лучше обратиться к профильному специалисту — отчёт не заменяет консультацию."}}, {"@type": "Question", "name": "А если отчёт мне не понравится?", "acceptedAnswer": {"@type": "Answer", "text": "Напишите нам в течение 7 дней — вернём деньги без лишних вопросов."}}, {"@type": "Question", "name": "Кто увидит рисунки моего ребёнка?", "acceptedAnswer": {"@type": "Answer", "text": "Только вы. Рисунки не публикуются, не используются для рекламы и не передаются третьим лицам."}}, {"@type": "Question", "name": "Как понять рисунок ребёнка 4–5 лет?", "acceptedAnswer": {"@type": "Answer", "text": "В 4–5 лет ребёнок часто переходит от «головоногов» к более полным фигурам, у него появляются любимые сюжеты и цвета. Понять рисунок — значит увидеть, что ребёнок выражает, что ему сейчас важно и на каком этапе развития он находится, а не искать «тайный смысл» по цветам. Именно это бережно показывает наш отчёт — по возрастным особенностям и видимым деталям, как наблюдение, а не диагноз."}}, {"@type": "Question", "name": "Как интерпретировать детский рисунок дома самому?", "acceptedAnswer": {"@type": "Answer", "text": "Дома полезно смотреть не на «значения цветов», а на то, что ребёнок выбирает рисовать: какие темы и сюжеты повторяются, какие герои ему важны, как уверенно он ведёт линию, как использует лист. И главное — расспрашивать самого ребёнка о его рисунке. Это бережное наблюдение за тем, что он выражает, а не гадание и не психологический диагноз."}}]}]</script>
 
@@ -1279,7 +1311,7 @@ html.dk .btn { color: #241A12; }
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 
-<script src="/static/js/track.js?v=1.071"></script>
+<script src="/static/js/track.js?v=1.072"></script>
 </head>
 <body>
 
@@ -2075,7 +2107,7 @@ html.dk .btn { color: #241A12; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.071</span>
+    <span class="foot-ver">V1.072</span>
   </div>
 </footer>
 

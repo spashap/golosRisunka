@@ -55,6 +55,12 @@
                   title="Отчёт о развитии: добавите свежие рисунки — сравним с этим отчётом. Скоро">
             📈 Сравнить с новыми рисунками · скоро</button>
         </div>
+        <p class="hint" style="margin-top: 10px">
+          {% if o.feedback %}Ваша оценка: <span class="stars">{{ o.feedback.str }}</span>
+            <a href="{{ o.report_url }}#feedback" data-ym-goal="cabinet_rate_report">изменить</a>
+          {% else %}<a href="{{ o.report_url }}#feedback" data-ym-goal="cabinet_rate_report">Оценить отчёт</a>
+            — насколько он помог понять ребёнка{% endif %}
+        </p>
         {% elif o.status_kind == "wait" %}
         <p class="hint" style="margin-top: 12px">Обычно отчёт готов в течение часа после
           оплаты — пришлём на почту и он появится здесь.</p>
@@ -84,6 +90,12 @@
           <a class="btn btn--primary" href="{{ f.order_url }}"
              data-ym-goal="cabinet_free_to_order">Собрать портрет {{ g.name }}</a>
         </div>
+        <p class="hint" style="margin-top: 10px">
+          {% if f.feedback %}Ваша оценка: <span class="stars">{{ f.feedback.str }}</span>
+            <a href="/free/r/{{ f.token }}#feedback" data-ym-goal="cabinet_rate_free">изменить</a>
+          {% else %}<a href="/free/r/{{ f.token }}#feedback" data-ym-goal="cabinet_rate_free">Оценить разбор</a>
+            — попал ли он в точку{% endif %}
+        </p>
       </div>
       {% endfor %}
 

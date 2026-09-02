@@ -1,0 +1,27 @@
+{# Виджет оценки результата: звёзды 1–5 + необязательный текст.
+   Один партиал на бесплатный разбор (kind='free') и платный отчёт (kind='order');
+   в отчёт вставляется при отдаче (app/feedback.inject_into_report).
+   Контекст: kind, token, existing (строка feedback или None), star_labels, version. #}
+<section class="rate" id="feedback" data-feedback-form data-kind="{{ kind }}" data-token="{{ token }}">
+  <form method="post" action="/feedback/{{ kind }}/{{ token }}"
+        data-ym-goal-submit="{{ 'free_rate_submit' if kind == 'free' else 'report_rate_submit' }}">
+    <div class="rate__title">{% if existing %}Ваша оценка{% else %}{% if kind == 'free' %}Насколько разбор попал в точку?{% else %}Насколько отчёт помог понять ребёнка?{% endif %}{% endif %}</div>
+    <div class="rate__stars" role="radiogroup" aria-label="Оценка от 1 до 5">
+      {# DOM 5→1 + CSS row-reverse: визуально 1→5, а `:checked ~` заливает звёзды левее #}
+      {% for n in [5, 4, 3, 2, 1] %}
+      <input class="rate__input" type="radio" name="stars" id="rate-{{ kind }}-{{ n }}"
+             value="{{ n }}" {% if existing and existing.stars == n %}checked{% endif %} required>
+      <label class="rate__star" for="rate-{{ kind }}-{{ n }}" title="{{ star_labels[n] }}"
+             aria-label="{{ n }} из 5">★</label>
+      {% endfor %}
+    </div>
+    <div class="rate__label" data-rate-label>{% if existing %}{{ star_labels[existing.stars] }}{% else %}&nbsp;{% endif %}</div>
+    <textarea class="input rate__text" name="text" rows="3" maxlength="1500"
+              placeholder="Что оказалось точным, а что — мимо? Необязательно, но очень помогает">{{ existing.text if existing and existing.text else '' }}</textarea>
+    <div class="rate__actions">
+      <button class="btn btn--primary" type="submit">{% if existing %}Обновить оценку{% else %}Отправить{% endif %}</button>
+      <span class="hint" data-rate-thanks {% if not existing %}hidden{% endif %}>Спасибо! Ваш ответ сохранён.</span>
+    </div>
+  </form>
+</section>
+<script src="/static/js/feedback.js?v={{ version }}" defer></script>

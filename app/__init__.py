@@ -32,6 +32,8 @@ def create_app() -> Flask:
     app.register_blueprint(bp_admin)
     from app.free import bp_free
     app.register_blueprint(bp_free)
+    from app.feedback import bp_feedback
+    app.register_blueprint(bp_feedback)
 
     # Ошибки — тоже поведение: битая ссылка из письма или из выдачи выглядела в
     # аналитике как «человек просто не дошёл», а не как страница, которой нет.

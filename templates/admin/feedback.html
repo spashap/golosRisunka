@@ -1,0 +1,56 @@
+{% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
+{% block title %}Отзывы{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Отзывы</h1>
+  {{ period_filter(periods, days, url_for("admin.feedback")) }}
+</div>
+<p class="hint">Оценка от 1 до 5 звёзд и текст, которые родитель оставляет внизу
+  бесплатного разбора и внизу онлайн-версии платного отчёта. Одна оценка на продукт;
+  повторная отправка заменяет прежнюю. Два продукта считаются отдельно: разбор бесплатный
+  и короткий, отчёт платный и большой — общий средний балл ничего бы не сказал.
+  Шкала: {% for n, l in labels.items() %}{{ n }} — {{ l }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>
+
+<div class="admin-kpis">
+  {% for title, s, d in [("Бесплатные разборы", free, delivered.free), ("Платные отчёты", order, delivered.order)] %}
+  <div class="form-card admin-kpi" style="text-align:left">
+    <div class="admin-kpi__l" style="margin-bottom:6px"><b>{{ title }}</b></div>
+    <div class="admin-kpi__n">{{ s.avg }}<span class="hint" style="font-size:14px;font-weight:400"> / 5</span></div>
+    <div class="hint">оценок: {{ s.n }} из {{ d }} выданных
+      {% if d %}({{ (100 * s.n / d)|round|int }}%){% endif %} · с текстом: {{ s.with_text }}</div>
+    <table style="margin-top:8px;min-width:0">
+      {% for n in [5, 4, 3, 2, 1] %}
+      <tr><td style="padding:1px 6px 1px 0;white-space:nowrap"><span class="stars">{{ '★' * n }}</span></td>
+        <td style="padding:1px 6px;width:140px">
+          <div style="height:10px;border-radius:5px;background:var(--accent2);opacity:.8;width:{{ (100 * s.dist[n] / s.max)|int if s.max else 0 }}%"></div></td>
+        <td style="padding:1px 0" class="hint">{{ s.dist[n] }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Когда (UTC)</th><th>Продукт</th><th>Email</th><th>Оценка</th><th>Текст</th></tr></thead>
+  <tbody>
+  {% for i in items %}
+  <tr>
+    <td style="white-space:nowrap">{{ i.at }}{% if i.updated %} <span class="hint" title="оценка менялась">изм.</span>{% endif %}</td>
+    <td style="white-space:nowrap">
+      <span class="status-pill status-pill--{{ 'ready' if i.kind == 'order' else 'wait' }}">{{ 'отчёт' if i.kind == 'order' else 'разбор' }}</span>
+      {% if i.url %}<a href="{{ i.url }}" target="_blank">{{ i.what }}</a>{% else %}{{ i.what }}{% endif %}
+    </td>
+    <td>{{ i.email or '—' }}</td>
+    <td style="white-space:nowrap"><span class="stars">{{ i.str }}</span> <span class="hint">{{ labels[i.stars] }}</span></td>
+    <td style="max-width:420px">{{ i.text or '—' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">За период отзывов нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if items|length == 500 %}<p class="hint">Показаны последние 500.</p>{% endif %}
+{% endblock %}

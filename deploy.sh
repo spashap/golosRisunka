@@ -14,7 +14,15 @@ SVC_USER=www-data
 cd "$APP_DIR"
 
 echo "== pull =="
-git pull --ff-only
+# SKIP_PULL=1 — код уже доставлен в этот клон напрямую (git push в ветку claude-deploy +
+# ff-merge), а GitHub недоступен: аккаунт spashap скрыт с 28.08.2026, анонимный
+# HTTPS-pull отвечает 404, deploy-ключи тоже не читают. Как только аккаунт вернут,
+# обычный запуск без переменной снова делает git pull.
+if [ "${SKIP_PULL:-0}" = "1" ]; then
+  echo "SKIP_PULL=1: git pull пропущен (код доставлен напрямую)"
+else
+  git pull --ff-only
+fi
 echo "now at $(git rev-parse --short HEAD)  (V$(cat VERSION 2>/dev/null || echo '?'))"
 
 echo "== python deps =="

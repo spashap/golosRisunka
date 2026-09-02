@@ -7,11 +7,13 @@
 <p class="hint">Родитель попадает сюда, как только оставил почту — в платном заказе или
   в бесплатном разборе. «Из фремиума» без заказов — это лид: контакт есть, покупки ещё нет.
   Ребёнка фремиум намеренно не заводит (там возрастная полоса, а не дата рождения),
-  поэтому у таких строк имя показано из разбора.</p>
+  поэтому у таких строк имя показано из разбора. В колонке «Получил» — ссылки на то,
+  что мы человеку выдали; в «Отзыв» — его оценка (все отзывы —
+  в разделе <a href="{{ url_for('admin.feedback') }}?days=all">Отзывы</a>).</p>
 <div class="admin-scroll">
 <table>
   <thead><tr><th>№</th><th>Email</th><th>С нами с</th><th>Дети</th>
-    <th>Заказов</th><th>Оплачено</th><th>Разборов</th><th></th></tr></thead>
+    <th>Заказов</th><th>Оплачено</th><th>Разборов</th><th>Получил</th><th>Отзыв</th><th></th></tr></thead>
   <tbody>
   {% for c in clients %}
   <tr>
@@ -24,12 +26,29 @@
     <td>{{ c.orders }}</td>
     <td>{{ c.rub }} ₽</td>
     <td>{% if c.free %}{{ c.free }}{% if c.free_done %} <span class="hint">({{ c.free_done }} готов.)</span>{% endif %}{% endif %}</td>
+    <td>
+      {% for p in c.products %}
+        <div style="white-space:nowrap">
+          {% if p.url %}<a href="{{ p.url }}" target="_blank">{{ p.label }}</a>
+          {% else %}{{ p.label }} <span class="hint">({{ p.status }})</span>{% endif %}
+          {% if p.feedback %}<span class="stars" title="{{ p.feedback.text }}">{{ p.feedback.str }}</span>{% endif %}
+        </div>
+      {% else %}—{% endfor %}
+    </td>
+    <td>
+      {% if c.feedback %}
+        {% set last = c.feedback[0] %}
+        <span class="stars">{{ last.str }}</span>
+        {% if c.feedback|length > 1 %}<span class="hint">+{{ c.feedback|length - 1 }}</span>{% endif %}
+        {% if last.text %}<div class="hint" style="max-width:260px" title="{{ last.what }}">{{ last.text }}</div>{% endif %}
+      {% else %}—{% endif %}
+    </td>
     <td>{% if c.lead %}<span class="status-pill status-pill--wait">только фремиум</span>
         {% elif c.free and c.paid %}<span class="status-pill status-pill--ready">фремиум → покупка</span>
         {% endif %}</td>
   </tr>
   {% else %}
-  <tr><td colspan="8">Клиентов пока нет</td></tr>
+  <tr><td colspan="10">Клиентов пока нет</td></tr>
   {% endfor %}
   </tbody>
 </table>

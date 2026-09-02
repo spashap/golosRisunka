@@ -23,6 +23,7 @@ from flask import (Blueprint, Response, abort, g, jsonify, redirect,
 from app.auth import SESSION_COOKIE, login_link_for
 from app.db import get_db, new_token, now
 from app.mailer import render_email, send_email
+from app import feedback
 from app.track import track_event
 from config import free_keys, free_names, settings
 from config import free_texts as T
@@ -326,7 +327,10 @@ def result(token: str):
              else T.selling_block(name, address)),
         is_coloring="coloring" in flags,
         image_deleted=bool(row["deleted_at"]),
-        has_email=bool(row["email"]))
+        has_email=bool(row["email"]),
+        # виджет оценки (_feedback_widget.html)
+        kind="free", existing=feedback.get_one(db, "free", row["id"]),
+        star_labels=feedback.STAR_LABELS, version=settings.APP_VERSION)
 
 
 @bp_free.get("/img/<token>")

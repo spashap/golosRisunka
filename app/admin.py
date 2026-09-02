@@ -23,6 +23,7 @@ from flask import (Blueprint, abort, redirect, render_template, request,
 from app import admin_free_analytics as fa
 from app import admin_funnels as fn
 from app import admin_tasks as tasks
+from app import feedback as fb
 from app import geoip, jobs
 from app.db import get_db, now
 from config import settings
@@ -39,6 +40,7 @@ SECTIONS = [
     ("admin.actions", "Действия"),
     ("admin.orders", "Заказы"),
     ("admin.clients", "Клиенты"),
+    ("admin.feedback", "Отзывы"),
     ("admin.coupons", "Промокоды"),
     ("admin.prices", "Цены"),
     ("admin.site_settings", "Настройки сайта"),
@@ -632,11 +634,13 @@ def _free_leads(db, since: str) -> list[dict]:
         "SELECT * FROM free_analyses WHERE email IS NOT NULL AND created_at >= ?"
         " ORDER BY id DESC LIMIT 300", (since,)).fetchall()
     bought = fa.purchases_index(db, rows)
+    rated = fb.index_for(db, "free", [r["id"] for r in rows])
     out = []
     for r in rows:
         buys = bought.get(r["id"], [])
         out.append({
             "id": r["id"], "token": r["token"],
+            "feedback": rated.get(r["id"]),
             "created": (r["created_at"] or "")[:16].replace("T", " "),
             "email": r["email"], "child": r["child_name"], "age": r["child_age"],
             "concern": fa.concern_label(r["concern_key"]),
@@ -670,10 +674,12 @@ def orders():
         " FROM orders o LEFT JOIN reports r ON r.order_id = o.id"
         " WHERE o.created_at >= ? ORDER BY o.id DESC LIMIT 300", (since,)).fetchall()
     orders_view = []
+    rated = fb.index_for(db, "order", [o["id"] for o in rows])
     for o in rows:
         child = json.loads(o["child_json"] or "{}")
         orders_view.append({
             "id": o["id"], "created": o["created_at"][:16].replace("T", " "),
+            "feedback": rated.get(o["id"]),
             "email": o["email"], "child": child.get("name", ""),
             "product": o["product_code"], "rub": o["price_kopecks"] // 100,
             "coupon": o["coupon_code"] or "", "status": o["status"],
@@ -760,6 +766,127 @@ _CLIENTS_SQL = (
     " FROM customers c")
 
 
+def _client_products(db, customer_ids: list[int]) -> tuple[dict, dict]:
+    """Что клиент получил (готовые отчёты и разборы, со ссылками) и что сказал.
+
+    Возвращает ({customer_id: [продукты]}, {customer_id: [отзывы]}). Раньше в списке
+    клиентов для покупателя не было даже ссылки на отчёт, а фремиум-клиент выглядел
+    строкой с числом — оценить, ЧТО мы человеку выдали, было негде.
+    """
+    products: dict[int, list] = {}
+    feedbacks: dict[int, list] = {}
+    if not customer_ids:
+        return products, feedbacks
+    q = ",".join("?" * len(customer_ids))
+    titles = {k: v.get("title", k) for k, v in settings.get_products().items()}
+    orders = db.execute(
+        f"SELECT o.id, o.customer_id, o.product_code, o.status, o.paid_at, o.created_at,"
+        f" r.public_token FROM orders o LEFT JOIN reports r ON r.order_id = o.id"
+        f" WHERE o.customer_id IN ({q}) AND o.status != 'created' ORDER BY o.id",
+        customer_ids).fetchall()
+    frees = db.execute(
+        f"SELECT id, customer_id, token, child_name, child_age, status, created_at"
+        f" FROM free_analyses WHERE customer_id IN ({q}) ORDER BY id",
+        customer_ids).fetchall()
+    fb_o = fb.index_for(db, "order", [o["id"] for o in orders])
+    fb_f = fb.index_for(db, "free", [f["id"] for f in frees])
+    for o in orders:
+        rated = fb_o.get(o["id"])
+        item = {
+            "kind": "order", "id": o["id"],
+            "label": f"#{o['id']} {titles.get(o['product_code'], o['product_code'])}",
+            "date": (o["paid_at"] or o["created_at"] or "")[:10],
+            "status": o["status"],
+            "url": f"/r/{o['public_token']}" if o["public_token"]
+                   and o["status"] == "delivered" else None,
+            "feedback": rated,
+        }
+        products.setdefault(o["customer_id"], []).append(item)
+        if rated:
+            feedbacks.setdefault(o["customer_id"], []).append(
+                {**rated, "what": item["label"], "url": item["url"]})
+    for f in frees:
+        rated = fb_f.get(f["id"])
+        age = f", {f['child_age']} л." if f["child_age"] else ""
+        item = {
+            "kind": "free", "id": f["id"],
+            "label": f"разбор: {f['child_name'] or '—'}{age}",
+            "date": (f["created_at"] or "")[:10],
+            "status": f["status"],
+            "url": f"/free/r/{f['token']}" if f["status"] == "done" else None,
+            "feedback": rated,
+        }
+        products.setdefault(f["customer_id"], []).append(item)
+        if rated:
+            feedbacks.setdefault(f["customer_id"], []).append(
+                {**rated, "what": item["label"], "url": item["url"]})
+    # Отзывы — свежие первыми: в колонке виден последний, остальные по наведению.
+    for lst in feedbacks.values():
+        lst.sort(key=lambda x: x["at"], reverse=True)
+    return products, feedbacks
+
+
+@bp_admin.get("/feedback")
+def feedback():
+    """Отзывы: звёзды + текст по бесплатным разборам и платным отчётам за период.
+    Сводка (сколько, средний балл, распределение) отдельно по двум продуктам —
+    смешивать их нельзя: разбор бесплатный и короткий, отчёт платный и большой."""
+    _guard()
+    days, since = _period()
+    db = get_db()
+    rows = db.execute(
+        "SELECT f.*, COALESCE(f.updated_at, f.created_at) at, c.email cust_email,"
+        " fa.token free_token, fa.child_name free_child, fa.child_age free_age,"
+        " fa.email free_email, o.product_code, o.email order_email, r.public_token,"
+        " (SELECT name FROM children ch WHERE ch.id = o.child_id) order_child"
+        " FROM feedback f"
+        " LEFT JOIN customers c ON c.id = f.customer_id"
+        " LEFT JOIN free_analyses fa ON f.kind = 'free' AND fa.id = f.ref_id"
+        " LEFT JOIN orders o ON f.kind = 'order' AND o.id = f.ref_id"
+        " LEFT JOIN reports r ON r.order_id = o.id"
+        " WHERE COALESCE(f.updated_at, f.created_at) >= ?"
+        " ORDER BY at DESC LIMIT 500", (since,)).fetchall()
+    titles = {k: v.get("title", k) for k, v in settings.get_products().items()}
+    items = []
+    for f in rows:
+        if f["kind"] == "free":
+            what = f"разбор: {f['free_child'] or '—'}" + \
+                   (f", {f['free_age']} л." if f["free_age"] else "")
+            url = f"/free/r/{f['free_token']}" if f["free_token"] else None
+            email = f["cust_email"] or f["free_email"] or ""
+        else:
+            what = f"#{f['ref_id']} {titles.get(f['product_code'], f['product_code'] or '')}"
+            url = f"/r/{f['public_token']}" if f["public_token"] else None
+            email = f["cust_email"] or f["order_email"] or ""
+        items.append({
+            "id": f["id"], "kind": f["kind"], "at": (f["at"] or "")[:16].replace("T", " "),
+            "stars": f["stars"], "str": fb.stars_str(f["stars"]),
+            "text": f["text"] or "", "email": email, "what": what, "url": url,
+            "updated": bool(f["updated_at"]), "customer_id": f["customer_id"],
+        })
+
+    def _summary(kind: str) -> dict:
+        ks = [i for i in items if i["kind"] == kind]
+        dist = {n: sum(1 for i in ks if i["stars"] == n) for n in (1, 2, 3, 4, 5)}
+        n = len(ks)
+        return {"n": n, "with_text": sum(1 for i in ks if i["text"]),
+                "avg": (f"{sum(i['stars'] for i in ks) / n:.2f}" if n else "—"),
+                "dist": dist, "max": max(dist.values()) if n else 0}
+
+    # Сколько всего продуктов выдано — знаменатель отклика.
+    delivered_free = db.execute(
+        "SELECT COUNT(*) c FROM free_analyses WHERE status = 'done'"
+        " AND delivered_at >= ?", (since,)).fetchone()["c"]
+    delivered_orders = db.execute(
+        "SELECT COUNT(*) c FROM orders WHERE status = 'delivered'"
+        " AND created_at >= ?", (since,)).fetchone()["c"]
+    return _render("admin.feedback", "admin/feedback.html", items=items,
+                   days=days, periods=PERIODS,
+                   free=_summary("free"), order=_summary("order"),
+                   delivered={"free": delivered_free, "order": delivered_orders},
+                   labels=fb.STAR_LABELS)
+
+
 @bp_admin.get("/clients")
 def clients():
     _guard()
@@ -775,6 +902,7 @@ def clients():
         f"SELECT COUNT(*) all_n, SUM(CASE WHEN n_paid > 0 THEN 1 ELSE 0 END) buyers_n,"
         f" SUM(CASE WHEN n_free > 0 THEN 1 ELSE 0 END) free_n"
         f" FROM ({_CLIENTS_SQL})").fetchone()
+    products, feedbacks = _client_products(db, [r["id"] for r in rows])
     clients_view = [{
         "id": r["id"], "email": r["email"],
         "created": r["created_at"][:10],
@@ -784,6 +912,9 @@ def clients():
         "free": r["n_free"], "free_done": r["n_free_done"],
         # «Только фремиум» — лид без единого заказа: с ним ещё предстоит работа.
         "lead": r["n_free"] > 0 and r["n_orders"] == 0,
+        # что мы ему выдали (ссылки на отчёт/разбор) и что он об этом сказал
+        "products": products.get(r["id"], []),
+        "feedback": feedbacks.get(r["id"], []),
     } for r in rows]
     return _render("admin.clients", "admin/clients.html", clients=clients_view,
                    tab=tab, tabs_items=CLIENT_TABS,

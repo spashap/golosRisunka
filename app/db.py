@@ -238,6 +238,23 @@ CREATE TABLE IF NOT EXISTS service_heartbeat (
     name TEXT PRIMARY KEY,
     last_seen_at TEXT NOT NULL
 );
+-- Оценка результата родителем (звёзды 1–5 + текст) — ОДНА на продукт, повтор
+-- обновляет строку. kind='free' -> free_analyses.id, kind='order' -> orders.id.
+-- Отдельно от free_interpretations.parent_vote: там «про него / не про него» по
+-- конкретной фразе, здесь — «помогло ли» про результат целиком (app/feedback.py).
+CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY,
+    kind TEXT NOT NULL,                   -- 'free' / 'order'
+    ref_id INTEGER NOT NULL,
+    stars INTEGER NOT NULL,               -- 1..5
+    text TEXT,
+    customer_id INTEGER REFERENCES customers(id),
+    visitor_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_feedback_ref ON feedback(kind, ref_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_customer ON feedback(customer_id);
 -- =================================================================================
 CREATE INDEX IF NOT EXISTS idx_events_type ON events(type, created_at);
 CREATE INDEX IF NOT EXISTS idx_events_visitor ON events(visitor_id, created_at);
