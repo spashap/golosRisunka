@@ -40,7 +40,8 @@
     <td style="white-space:nowrap">{{ i.at }}{% if i.updated %} <span class="hint" title="оценка менялась">изм.</span>{% endif %}</td>
     <td style="white-space:nowrap">
       <span class="status-pill status-pill--{{ 'ready' if i.kind == 'order' else 'wait' }}">{{ 'отчёт' if i.kind == 'order' else 'разбор' }}</span>
-      {% if i.url %}<a href="{{ i.url }}" target="_blank">{{ i.what }}</a>{% else %}{{ i.what }}{% endif %}
+      {{ i.what }}
+      {% if i.url %}<a class="admin-open" href="{{ i.url }}" target="_blank">открыть ↗</a>{% endif %}
     </td>
     <td>{{ i.email or '—' }}</td>
     <td style="white-space:nowrap"><span class="stars">{{ i.str }}</span> <span class="hint">{{ labels[i.stars] }}</span></td>

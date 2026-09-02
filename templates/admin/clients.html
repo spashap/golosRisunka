@@ -29,8 +29,9 @@
     <td>
       {% for p in c.products %}
         <div style="white-space:nowrap">
-          {% if p.url %}<a href="{{ p.url }}" target="_blank">{{ p.label }}</a>
-          {% else %}{{ p.label }} <span class="hint">({{ p.status }})</span>{% endif %}
+          {{ p.label }}
+          {% if p.url %}<a class="admin-open" href="{{ p.url }}" target="_blank">открыть ↗</a>
+          {% else %}<span class="hint">({{ p.status }})</span>{% endif %}
           {% if p.feedback %}<span class="stars" title="{{ p.feedback.text }}">{{ p.feedback.str }}</span>{% endif %}
         </div>
       {% else %}—{% endfor %}

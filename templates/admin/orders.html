@@ -32,7 +32,7 @@
     <td>{% if f.email_only %}только почта{% else %}почта и рисунок{% endif %}</td>
     <td><span class="admin-status admin-status--{{ f.status }}">{{ f.status }}</span>
       {% if f.reject %}<br><span class="hint">{{ f.reject }}</span>{% endif %}</td>
-    <td>{% if f.status == 'done' %}<a href="/free/r/{{ f.token }}" target="_blank">открыть</a>{% endif %}</td>
+    <td>{% if f.status == 'done' %}<a class="admin-open" href="/free/r/{{ f.token }}" target="_blank">открыть ↗</a>{% endif %}</td>
     <td>{% if f.feedback %}<span class="stars">{{ f.feedback.str }}</span>
       {% if f.feedback.text %}<div class="hint" style="max-width:220px">{{ f.feedback.text }}</div>{% endif %}
       {% else %}—{% endif %}</td>
@@ -64,7 +64,7 @@
     <td style="white-space:nowrap">{{ o.rub }} ₽</td><td>{{ o.coupon }}</td><td>{{ o.drawings }}</td>
     <td class="hint">{{ o.utm }}</td>
     <td><span class="admin-status admin-status--{{ o.status }}">{{ o.status }}</span></td>
-    <td>{% if o.token %}<a href="/r/{{ o.token }}" target="_blank">открыть</a>{% endif %}</td>
+    <td>{% if o.token %}<a class="admin-open" href="/r/{{ o.token }}" target="_blank">открыть ↗</a>{% endif %}</td>
     <td>{% if o.feedback %}<span class="stars">{{ o.feedback.str }}</span>
       {% if o.feedback.text %}<div class="hint" style="max-width:220px">{{ o.feedback.text }}</div>{% endif %}
       {% else %}—{% endif %}</td>

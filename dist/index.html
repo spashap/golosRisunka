@@ -981,6 +981,14 @@ html.dk .btn { color: #241A12; }
 .admin-filter { display: flex; gap: 8px; margin: 16px 0; max-width: 520px; }
 .admin-filter .input { flex: 1; }
 .admin-status { font-weight: 600; font-size: 13px; }
+/* Ссылка «открыть» на выданный продукт. Глобально `a { color: inherit }` — в таблице
+   ссылка сливалась с текстом, и колонку «Получил» читали как подпись, а не как переход. */
+.admin-open {
+  display: inline-block; font-size: 12px; font-weight: 700; line-height: 1.4;
+  padding: 2px 10px; border-radius: var(--radius-pill); white-space: nowrap;
+  background: var(--accent); color: #fff; vertical-align: middle;
+}
+.admin-open:hover { background: var(--ink); color: #fff; }
 .admin-status--delivered { color: #2E7D32; }
 .admin-status--paid, .admin-status--generating { color: var(--accent); }
 .admin-status--failed { color: #C0392B; }
@@ -1311,7 +1319,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 
-<script src="/static/js/track.js?v=1.072"></script>
+<script src="/static/js/track.js?v=1.073"></script>
 </head>
 <body>
 
@@ -2107,7 +2115,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.072</span>
+    <span class="foot-ver">V1.073</span>
   </div>
 </footer>
 
