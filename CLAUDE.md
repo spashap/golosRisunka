@@ -452,6 +452,7 @@ DevelopmentStatus.md (23.06), хендофф для англо-версии `pro
 - **Правка `deploy.sh` применяется только со СЛЕДУЮЩЕГО запуска** (скрипт делает `git pull`
   сам себя) — после такой правки прогнать `./deploy.sh` второй раз и убедиться в новом
   поведении, UseCase #29.
+- **Heartbeat воркера «стар» при `active (running)`** = соединение зависло в открытой транзакции (UseCase #32, 08.09): сначала `ls -la data/*.sqlite3-wal` (сотни МБ = чекпоинт заморожен), лечение — `systemctl restart golosrisunka-worker` + `PRAGMA wal_checkpoint(TRUNCATE)`. В коде: на долгоживущем соединении НИКОГДА `except: pass` вокруг commit — только rollback.
 - После ЛЮБОЙ правки аналитики/целей/шаблонов с `data-ym-goal` — `scripts/analytics_selftest.py`
   (30 проверок, красный при цели вне реестра `config/goals.py`).
 - `python -` heredoc и `&&`-цепочки: падение по encoding обрывает цепочку — файлы писать Write-тулом.

@@ -16,6 +16,7 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+import sqlite3
 import sys
 import time
 
@@ -28,16 +29,39 @@ log = logging.getLogger("free_worker")
 
 STAGES = ["prepare", "looking", "detail", "lint", "almost"]
 HEARTBEAT = "free_worker"
+_beat_broken = False
+
+
+def _rollback_quietly(conn) -> None:
+    """Закрыть транзакцию, пережившую ошибку (UseCase #32): открытая транзакция на
+    долгоживущем соединении = замороженный снимок БД, очередь не видна, WAL растёт."""
+    try:
+        conn.rollback()
+    except sqlite3.Error:
+        pass
 
 
 def _beat(conn) -> None:
     """Признак живости для админки: deploy.sh новый юнит не поднимает, мониторинга нет,
-    и после перезагрузки бокса разборы молча перестали бы генерироваться."""
-    conn.execute(
-        "INSERT INTO service_heartbeat (name, last_seen_at) VALUES (?, ?)"
-        " ON CONFLICT(name) DO UPDATE SET last_seen_at = excluded.last_seen_at",
-        (HEARTBEAT, now()))
-    conn.commit()
+    и после перезагрузки бокса разборы молча перестали бы генерироваться.
+
+    «database is locked» здесь (04.09 — упал весь процесс, спас только systemd
+    Restart=always) не должен ни ронять воркер, ни оставлять транзакцию открытой."""
+    global _beat_broken
+    try:
+        conn.execute(
+            "INSERT INTO service_heartbeat (name, last_seen_at) VALUES (?, ?)"
+            " ON CONFLICT(name) DO UPDATE SET last_seen_at = excluded.last_seen_at",
+            (HEARTBEAT, now()))
+        conn.commit()
+        if _beat_broken:
+            _beat_broken = False
+            log.info("heartbeat write recovered")
+    except sqlite3.Error as e:
+        _rollback_quietly(conn)
+        if not _beat_broken:          # одна строка на инцидент, не каждую секунду
+            _beat_broken = True
+            log.warning("heartbeat write failed (%s) - rolled back, will keep trying", e)
 
 
 def _stage(conn, aid: int, stage: str) -> None:
@@ -181,6 +205,11 @@ def main() -> int:
     last_sweep = ""
     try:
         while True:
+            if conn.in_transaction:
+                # Транзакция, пережившая итерацию, = замороженный снимок: новых анкет
+                # воркер не увидит никогда, чекпоинт WAL не пройдёт (UseCase #32).
+                log.warning("leaked transaction on worker connection - rolling back")
+                _rollback_quietly(conn)
             _beat(conn)
             # Уборщик хранения раз в сутки: free_worker и так долгоживущий процесс,
             # это дешевле cron и не требует ещё одного юнита.
@@ -190,21 +219,36 @@ def main() -> int:
                 try:
                     sweep_expired(conn)
                 except Exception as e:                       # noqa: BLE001
+                    _rollback_quietly(conn)
                     log.warning("retention sweep failed: %s", e)
 
-            if _running(conn) >= settings.FREE_MAX_CONCURRENT:
+            try:
+                if _running(conn) >= settings.FREE_MAX_CONCURRENT:
+                    time.sleep(1)
+                    continue
+                row = conn.execute(
+                    "SELECT * FROM free_analyses WHERE status = 'queued'"
+                    " ORDER BY id LIMIT 1").fetchone()
+            except sqlite3.Error as e:
+                # 'database is locked' дольше busy_timeout — переждать, не умереть.
+                _rollback_quietly(conn)
+                log.warning("sqlite error in poll loop (%s) - rolled back, retrying", e)
                 time.sleep(1)
                 continue
-            row = conn.execute(
-                "SELECT * FROM free_analyses WHERE status = 'queued'"
-                " ORDER BY id LIMIT 1").fetchone()
             if row is None:
                 if once:
                     log.info("queue drained")
                     return 0
                 time.sleep(1)
                 continue
-            process(conn, row)
+            try:
+                process(conn, row)
+            except sqlite3.Error as e:
+                # commit внутри process() упал по блокировке: анкета вернётся в очередь
+                # через _reap по STALL-таймауту, соединение — чистое.
+                _rollback_quietly(conn)
+                log.warning("free #%s: sqlite error (%s) - rolled back", row["id"], e)
+                time.sleep(1)
     except KeyboardInterrupt:
         log.info("free_worker stopped")
         return 0

@@ -68,11 +68,15 @@ def sweep_expired(conn: sqlite3.Connection,
         "SELECT id, file_path FROM free_analyses"
         " WHERE deleted_at IS NULL AND file_path IS NOT NULL AND created_at < ?",
         (cutoff,)).fetchall()
+    # Сначала файлы, потом ОДНА короткая транзакция: первый UPDATE открывал запись, и
+    # пока удалялись файлы, WAL-замок держался всё это время — веб и платный воркер
+    # ловили «database is locked» (UseCase #32).
     for r in rows:
         _remove_files(r["file_path"])
-        conn.execute("UPDATE free_analyses SET deleted_at = ? WHERE id = ?",
-                     (now(), r["id"]))
     if rows:
+        stamp = now()
+        conn.executemany("UPDATE free_analyses SET deleted_at = ? WHERE id = ?",
+                         [(stamp, r["id"]) for r in rows])
         conn.commit()
         log.info("retention: swept %d image(s) older than %d days", len(rows), ttl_days)
     return len(rows)
