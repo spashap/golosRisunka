@@ -317,6 +317,24 @@ def _sample_url() -> str | None:
         return None
 
 
+def _sample_proof(age: int | None) -> dict | None:
+    """Доказательство в оффере: цитата и рисунок из НАСТОЯЩЕГО примера отчёта того же
+    возраста. Родитель видит, как звучит то, за что платит, не уходя со страницы."""
+    try:
+        from app.samples import get_samples
+        want = T.SAMPLE_BY_BAND.get(T.age_band(age or 6))
+        samples = get_samples()
+        s = next((x for x in samples if x.token == want), None) or (samples[0] if samples else None)
+        if s is None or not s.quote:
+            return None
+        return {"url": f"/r/{s.token}", "caption": s.caption, "quote": s.quote,
+                "thumb": s.thumb_url,
+                "label": T.SELLING_PROOF_LABEL.format(caption=s.caption),
+                "more": T.SELLING_PROOF_MORE}
+    except Exception:
+        return None
+
+
 def _reject_text(row) -> str | None:
     """Человеческое объяснение отказа — его пишет модель (free_worker кладёт в JSON)."""
     try:
@@ -380,7 +398,8 @@ def result(token: str):
         sparse_pars=([p.replace("{name}", name) for p in T.SPARSE_PARAGRAPHS]
                      if "sparse" in flags else []),
         cta=(T.coloring_cta(name, address) if "coloring" in flags
-             else T.selling_block(name, address)),
+             else T.selling_block(name, address, row["concern_key"] or "neutral")),
+        proof=_sample_proof(row["child_age"]),
         is_coloring="coloring" in flags,
         image_deleted=bool(row["deleted_at"]),
         has_email=bool(row["email"]),

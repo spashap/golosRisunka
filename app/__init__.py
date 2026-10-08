@@ -51,6 +51,19 @@ def create_app() -> Flask:
         return render_template("error.html", code=404,
                                message="Такой страницы нет"), 404
 
+    @app.errorhandler(413)
+    def too_large(e):
+        """Загрузка больше MAX_CONTENT_LENGTH. Раньше — немой обрыв: в аналитике было
+        «нажал оформить» и тишина. Мастер бесплатного разбора ждёт JSON."""
+        from flask import jsonify
+        from app.track import track_event
+        track_event("upload_too_large", {"path": request.path[:200]})
+        if request.path.startswith("/free/"):
+            return jsonify({"error": "too_big"}), 413
+        return render_template("error.html", code=413,
+                               message="Фото слишком большие: до 15 МБ каждое. Вернитесь "
+                                       "назад и выберите снимки поменьше."), 413
+
     @app.errorhandler(500)
     def server_error(e):
         from app.track import track_event

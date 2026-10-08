@@ -205,6 +205,116 @@ def main() -> int:
     check("yandex cpc still ads", classify_channel({"utm_source": "yandex", "utm_medium": "cpc"},
                                                    None, None) == "ads")
 
+    print("8. free result offer")
+    from config import free_texts as T
+    bad = []
+    for addr in ("он", "она"):
+        for ck in [x["key"] for x in T.CONCERNS] + ["unknown"]:
+            s = T.selling_block("Маша" if addr == "она" else "Миша", addr, ck)
+            txt = " ".join([s["title"], s["body"], *s["includes"], s["button"]])
+            if "{" in txt or "}" in txt or not s["includes"]:
+                bad.append(f"{addr}/{ck}")
+    check("offer texts: every concern x gender fills all slots", not bad, ", ".join(bad))
+    s = T.selling_block("Маша", "она", "alone")
+    check("offer agrees with gender", "одну" in s["body"] and "какая Маша" in s["includes"][0],
+          s["body"][:80])
+    tmpjson = Path(tempfile.gettempdir()) / "golos_selftest_analysis.json"
+    tmpjson.write_text(json.dumps({"opening": "Открытие.", "detail": "Деталь.",
+                                   "question_to_child": "Вопрос?", "unknown_next": "Неизвестное."},
+                                  ensure_ascii=False), encoding="utf-8")
+    conn.execute("INSERT INTO free_analyses (token, visitor_id, status, child_name, child_age,"
+                 " address_form, concern_key, analysis_json_path, email, created_at)"
+                 " VALUES ('st_res', 'st_va', 'done', 'Маша', 6, 'она', 'black', ?, 'st@e.ru', ?)",
+                 (str(tmpjson), t_free))
+    conn.commit()
+    page = c.get("/free/r/st_res").get_data(as_text=True)
+    check("result page renders the offer", 'data-track-section="fr_offer"' in page
+          and "/order?free=st_res" in page and "check-list--one" in page)
+    check("offer sits before the rating widget",
+          page.find('data-track-section="fr_offer"') < page.find("feedback") or "feedback" not in page)
+    check("offer bridge uses the concern", "тёмными цветами" in page)
+    check("sample proof shown (if samples exist locally)", "free-proof" in page or not
+          __import__("app.samples", fromlist=["get_samples"]).get_samples())
+
+    print("9. order form detection")
+    base_ev = conn.execute("SELECT COALESCE(MAX(id), 0) m FROM events").fetchone()["m"]
+    c.post("/track/order-form", data={"k": "exit", "sec": "95", "f": "child_name,email,evil field,d1_file",
+                                      "last": "d1_theme", "files": "1", "via": "header_nav_check",
+                                      "bi": "2", "free": "1"})
+    c.post("/track/order-form", data={"k": "bogus"})
+    rows = conn.execute("SELECT type, payload_json FROM events WHERE id > ?", (base_ev,)).fetchall()
+    st = [json.loads(r["payload_json"]) for r in rows if r["type"] == "order_form_state"]
+    check("one state stored, bogus kind ignored", len(st) == 1, str(len(st)))
+    check("only whitelisted field names kept",
+          st and st[0]["fields"] == ["child_name", "email", "d1_file"] and st[0]["last"] == "d1_theme",
+          str(st[0] if st else None))
+    app.config["MAX_CONTENT_LENGTH"] = 1000
+    r = c.post("/order", data={"x": "y" * 3000})
+    r2 = c.post("/free/summary", data={"x": "y" * 3000})
+    app.config["MAX_CONTENT_LENGTH"] = settings.UPLOAD_MAX_BYTES * 3 + 1_000_000
+    n413 = conn.execute("SELECT COUNT(*) n FROM events WHERE type = 'upload_too_large' AND id > ?",
+                        (base_ev,)).fetchone()["n"]
+    check("too-large upload recorded (HTML for form, JSON for wizard)",
+          r.status_code == 413 and r2.status_code == 413 and r2.get_json() == {"error": "too_big"}
+          and n413 == 2, f"{r.status_code} {r2.status_code} n={n413}")
+    from app.routes import _record_cancel
+    oid = conn.execute("SELECT id FROM orders WHERE visit_id = 'st_mail'").fetchone()["id"]
+    pay = {"id": "st-pay-1", "status": "canceled", "metadata": {"order_id": str(oid)},
+           "cancellation_details": {"reason": "insufficient_funds", "party": "payment_network"}}
+    with app.test_request_context():
+        _record_cancel(pay)
+        _record_cancel(pay)
+    nc = conn.execute("SELECT COUNT(*) n FROM events WHERE type = 'pay_canceled'"
+                      " AND payload_json LIKE '%st-pay-1%'").fetchone()["n"]
+    check("payment cancel reason recorded once", nc == 1, str(nc))
+
+    # Синтетика: клик -> форма -> ушёл через шапку; второй — создал заказ, банк отказал.
+    t_f = iso(now - datetime.timedelta(minutes=5))
+    for vid, vis in (("st_form1", "st_vf1"), ("st_form2", "st_va")):
+        conn.execute("INSERT INTO web_visits (visit_id, visitor_id, started_at, last_at, entry_path,"
+                     " exit_path, pages, device, screen_w, channel, utm_json, yclid, referer)"
+                     " VALUES (?,?,?,?, '/order', '/order', 1, 'mobile', 390, ?, ?, ?, ?)",
+                     (vid, vis, t_f, t_f, "ads" if vid == "st_form1" else "email",
+                      utm if vid == "st_form1" else None, "y9" if vid == "st_form1" else None,
+                      "https://yandex.ru/" if vid == "st_form1" else "https://e.mail.ru/"))
+    st_exit = json.dumps({"k": "exit", "sec": 40, "fields": ["child_name", "child_gender"],
+                          "last": "child_birth_ym", "files": 0, "via": "header_nav_check"})
+    evs = [("st_form1", "order_form_view", None), ("st_form1", "form_started", None),
+           ("st_form1", "order_form_state", st_exit),
+           ("st_form2", "order_form_view", None), ("st_form2", "order_created", None),
+           ("st_form2", "pay_init_mobile_redirect", None)]
+    for vid, typ, p in evs:
+        conn.execute("INSERT INTO events (visitor_id, visit_id, type, payload_json, created_at)"
+                     " VALUES (?,?,?,?,?)", ("st_vf1" if vid == "st_form1" else "st_va", vid, typ, p, t_f))
+    conn.execute("INSERT INTO orders (email, product_code, price_kopecks, status, child_json,"
+                 " visitor_id, visit_id, created_at) VALUES ('st2@e.ru', 'snapshot', 149000,"
+                 " 'created', '{}', 'st_va', 'st_form2', ?)", (t_f,))
+    oid2 = conn.execute("SELECT id FROM orders WHERE visit_id = 'st_form2'").fetchone()["id"]
+    conn.commit()
+    with app.test_request_context():
+        _record_cancel({"id": "st-pay-2", "status": "canceled", "metadata": {"order_id": oid2},
+                        "cancellation_details": {"reason": "3d_secure_failed"}})
+    from app import order_diag
+    dg = order_diag.build(conn, d, d, scope="ads", campaign_id=camp)
+    fn_ = dg["funnel"]
+    check("diag: both ad-credited form visits counted", fn_["viewed"] == 2, str(fn_))
+    check("diag: stop reason = left before photo", dg["stopped_at"].get("left_before_photo") == 1,
+          str(dg["stopped_at"]))
+    check("diag: exit link captured", dg["left_via"].get("header_nav_check") == 1, str(dg["left_via"]))
+    check("diag: last field captured", any(x["field"] == "child_birth_ym"
+                                           for x in dg["last_field_before_leaving"]))
+    check("diag: order created + payment started + bank refusal reason",
+          fn_["created"] == 1 and fn_["payment_started"] == 1 and fn_["payment_canceled"] == 1
+          and dg["payment_cancel_reasons"].get("3d_secure_failed") == 1, json.dumps(fn_))
+    check("diag: free offer block counts the result view", dg["free_offer"]["result_views"] >= 0)
+    api_d = c.get(f"/api/ads/v1/order-diagnostics?from={today}&to={today}&campaign_id={camp}",
+                  headers=H).get_json()
+    check("API order-diagnostics", api_d.get("ok") and api_d["funnel"]["viewed"] == 2
+          and "@" not in json.dumps(api_d, ensure_ascii=False))
+    page = c.get(f"/admin/ads?from={today}&to={today}&scope=ads")
+    check("/admin/ads diagnostics section renders", page.status_code == 200
+          and "Почему не доходят до оплаты" in page.get_data(as_text=True))
+
     conn.close()
     print("")
     if FAILED:

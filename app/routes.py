@@ -600,6 +600,40 @@ def order_submit():
                              order_id, access_token)
 
 
+_ORDER_FIELD_RE = re.compile(r"^(child_[a-z_]{1,24}|d[1-3]_[a-z_]{1,24}|email|coupon)$")
+
+
+@bp.post("/track/order-form")
+def track_order_form():
+    """Состояние формы заказа от order.js: какие поля трогали, на каком остановились,
+    сколько фото выбрано, сколько секунд форма была на экране, через какую ссылку ушли.
+    Только ИМЕНА полей (белый список по форме), никогда — значения. Снимок шлётся при
+    уходе со вкладки (snap), при уходе со страницы (exit) и при отправке (submit);
+    диагностика берёт ПОСЛЕДНИЙ снимок визита (app/order_diag.py)."""
+    f = request.form
+    kind = f.get("k")
+    if kind not in ("snap", "exit", "submit"):
+        return "", 204
+
+    def num(key: str, hi: int) -> int:
+        try:
+            return max(0, min(int(f.get(key) or 0), hi))
+        except ValueError:
+            return 0
+    fields = [x for x in (f.get("f") or "").split(",")[:40] if _ORDER_FIELD_RE.match(x)]
+    last = f.get("last") or ""
+    via = re.sub(r"[^a-z0-9_:/.\-]", "", (f.get("via") or "").lower())[:60]
+    track_event("order_form_state", {
+        "k": kind, "sec": num("sec", 86400), "fields": fields,
+        "last": last if _ORDER_FIELD_RE.match(last) else "",
+        "files": num("files", 3), "blocks": num("blocks", 3), "via": via,
+        "blocked_incomplete": num("bi", 50), "file_too_big": num("tb", 50),
+        "email_typo": num("ty", 50), "from_free": 1 if f.get("free") == "1" else 0,
+        "restored": 1 if f.get("r") == "1" else 0,
+    }, path="/order")
+    return "", 204
+
+
 @bp.post("/track/form-started")
 def track_form_started():
     """Маяк из JS: пользователь начал заполнять форму (гранулярность воронки).
@@ -731,11 +765,37 @@ def yookassa_create(order_id: int):
     return jsonify(resp)
 
 
+def _record_cancel(pay: dict) -> None:
+    """Почему платёж не прошёл — причину даёт ЮKassa (cancellation_details): отказ банка,
+    нет денег, не прошёл 3-D Secure, истекло время подтверждения… Раньше canceled был
+    no-op, и «пытался заплатить, но банк отказал» не отличалось от «передумал».
+    Один раз на платёж (webhook и поллинг могут прийти оба). Без браузера: device NULL."""
+    try:
+        from app.db import track as db_track
+        pid = str(pay.get("id") or "")
+        db = get_db()
+        if not pid or db.execute("SELECT 1 FROM events WHERE type = 'pay_canceled'"
+                                 " AND payload_json LIKE ?", (f'%"{pid}"%',)).fetchone():
+            return
+        det = pay.get("cancellation_details") or {}
+        try:
+            oid = int((pay.get("metadata") or {}).get("order_id"))
+        except (TypeError, ValueError):
+            oid = None
+        db_track("pay_canceled", payload={"order_id": oid, "payment_id": pid,
+                                          "reason": str(det.get("reason") or "unknown")[:60],
+                                          "party": str(det.get("party") or "")[:30]}, conn=db)
+    except Exception:
+        log.exception("pay_canceled record failed")
+
+
 def _settle_payment(payment_id: str):
     """Перезапрашивает платёж в API ЮKassa (подлинность) и при succeeded + совпадении
     суммы проводит mark_paid. Возвращает результат mark_paid или None. Идемпотентно:
     mark_paid сам отсекает повторы (status != 'created')."""
     pay = yookassa.get_payment(payment_id)
+    if pay and pay.get("status") == "canceled":
+        _record_cancel(pay)
     if not pay or pay.get("status") != "succeeded":
         return None
     raw_id = (pay.get("metadata") or {}).get("order_id")

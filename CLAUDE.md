@@ -170,6 +170,13 @@ release.bat "msg"                                               # релиз о�
   (`/admin/ads`) показывает тот же отчёт. API не отдаёт персональных данных — не добавлять туда
   почты/имена. Инструкция партнёру — `projectSpec/ads/ADS-PARTNER-HANDOFF.md` (не коммитить:
   репо публичный). После правок — `scripts/ads_api_selftest.py`.
+  **Диагностика формы заказа** (`app/order_diag.py`, с 09.10): order.js шлёт снимки
+  `order_form_state` (ТОЛЬКО имена полей, белый список `_ORDER_FIELD_RE` в routes — значения
+  НЕ собирать никогда), 413 → `upload_too_large`, отказ платежа → `pay_canceled` с причиной
+  ЮKassa (`_record_cancel`, раз на платёж). Показ — «Реклама» и `GET /api/ads/v1/order-diagnostics`.
+  **Оффер бесплатного разбора** (`free_texts.selling_block`, переписан 09.10): мост от тревоги
+  (`SELLING_BRIDGE` по concern_key), что внутри (`SELLING_INCLUDES`), цитата примера по возрасту
+  (`SAMPLE_BY_BAND`), стоит ПЕРЕД оценкой разбора; блок `data-track-section="fr_offer"`.
 - **Яндекс-API** (`app/metrika.py`, токен `YANDEX_OAUTH_TOKEN` в СЕРВЕРНОМ `.env`, гейт
   `metrika.enabled()`): Management API — завести цели из реестра (`scripts/metrika_goals_sync.py`,
   идемпотентно, `--dry-run`), Reporting API — расход Директа по кампаниям (наша база его знать

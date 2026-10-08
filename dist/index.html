@@ -31,7 +31,7 @@
 
 <link rel="preload" as="image" href="/static/img/hero-800.webp" type="image/webp" media="(max-width: 600px)" fetchpriority="high">
 <link rel="preload" as="image" href="/static/img/hero.webp" type="image/webp" media="(min-width: 601px)" fetchpriority="high">
-<link rel="stylesheet" href="/static/css/fonts.css?v=1.084">
+<link rel="stylesheet" href="/static/css/fonts.css?v=1.085">
 
 <style>/* ============================================================
    ДИЗАЙН-ТОКЕНЫ — ЕДИНСТВЕННЫЙ источник цветов/шрифтов/размеров.
@@ -1183,6 +1183,26 @@ html.dk .btn { color: #241A12; }
   color: var(--muted);
 }
 .free-sell__guarantee b { color: var(--sage); }
+.free-sell__note { display: block; font-family: var(--font-body); font-weight: 400;
+                   font-size: var(--fs-micro); color: var(--muted); margin-top: 2px; }
+.free-sell .check-list { margin: 4px 0 14px; }
+/* Чек-лист в одну колонку — для узких карточек (оффер разбора). */
+.check-list--one ul { columns: 1; }
+/* Доказательство в оффере: рисунок + цитата из настоящего примера отчёта. Вся карточка —
+   ссылка: родитель видит, как звучит отчёт, и может открыть его целиком. */
+.free-proof {
+  display: flex; gap: 14px; align-items: flex-start; margin: 4px 0 16px;
+  padding: 14px; border-radius: var(--radius-sm); background: var(--alt);
+  border: 1px solid var(--line); color: var(--ink); text-decoration: none;
+}
+.free-proof:hover { border-color: var(--accent); }
+.free-proof__img { width: 84px; height: 84px; object-fit: cover; border-radius: var(--radius-sm);
+                   flex: none; background: var(--polbg); }
+.free-proof__body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.free-proof__label { font-size: var(--fs-micro); color: var(--muted); }
+.free-proof__quote { font-size: var(--fs-small); line-height: 1.5; }
+.free-proof__more { font-size: var(--fs-small); color: var(--accent); font-weight: 600; }
+@media (max-width: 480px) { .free-proof__img { width: 64px; height: 64px; } }
 .free-vote { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 0; }
 
 /* Трактовка — отдельный блок, а не абзац прозы: родитель должен видеть, где
@@ -1405,7 +1425,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 
-<script src="/static/js/track.js?v=1.084"></script>
+<script src="/static/js/track.js?v=1.085"></script>
 </head>
 <body>
 
@@ -2403,7 +2423,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.084</span>
+    <span class="foot-ver">V1.085</span>
   </div>
 </footer>
 

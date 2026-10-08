@@ -235,11 +235,17 @@ def ads():
     cell = request.args.get("cell") or ""
     cell = cell if cell in ads_mod.CELLS else ""
     rep = ads_mod.report(db, d_from, d_to, level=level, cell=cell or None)
+    from app import order_diag
+    scope = request.args.get("scope", "all")
+    scope = scope if scope in ("ads", "all") else "all"
+    diag = order_diag.build(db, d_from, d_to, scope=scope, cell=cell or None)
     t = ads_mod.today_msk()
     presets = [(n, (t - datetime.timedelta(days=n - 1)).isoformat(), t.isoformat())
                for n in (7, 14, 30, 90)]
     return _render("admin.ads", "admin/ads.html", rep=rep, levels=ADS_LEVELS, level=level,
                    cell=cell, presets=presets, api_on=ads_api.enabled(),
+                   diag=diag, scope=scope, stop_text=order_diag.stop_text,
+                   field_label=order_diag.label,
                    log=ads_api.recent_log(db, 20),
                    campaigns=[dict(r) for r in db.execute(
                        "SELECT * FROM ad_campaigns ORDER BY status, source, campaign_id")])

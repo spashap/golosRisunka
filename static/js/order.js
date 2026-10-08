@@ -2,6 +2,7 @@
 // и ЧЕРНОВИК в localStorage — refresh не теряет введённое (кроме файлов).
 (function () {
   var DRAFT_KEY = "gr_order_draft";
+  var draftRestored = false;          // для диагностики формы (см. внизу)
   var form = document.getElementById("order-form");
   var blocks = Array.prototype.slice.call(document.querySelectorAll(".drawing-block"));
   var addBtn = document.getElementById("add-drawing");
@@ -50,6 +51,7 @@
     });
     // Черновик восстановлен = человек ВЕРНУЛСЯ к брошенной форме. Отдельный сигнал:
     // такой визит нельзя считать первым знакомством, и мерить его надо иначе.
+    draftRestored = true;
     if (window.ymGoal) { window.ymGoal("order_draft_restored"); }
   }
 
@@ -346,6 +348,89 @@
     });
     document.addEventListener("click", function (e) {
       if (listEl && !listEl.contains(e.target) && e.target !== inputEl) close();
+    });
+  })();
+
+  // ---------- диагностика: почему форма не доходит до оплаты ----------
+  // Шлём ИМЕНА полей (никогда не значения): какие трогали, на каком остановились,
+  // сколько фото выбрано, сколько секунд форма была на экране, через какую ссылку
+  // ушли и сколько раз нас остановила своя же проверка. Снимок — при уходе со вкладки
+  // (snap: на телефоне выбор фото тоже прячет вкладку, поэтому это не «уход»), при
+  // уходе со страницы (exit) и при отправке (submit). Сервер берёт последний снимок.
+  (function orderDiag() {
+    var visibleMs = 0;
+    var visSince = document.visibilityState === "visible" ? Date.now() : 0;
+    var touched = {}, last = "", via = "", submitted = false;
+    var cnt = { bi: 0, tb: 0, ty: 0 };
+
+    function fieldName(el) {
+      var n = (el && el.name) || "";
+      if (!n || el.type === "hidden") return "";
+      return n.replace(/_(m|y)$/, "");      // месяц/год — одно поле
+    }
+    function mark(e) {
+      var n = fieldName(e.target);
+      if (n) { touched[n] = 1; last = n; }
+    }
+    form.addEventListener("focusin", mark);
+    form.addEventListener("change", mark);
+    // Через какую ссылку ушли (шапка «Бесплатная проверка», логотип…)
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[href]");
+      if (a) {
+        via = a.getAttribute("data-ym-goal") ||
+              ("link:" + (a.getAttribute("href") || "").split("?")[0]).slice(0, 60);
+      }
+    }, true);
+    // Свои же блокировки отправки уже шлют цели — считаем их и здесь.
+    var origGoal = window.ymGoal;
+    if (origGoal) {
+      window.ymGoal = function (goal, params) {
+        if (goal === "order_block_incomplete") { cnt.bi++; }
+        else if (goal === "order_file_too_big") { cnt.tb++; }
+        else if (goal === "order_blocked_email_typo") { cnt.ty++; }
+        return origGoal(goal, params);
+      };
+    }
+    function files() {
+      var n = 0;
+      blocks.forEach(function (b) {
+        if (b.hidden) return;
+        var f = b.querySelector('input[type="file"]');
+        if ((f && f.files && f.files.length) || (!f && b.querySelector("img.preview[src]"))) { n++; }
+      });
+      return n;
+    }
+    function visibleSec() {
+      return Math.round((visibleMs + (visSince ? Date.now() - visSince : 0)) / 1000);
+    }
+    function send(kind) {
+      var p = new URLSearchParams();
+      p.append("k", kind);
+      p.append("sec", String(visibleSec()));
+      p.append("f", Object.keys(touched).join(","));
+      p.append("last", last);
+      p.append("files", String(files()));
+      p.append("blocks", String(visibleCount()));
+      p.append("via", via);
+      p.append("bi", String(cnt.bi)); p.append("tb", String(cnt.tb)); p.append("ty", String(cnt.ty));
+      p.append("free", form.querySelector('[name="free_token"]') ? "1" : "0");
+      p.append("r", draftRestored ? "1" : "0");
+      try { navigator.sendBeacon("/track/order-form", p); } catch (e) {}
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") {
+        if (visSince) { visibleMs += Date.now() - visSince; visSince = 0; }
+        if (!submitted) { send("snap"); }
+      } else {
+        visSince = Date.now();
+      }
+    });
+    window.addEventListener("pagehide", function () { if (!submitted) { send("exit"); } });
+    form.addEventListener("submit", function (e) {
+      if (e.defaultPrevented) return;
+      submitted = true;
+      send("submit");
     });
   })();
 

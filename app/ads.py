@@ -408,6 +408,32 @@ def _label(r: dict, dims: tuple) -> str:
     return " / ".join(str(r.get(d) or "—") for d in dims)
 
 
+def credited_clicks(db, since: str, visits: list[tuple[str, str | None, str]],
+                    source: str | None = None, campaign_id: str | None = None,
+                    cell: str | None = None) -> dict[str, dict]:
+    """visit_id -> рекламный клик, которому принадлежит визит (то же правило, что у
+    результатов в report()). Нужен диагностике формы заказа: «из рекламы» — это не только
+    визит самого клика, но и возврат того же человека по ссылке из письма.
+    visits: [(visit_id, visitor_id, started_at)]."""
+    lookback = _utc(_ts(since) - datetime.timedelta(days=ATTRIBUTION_DAYS))
+    clicks = _clicks(db, lookback)
+    credit = _crediter(clicks)
+    camps = _load_campaigns(db)
+    src = norm_source(source) if source else None
+    out: dict[str, dict] = {}
+    for vid, visitor, started in visits:
+        c = credit(visitor, vid, started)
+        if c is None:
+            continue
+        if (src and c["source"] != src) or (campaign_id and c["campaign_id"] != campaign_id):
+            continue
+        c_cell = (camps.get((c["source"], c["campaign_id"])) or {}).get("cell") or c["cell_hint"]
+        if cell and c_cell != cell:
+            continue
+        out[vid] = {**c, "cell": c_cell}
+    return out
+
+
 def spend_by_channel(db, since_day: str, until_day_excl: str) -> dict[str, float]:
     """Расход из API по каналам дашборда (yandex -> ads, meta -> meta)."""
     out: dict[str, float] = {}

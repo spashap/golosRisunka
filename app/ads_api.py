@@ -364,6 +364,27 @@ def report():
     return jsonify({"ok": True, **rep, "definitions": SITE_INFO["funnel_definitions"]})
 
 
+@bp_ads_api.get("/order-diagnostics")
+def order_diagnostics():
+    """Почему клики не доходят до оплаты: форма заказа по шагам и полям, свои проверки,
+    отказы сервера и платежа (с причиной от ЮKassa), ссылки ухода, оффер бесплатного
+    разбора. scope=ads (по умолчанию) — только люди с рекламного клика, с теми же
+    фильтрами, что у /report; scope=all — весь сайт (для сравнения)."""
+    from app import order_diag
+    scope = request.args.get("scope", "ads")
+    if scope not in ("ads", "all"):
+        return _err(400, "scope must be ads or all")
+    cell = (request.args.get("cell") or "").strip().lower() or None
+    if cell and cell not in ads.CELLS:
+        return _err(400, f"cell must be one of {list(ads.CELLS)}")
+    d_from, d_to = _day_range()
+    rep = order_diag.build(get_db(), d_from, d_to, scope=scope,
+                           source=request.args.get("source") or None,
+                           campaign_id=request.args.get("campaign_id") or None, cell=cell)
+    _log(200, rep["funnel"]["viewed"])
+    return jsonify({"ok": True, **rep, "stop_reasons": order_diag._STOP_TEXT})
+
+
 def recent_log(db, limit: int = 30) -> list[dict]:
     return [dict(r) for r in db.execute(
         "SELECT * FROM ad_api_log ORDER BY id DESC LIMIT ?", (limit,))]

@@ -67,11 +67,9 @@
         {% endif %}
       </div>
       {% endif %}
-      {% if a.portrait_hint %}<p>{{ a.portrait_hint }}</p>{% endif %}
-      <p><b>Спросите {{ name_acc }} сегодня:</b> <i>{{ a.question_to_child }}</i></p>
-      <p><b>Чего этот лист не показывает.</b> {{ a.unknown_next }}</p>
 
-      {# Оценка привязана к конкретной интерпретации, а не к разбору целиком #}
+      {# Оценка привязана к конкретной интерпретации — и стоит сразу под ней, а не в
+         конце страницы, где она отделяла текст разбора от продающего блока. #}
       {% for i in interps %}
       <div class="free-note" data-interp="{{ i.id }}">
         <p class="hint" style="margin:0 0 6px">Это про {{ name_acc }}?</p>
@@ -85,31 +83,48 @@
       </div>
       {% endfor %}
 
-      {# Оценка разбора целиком: звёзды + текст (app/feedback.py). Стоит ДО продажи:
-         человек только что дочитал, мнение свежее; после оффера его уже не вернуть. #}
-      {% include "_feedback_widget.html" with context %}
+      {% if a.portrait_hint %}<p>{{ a.portrait_hint }}</p>{% endif %}
+      <p><b>Спросите {{ name_acc }} сегодня:</b> <i>{{ a.question_to_child }}</i></p>
+      <p><b>Чего этот лист не показывает.</b> {{ a.unknown_next }}</p>
 
-      {# 4. финал: продажа, а на раскраске — перенаправление за нормальным рисунком #}
-      <div class="free-sell">
+      {# 4. финал: продажа СРАЗУ после «чего этот лист не показывает» — это и есть мост.
+         На раскраске — перенаправление за нормальным рисунком, а не продажа. #}
+      <div class="free-sell" id="offer" data-track-section="fr_offer">
         {% if is_coloring %}
         <p><b>{{ cta.title }}</b> {{ cta.body }}</p>
         <a class="btn btn--primary" style="width:100%" href="/free/"
            data-ym-goal="free_coloring_again">{{ cta.button }}</a>
         {% else %}
-        <span class="badge">Следующий шаг</span>
+        <span class="badge">Полный отчёт</span>
         <h2 class="h2 free-sell__title">{{ cta.title }}</h2>
-        <p class="free-sell__lead">{{ cta.launch }}</p>
-        <p>{{ cta.body }}</p>
-        <p>{{ cta.main }}</p>
+        <p class="free-sell__lead">{{ cta.body }}</p>
+        <div class="check-list check-list--one"><ul>
+          {% for item in cta.includes %}<li>{{ item }}</li>{% endfor %}
+        </ul></div>
+        {% if proof %}
+        <a class="free-proof" href="{{ proof.url }}" target="_blank" data-ym-goal="free_sample_open">
+          {% if proof.thumb %}<img class="free-proof__img" src="{{ proof.thumb }}" alt="" loading="lazy">{% endif %}
+          <span class="free-proof__body">
+            <span class="free-proof__label">{{ proof.label }}</span>
+            <span class="free-proof__quote">«{{ proof.quote }}»</span>
+            <span class="free-proof__more">{{ proof.more }} →</span>
+          </span>
+        </a>
+        {% endif %}
         <p class="free-sell__price">{{ cta.price }} ₽{% if cta.old_price %}<span
-           class="free-sell__old">{{ cta.old_price }} ₽</span>{% endif %}</p>
+           class="free-sell__old">{{ cta.old_price }} ₽</span>{% endif %}
+          <span class="free-sell__note">{{ cta.price_note }}</span></p>
         <a class="btn btn--primary" style="width:100%" href="/order?free={{ token }}"
            data-ym-goal="free_to_order">{{ cta.button }}</a>
-        <p class="hint" style="text-align:center;margin-top:10px">{{ cta.ready }}
-          {% if sample_url %}· <a href="{{ sample_url }}" target="_blank" data-ym-goal="free_sample_open">посмотреть пример отчёта</a>{% endif %}</p>
+        <p class="hint" style="text-align:center;margin-top:10px">{{ cta.ready }}</p>
         <p class="free-sell__guarantee"><b>✓</b> {{ cta.guarantee }}</p>
         {% endif %}
       </div>
+
+      {# Оценка разбора целиком: звёзды + текст (app/feedback.py). ПОСЛЕ оффера (09.10):
+         «оцените нас» перед продажей читалось как конец страницы — дочитывали, оценивали
+         и уходили, до кнопки не доходя. #}
+      {% include "_feedback_widget.html" with context %}
 
     </div>
   {% endif %}

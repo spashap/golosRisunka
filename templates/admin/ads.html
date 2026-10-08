@@ -137,6 +137,133 @@
     {{ q.visits_without_spend|join(', ') }}</li>{% endif %}
 </ul>
 
+<h2>Почему не доходят до оплаты</h2>
+<div class="admin-periods">
+  {% for sv, sl in [('all', 'весь сайт'), ('ads', 'только из рекламы')] %}
+  <a class="status-pill {% if scope == sv %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+     href="{{ url_for('admin.ads', **{'from': rep['from'], 'to': rep['to'], 'level': level, 'cell': cell, 'scope': sv}) }}">{{ sl }}</a>
+  {% endfor %}
+</div>
+<p class="hint">Форма заказа по шагам: что трогали, на чём остановились, через какую ссылку ушли,
+  где остановила наша же проверка, что ответил банк. Значения полей не собираются — только их имена.
+  Считаются визиты с живым браузером; открытий формы без него (сканеры): {{ diag.views_without_browser_signal }}.
+  Тот же расчёт агент получает из <code>GET /api/ads/v1/order-diagnostics</code>.</p>
+{% if diag.findings %}<ul>{% for f in diag.findings %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
+
+{% set D = diag.funnel %}
+{% set steps = [('viewed', 'Открыли форму'), ('from_free', '…из них пришли из бесплатного разбора'),
+                ('started', 'Начали заполнять'), ('photo', 'Есть фото рисунка'), ('email', 'Дошли до почты'),
+                ('submitted', 'Нажали «оформить» (проверки пройдены)'), ('server_rejected', 'Сервер вернул с ошибками'),
+                ('created', 'Заказ создан — страница оплаты'), ('payment_started', 'Начали оплату'),
+                ('payment_failed', 'Сбой платёжного окна'), ('payment_canceled', 'Платёж отклонён / отменён'),
+                ('paid', 'Оплатили')] %}
+<div class="admin-cols">
+<div>
+<table class="dash-table">
+  <thead><tr><th>Шаг</th><th class="n">визитов</th><th class="n">от открывших</th></tr></thead>
+  <tbody>
+  {% for k, l in steps %}
+  <tr class="{% if not D[k] %}dash-dim{% endif %}"><td>{{ l }}</td><td class="n"><b>{{ D[k] }}</b></td>
+    <td class="n">{% if D.viewed %}{{ (100 * D[k] / D.viewed)|round|int }}%{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<div>
+<table class="dash-table">
+  <thead><tr><th>Не создали заказ: где остановились</th><th class="n">визитов</th></tr></thead>
+  <tbody>
+  {% for k, n in diag.stopped_at.items() %}<tr><td>{{ stop_text(k) }}</td><td class="n"><b>{{ n }}</b></td></tr>
+  {% else %}<tr><td class="hint" colspan="2">—</td></tr>{% endfor %}
+  </tbody>
+</table>
+<table class="dash-table">
+  <thead><tr><th>Время на форме у ушедших</th><th class="n">визитов</th></tr></thead>
+  <tbody>{% for k, n in diag.time_on_form_when_lost.items() %}<tr class="{% if not n %}dash-dim{% endif %}"><td>{{ k }}</td><td class="n">{{ n }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+
+<div class="admin-cols">
+<div>
+<table class="dash-table">
+  <thead><tr><th>Последнее поле перед уходом</th><th class="n">визитов</th></tr></thead>
+  <tbody>{% for r in diag.last_field_before_leaving %}<tr><td>{{ r.label }}</td><td class="n">{{ r.visits }}</td></tr>
+  {% else %}<tr><td class="hint" colspan="2">—</td></tr>{% endfor %}</tbody>
+</table>
+<table class="dash-table">
+  <thead><tr><th>Ушли через ссылку</th><th class="n">визитов</th></tr></thead>
+  <tbody>{% for k, n in diag.left_via.items() %}<tr><td><code>{{ k }}</code></td><td class="n">{{ n }}</td></tr>
+  {% else %}<tr><td class="hint" colspan="2">—</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+<div>
+<table class="dash-table">
+  <thead><tr><th>Поле (сколько визитов его тронули)</th><th class="n">визитов</th></tr></thead>
+  <tbody>{% for r in diag.field_reach %}<tr class="{% if not r.visits %}dash-dim{% endif %}"><td>{{ r.label }}</td><td class="n">{{ r.visits }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>
+
+<div class="admin-cols">
+<div>
+<table class="dash-table">
+  <thead><tr><th>Наши проверки и отказы</th><th class="n">визитов</th></tr></thead>
+  <tbody>
+    <tr><td>Не дала добавить рисунок (не заполнен предыдущий)</td><td class="n">{{ diag.form_checks.incomplete_drawing }}</td></tr>
+    <tr><td>Фото больше 15 МБ</td><td class="n">{{ diag.form_checks.file_too_big }}</td></tr>
+    <tr><td>Остановила опечатка в почте</td><td class="n">{{ diag.form_checks.email_typo }}</td></tr>
+    <tr><td>Сервер вернул форму с ошибками</td><td class="n">{{ diag.form_checks.server_rejected }}</td></tr>
+    <tr><td>Загрузка больше лимита (413)</td><td class="n">{{ diag.form_checks.upload_too_large }}</td></tr>
+    {% for f, n in diag.server_rejected_fields.items() %}<tr class="dash-dim"><td>· поле {{ field_label(f) }}</td><td class="n">{{ n }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+<div>
+<table class="dash-table">
+  <thead><tr><th>Оплата: сбои и отказы</th><th class="n">визитов</th></tr></thead>
+  <tbody>
+    {% for k, n in diag.payment_failures.items() %}<tr><td><code>{{ k }}</code></td><td class="n">{{ n }}</td></tr>{% endfor %}
+    {% for k, n in diag.payment_cancel_reasons.items() %}<tr><td>отклонён: <code>{{ k }}</code></td><td class="n">{{ n }}</td></tr>{% endfor %}
+    {% if not diag.payment_failures and not diag.payment_cancel_reasons %}<tr><td class="hint" colspan="2">—</td></tr>{% endif %}
+  </tbody>
+</table>
+{% set O = diag.free_offer %}
+<table class="dash-table">
+  <thead><tr><th>Бесплатный разбор → заказ</th><th class="n">визитов</th></tr></thead>
+  <tbody>
+    <tr><td>Открыли готовый разбор</td><td class="n">{{ O.result_views }}</td></tr>
+    <tr><td>Доскроллили до оффера</td><td class="n">{{ O.offer_seen }}</td></tr>
+    <tr><td>Открыли пример отчёта</td><td class="n">{{ O.sample_opened }}</td></tr>
+    <tr><td>Нажали «Собрать портрет» в оффере</td><td class="n"><b>{{ O.to_order }}</b></td></tr>
+    <tr><td>Нажали «Собрать портрет» в шапке</td><td class="n">{{ O.header_order }}</td></tr>
+    <tr><td>Открыли форму с рисунком из разбора</td><td class="n">{{ O.form_from_free }}</td></tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+{% if diag.sessions %}
+<details>
+  <summary class="hint">Сессии формы ({{ diag.sessions|length }}, анонимно)</summary>
+  <div class="admin-scroll">
+  <table class="dash-table">
+    <thead><tr><th>День</th><th>Устр.</th><th>Из разбора</th><th>Кампания / фраза</th><th class="n">сек</th>
+      <th class="n">полей</th><th>Последнее поле</th><th class="n">фото</th><th>Ушёл через</th><th>Итог</th></tr></thead>
+    <tbody>
+    {% for s in diag.sessions %}
+    <tr><td>{{ s.day }}</td><td>{{ s.device }}</td><td>{{ 'да' if s.from_free else '' }}</td>
+      <td class="hint">{{ s.campaign_id or '' }}{% if s.keyword %} · {{ s.keyword }}{% endif %}</td>
+      <td class="n">{{ s.seconds }}</td><td class="n">{{ s.fields_touched }}</td>
+      <td>{{ field_label(s.last_field) if s.last_field else '' }}</td><td class="n">{{ s.photos }}</td>
+      <td><code>{{ s.left_via }}</code></td><td>{{ stop_text(s.outcome) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</details>
+{% endif %}
+
 <h2>Кампании</h2>
 <p class="hint">Справочник ведёт агент (<code>PUT /api/ads/v1/campaigns</code>): имя и ячейка теста.</p>
 <div class="admin-scroll">
