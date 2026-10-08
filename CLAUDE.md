@@ -29,6 +29,7 @@ venv\Scripts\python.exe scripts\free_lab.py --texts              # все сбо
 venv\Scripts\python.exe scripts\free_retention_check.py          # проверка удаления фото по сроку хранения
 venv\Scripts\python.exe scripts\analytics_selftest.py            # самопроверка аналитики (копия БД, 30 проверок)
 venv\Scripts\python.exe scripts\ads_api_selftest.py              # самопроверка API рекламы + атрибуции клик->лид->продажа (копия БД)
+venv/bin/python scripts/ads_api_token.py [--rotate]              # НА СЕРВЕРЕ: токен API рекламы в .env + рестарт web + проверка + файл доступа партнёру (~/golosrisunka-ads-access.md)
 venv\Scripts\python.exe scripts\metrika_goals_sync.py --dry-run  # завести цели из config/goals.py в Метрике
 venv\Scripts\python.exe scripts\regenerate_report.py ORDER_ID   # ручной перезапуск заказа
 venv\Scripts\python.exe scripts\generate_report.py IMG [IMG2] --context C1.txt [C2.txt] [--common X.txt] [-o DIR]
