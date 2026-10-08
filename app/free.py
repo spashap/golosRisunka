@@ -153,11 +153,12 @@ def summary():
     db = get_db()
     token = new_token(12)
     db.execute(
-        "INSERT INTO free_analyses (token, visitor_id, limit_key, child_name,"
+        "INSERT INTO free_analyses (token, visitor_id, visit_id, limit_key, child_name,"
         " child_name_norm, child_age, address_form, concern_key, duration_key,"
         " parent_text, ask_variant, status, created_at, is_test)"
-        " VALUES (?,?,?,?,?,?,?,?,?,?,?,'answers',?,?)",
-        (token, getattr(g, "visitor_id", None), _limit_key(), name, _norm_name(name),
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'answers',?,?)",
+        (token, getattr(g, "visitor_id", None), getattr(g, "visit_id", None),
+         _limit_key(), name, _norm_name(name),
          age, address, concern, duration or None, parent_text or None,
          s["ask_variant"], now(), 1 if is_owner_browser() else 0))
     db.commit()

@@ -1,0 +1,169 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Реклама{% endblock %}
+
+{% macro v(x, suffix='') %}{% if x is none %}—{% else %}{{ x }}{{ suffix }}{% endif %}{% endmacro %}
+{% macro rub(x) %}{% if x is none %}—{% else %}{{ x|round|int }} ₽{% endif %}{% endmacro %}
+
+{% macro group_label(r) -%}
+  {%- if level == 'day' %}{{ r.day }} · {% endif -%}
+  {%- if level == 'keyword' or level == 'ad_keyword' -%}
+    <b>{{ r.keyword or '(без фразы)' }}</b>{% if level == 'ad_keyword' %} <span class="hint">· объявл. {{ r.ad_id or '—' }}</span>{% endif %}
+    <div class="hint">{{ r.campaign_name or r.campaign_id }}</div>
+  {%- elif level == 'ad' -%}
+    <b>{{ r.ad_id or '(без объявления)' }}</b>
+    <div class="hint">{{ r.campaign_name or r.campaign_id }}</div>
+  {%- elif level == 'landing' -%}
+    <b>{{ r.landing or '?' }}</b>
+    <div class="hint">{{ r.campaign_name or r.campaign_id }}</div>
+  {%- else -%}
+    <b>{{ r.campaign_name or r.campaign_id }}</b>
+    {% if r.campaign_name %}<div class="hint">{{ r.campaign_id }}</div>{% endif %}
+  {%- endif %}
+  <div class="hint">{{ r.source }}</div>
+{%- endmacro %}
+
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Реклама</h1>
+  <div class="admin-periods">
+    {% for n, f, t in presets %}
+    <a class="status-pill {% if rep['from'] == f and rep['to'] == t %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.ads', **{'from': f, 'to': t, 'level': level, 'cell': cell}) }}">{{ n }} дней</a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if not api_on %}
+<p class="admin-flash admin-flash--err">API для рекламного агента выключен: в серверном <code>.env</code> нет
+  <code>ADS_API_TOKEN</code> (24+ символа). Расход сюда не приходит — только ручные записи на Дашборде.</p>
+{% endif %}
+
+<p class="hint">Расход, показы и клики присылает рекламный агент через API (до уровня объявления и фразы);
+  визиты, лиды и продажи — наши. <b>Клик</b> — визит с рекламной меткой, пришедший не с нашего сайта
+  (возврат после паузы — тот же клик). Мастер и форма заказа — в самом визите клика. Анкеты, лиды,
+  разборы, заказы и оплаты приписаны <b>последнему рекламному клику</b> того же посетителя за
+  {{ rep.attribution.window_days }} дней и стоят в <b>дне клика</b> — последние дни дозаполняются.
+  <b>Лид</b> — бесплатный разбор с почтой. Тот же отчёт агент получает из <code>GET /api/ads/v1/report</code>.</p>
+
+<form method="get" action="{{ url_for('admin.ads') }}" class="admin-inline-form">
+  <label>С <input class="input" type="date" name="from" value="{{ rep['from'] }}"></label>
+  <label>По <input class="input" type="date" name="to" value="{{ rep['to'] }}"></label>
+  <label>Разрез <select class="input" name="level">
+    {% for k, l in levels %}<option value="{{ k }}" {% if k == level %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select></label>
+  <label>Ячейка <select class="input" name="cell">
+    <option value="">все</option>
+    <option value="free" {% if cell == 'free' %}selected{% endif %}>бесплатная дверь</option>
+    <option value="paid" {% if cell == 'paid' %}selected{% endif %}>платная дверь</option>
+    <option value="other" {% if cell == 'other' %}selected{% endif %}>другое</option>
+  </select></label>
+  <button class="btn btn--primary" type="submit">Показать</button>
+</form>
+
+{% set T = rep.totals %}
+<div class="admin-scroll">
+<table class="dash-table">
+  <thead><tr>
+    <th>Группа</th><th>Ячейка</th>
+    <th class="n">расход</th><th class="n">клики</th><th class="n">визиты</th>
+    <th class="n" title="реально загрузили страницу (браузер выполнил скрипт)">реальн.</th>
+    <th class="n" title="метка Директа без yclid — ручная ссылка или робот">подозр.</th>
+    <th class="n" title="визит короче 10 секунд">&lt;10 с</th>
+    <th class="n" title="открыли /free/ в визите клика">мастер</th>
+    <th class="n" title="ответили на вопросы фремиума">анкеты</th>
+    <th class="n" title="бесплатный разбор с почтой">лиды</th>
+    <th class="n" title="бесплатный разбор готов">разборы</th>
+    <th class="n" title="открыли /order в визите клика">форма</th>
+    <th class="n" title="заказ создан = дошли до оплаты">заказы</th>
+    <th class="n">оплаты</th><th class="n">выручка</th>
+    <th class="n">₽/клик</th><th class="n">₽/лид</th><th class="n">₽/разбор</th><th class="n">₽/продажа</th>
+  </tr></thead>
+  <tbody>
+  {% for r in rep.rows %}
+  <tr class="{% if not r.visits and not r.cost_rub %}dash-dim{% endif %}">
+    <td>{{ group_label(r) }}</td>
+    <td>{% if r.cell %}<span class="status-pill status-pill--{{ 'ready' if r.cell == 'paid' else 'wait' }}">{{ {'free': 'бесплатная', 'paid': 'платная'}.get(r.cell, r.cell) }}</span>{% else %}<span class="hint">—</span>{% endif %}</td>
+    <td class="n">{{ rub(r.cost_rub) }}</td>
+    <td class="n">{{ r.clicks }}</td>
+    <td class="n"><b>{{ r.visits }}</b></td>
+    <td class="n">{{ r.real_visits }}</td>
+    <td class="n">{% if r.suspect_visits %}<span class="admin-status admin-status--failed">{{ r.suspect_visits }}</span>{% else %}0{% endif %}</td>
+    <td class="n">{{ r.quick_exits }}{% if r.quick_exit_pct is not none %} <span class="hint">{{ r.quick_exit_pct|round|int }}%</span>{% endif %}</td>
+    <td class="n">{{ r.free_wizard }}</td>
+    <td class="n">{{ r.free_started }}</td>
+    <td class="n"><b>{{ r.free_leads }}</b></td>
+    <td class="n">{{ r.free_results }}</td>
+    <td class="n">{{ r.order_form }}</td>
+    <td class="n">{{ r.orders }}</td>
+    <td class="n"><b>{{ r.paid }}</b></td>
+    <td class="n">{{ rub(r.revenue_rub) }}</td>
+    <td class="n">{{ rub(r.cpc_rub) }}</td>
+    <td class="n">{{ rub(r.cost_per_lead_rub) }}</td>
+    <td class="n">{{ rub(r.cost_per_result_rub) }}</td>
+    <td class="n"><b>{{ rub(r.cost_per_sale_rub) }}</b></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="20">За период нет ни рекламных визитов, ни присланного расхода.</td></tr>
+  {% endfor %}
+  {% if rep.rows %}
+  <tr class="dash-total">
+    <td>Итого</td><td></td>
+    <td class="n">{{ rub(T.cost_rub) }}</td><td class="n">{{ T.clicks }}</td><td class="n">{{ T.visits }}</td>
+    <td class="n">{{ T.real_visits }}</td><td class="n">{{ T.suspect_visits }}</td>
+    <td class="n">{{ T.quick_exits }}{% if T.quick_exit_pct is not none %} <span class="hint">{{ T.quick_exit_pct|round|int }}%</span>{% endif %}</td>
+    <td class="n">{{ T.free_wizard }}</td><td class="n">{{ T.free_started }}</td><td class="n">{{ T.free_leads }}</td>
+    <td class="n">{{ T.free_results }}</td><td class="n">{{ T.order_form }}</td><td class="n">{{ T.orders }}</td>
+    <td class="n">{{ T.paid }}</td><td class="n">{{ rub(T.revenue_rub) }}</td>
+    <td class="n">{{ rub(T.cpc_rub) }}</td><td class="n">{{ rub(T.cost_per_lead_rub) }}</td>
+    <td class="n">{{ rub(T.cost_per_result_rub) }}</td><td class="n">{{ rub(T.cost_per_sale_rub) }}</td>
+  </tr>
+  {% endif %}
+  </tbody>
+</table>
+</div>
+{% if T.clicks %}<p class="hint">Визитов на клик: <b>{{ v(T.visits_per_click) }}</b> — заметно меньше 1 значит,
+  что клики не доходят до сайта (боты, долгая загрузка, потерянные метки); больше 1 — визиты без расхода
+  (агент прислал не все кампании).</p>{% endif %}
+
+<h2>Качество данных</h2>
+{% set q = rep.quality %}
+<ul class="hint">
+  <li>Расход прислан: последний день <b>{{ q.stats_last_day or '—' }}</b>, обновлено {{ q.stats_last_update|msk if q.stats_last_update else '—' }}.</li>
+  <li>Подозрительных визитов (метка Директа без yclid): <b>{{ q.suspect_visits }}</b>.</li>
+  <li>Рекламных визитов без кампании в метках (только yclid): <b>{{ q.untagged_ad_visits }}</b>.</li>
+  {% if q.spend_without_visits %}<li>Расход есть, визитов нет — метки не доходят или id не совпадают:
+    {{ q.spend_without_visits|join(', ') }}</li>{% endif %}
+  {% if q.visits_without_spend %}<li>Визиты есть, расхода нет — агент не прислал эти строки:
+    {{ q.visits_without_spend|join(', ') }}</li>{% endif %}
+</ul>
+
+<h2>Кампании</h2>
+<p class="hint">Справочник ведёт агент (<code>PUT /api/ads/v1/campaigns</code>): имя и ячейка теста.</p>
+<div class="admin-scroll">
+<table class="dash-table">
+  <thead><tr><th>Источник</th><th>id</th><th>Название</th><th>Ячейка</th><th>Посадочная</th><th>Статус</th><th>Обновлено</th></tr></thead>
+  <tbody>
+  {% for c in campaigns %}
+  <tr><td>{{ c.source }}</td><td><code>{{ c.campaign_id }}</code></td><td>{{ c.name or '—' }}</td>
+    <td>{{ c.cell or '—' }}</td><td>{{ c.landing or '—' }}</td><td>{{ c.status or '—' }}</td>
+    <td class="hint">{{ c.updated_at|msk }}</td></tr>
+  {% else %}
+  <tr><td colspan="7" class="hint">Агент ещё не прислал справочник.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<details>
+  <summary class="hint">Журнал обращений к API (последние {{ log|length }})</summary>
+  <table class="dash-table"><tbody>
+  {% for l in log %}
+  <tr><td class="hint">{{ l.created_at|msk }}</td><td>{{ l.method }}</td><td><code>{{ l.path }}</code></td>
+    <td><span class="admin-status admin-status--{{ 'delivered' if l.status == 200 else 'failed' }}">{{ l.status }}</span></td>
+    <td class="n">{{ l.rows or '' }}</td><td class="hint">{{ l.note or '' }}</td></tr>
+  {% else %}
+  <tr><td class="hint">Обращений не было.</td></tr>
+  {% endfor %}
+  </tbody></table>
+</details>
+{% endblock %}

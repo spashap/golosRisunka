@@ -306,6 +306,11 @@ def spend(db, p: dict) -> dict:
         "SELECT channel, COALESCE(SUM(rub), 0) rub FROM ad_spend WHERE day >= ? AND day < ?"
         " GROUP BY channel", (p["since_day"], p["until_day"])).fetchall()
     spend_by = {r["channel"]: float(r["rub"] or 0) for r in rows}
+    # Расход от рекламного агента (API, app/ads_api.py) складывается с ручными записями.
+    from app import ads
+    api_spend = ads.spend_by_channel(db, p["since_day"], p["until_day"])
+    for ch, rub in api_spend.items():
+        spend_by[ch] = spend_by.get(ch, 0.0) + rub
     visits_by = {k: n for k, n in _visits_window(db, p["since"], p["until"])["by_channel"]}
     # Лид = анкета с почтой; канал — визит того же visitor_id, ближайший до анкеты.
     leads_by: dict[str, int] = {}
@@ -337,6 +342,7 @@ def spend(db, p: dict) -> dict:
     recent = db.execute(
         "SELECT id, day, channel, rub, note FROM ad_spend ORDER BY day DESC, id DESC LIMIT 12").fetchall()
     return {"table": table, "total": round(sum(spend_by.values())),
+            "api_total": round(sum(api_spend.values())),
             "recent": [dict(r) for r in recent], "channels": SPEND_CHANNELS,
             "today": datetime.datetime.now(MSK).strftime("%Y-%m-%d")}
 

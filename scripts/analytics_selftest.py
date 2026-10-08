@@ -56,7 +56,9 @@ def main() -> int:
              (None, None, None, "direct"),
              (None, None, "https://yandex.ru/search/?text=x", "organic"),
              (None, None, "https://vk.com/w", "social"),
-             (None, None, "https://blog.example/x", "referral")]
+             (None, None, "https://blog.example/x", "referral"),
+             ({"utm_source": "meta", "utm_medium": "cpc"}, None, None, "meta"),
+             ({"utm_source": "instagram", "utm_medium": "paid_social"}, None, None, "meta")]
     for utm, ycl, ref, want in cases:
         got = classify_channel(utm, ycl, ref)
         check(f"channel {want}", got == want, f"got {got}")

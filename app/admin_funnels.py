@@ -47,6 +47,9 @@ PAID_STEPS: list[tuple[str, str, str]] = [
     ("Начал заполнять", "form_started", GATE),
     ("Создал заказ", "order_created", GATE),
     ("Дошёл до оплаты", "checkout_view", GATE),
+    # Платёж создан в ЮKassa (виджет или переход в банк) — раньше воронка кончалась на
+    # странице оплаты, и «открыл и ушёл» было неотличимо от «пытался заплатить».
+    ("Начал оплату", "pay_init_*", GATE),
 ]
 
 # Холодная дверь: посадочная /free-check под платный трафик. Отдельная воронка, а не
@@ -197,6 +200,11 @@ def _funnel(visits: dict, orders: dict, steps: list, entry_marker: str,
             created = [i for i in gate_idx if steps[i][1] == "order_created"]
             if created:
                 deepest = max(deepest, created[0])
+            # Оплата доказывает и все ворота платежа (событие начала оплаты могло
+            # потеряться: переход в банк, другой браузер).
+            # Только в дверях, где заказ — один из шагов (бесплатная им не кончается).
+            if o["paid"] and created:
+                deepest = max(deepest, gate_idx[-1])
         for i in gate_idx:
             if i <= deepest:
                 hit(i)

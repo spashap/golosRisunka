@@ -37,6 +37,7 @@ ADMIN_COOKIE = "gr_a"
 SECTIONS = [
     ("admin.dashboard", "Дашборд"),
     ("admin.analytics", "Воронки"),
+    ("admin.ads", "Реклама"),
     ("admin.visits", "Визиты"),
     ("admin.actions", "Действия"),
     ("admin.orders", "Заказы"),
@@ -211,6 +212,37 @@ def spend_delete(spend_id: int):
     db.execute("DELETE FROM ad_spend WHERE id = ?", (spend_id,))
     db.commit()
     return redirect(url_for("admin.dashboard", days=request.form.get("days", "7")))
+
+
+ADS_LEVELS = [("campaign", "Кампании"), ("ad", "Объявления"), ("keyword", "Фразы"),
+              ("ad_keyword", "Объявление × фраза"), ("landing", "Посадочные"), ("day", "По дням")]
+
+
+@bp_admin.get("/ads")
+def ads():
+    """Реклама: расход/клики от агента (API) против наших визитов, лидов и продаж.
+    Тот же отчёт агент получает из GET /api/ads/v1/report — определения в app/ads.py."""
+    _guard()
+    from app import ads as ads_mod
+    from app import ads_api
+    db = get_db()
+    d_to = ads_mod.parse_day(request.args.get("to")) or ads_mod.today_msk()
+    d_from = ads_mod.parse_day(request.args.get("from")) or (d_to - datetime.timedelta(days=13))
+    if d_from > d_to:
+        d_from, d_to = d_to, d_from
+    level = request.args.get("level", "campaign")
+    level = level if level in ads_mod.LEVELS else "campaign"
+    cell = request.args.get("cell") or ""
+    cell = cell if cell in ads_mod.CELLS else ""
+    rep = ads_mod.report(db, d_from, d_to, level=level, cell=cell or None)
+    t = ads_mod.today_msk()
+    presets = [(n, (t - datetime.timedelta(days=n - 1)).isoformat(), t.isoformat())
+               for n in (7, 14, 30, 90)]
+    return _render("admin.ads", "admin/ads.html", rep=rep, levels=ADS_LEVELS, level=level,
+                   cell=cell, presets=presets, api_on=ads_api.enabled(),
+                   log=ads_api.recent_log(db, 20),
+                   campaigns=[dict(r) for r in db.execute(
+                       "SELECT * FROM ad_campaigns ORDER BY status, source, campaign_id")])
 
 
 @bp_admin.app_template_filter("msk")

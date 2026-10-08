@@ -167,6 +167,9 @@
         err.textContent = "Заполните имя и возраст"; err.hidden = false; return;
       }
       err.hidden = true;
+      // Цель — только после проверки: атрибутом на кнопке она считала и пустые поля,
+      // а это шаг воронки «Ввёл имя и возраст».
+      if (window.ymGoal) { window.ymGoal("free_step1"); }
       if (!state.address) state.address = guess(state.name) || "он";
       renderDurations();
       show(1);
@@ -184,8 +187,14 @@
     box.innerHTML = "<p class='sub'>Секунду…</p>";
     show(3);
     fetch("/free/summary", { method: "POST", body: fd })
-      .then(function (r) { return r.text(); })
+      .then(function (r) {
+        // Отказ сервера раньше вставлялся в страницу как есть (JSON вместо вывода).
+        if (!r.ok) { throw new Error("summary " + r.status); }
+        return r.text();
+      })
       .then(function (html) {
+        // Цель free_summary — когда сервер ПРИНЯЛ ответы (кандидат в цель Директа).
+        if (window.ymGoal) { window.ymGoal("free_summary"); }
         box.innerHTML = html;
         var up = document.getElementById("f-upload");
         if (up) { token = up.dataset.token; window.FREE_WAIT_HINT = up.dataset.waitHint || ""; bindUpload(); }
@@ -236,6 +245,9 @@
         return;
       }
       err.hidden = true;
+      // Цель — после проверки фото и почты (атрибутом считались и неудачные нажатия).
+      // У кнопки повторной загрузки своя цель-атрибут, её не дублируем.
+      if (window.ymGoal && !go.hasAttribute("data-ym-goal")) { window.ymGoal("free_upload_submit"); }
       var fd = new FormData(); fd.append("file", f); fd.append("email", mail);
       go.disabled = true; go.textContent = "Отправляем…";
       fetch("/free/upload/" + token, { method: "POST", body: fd })

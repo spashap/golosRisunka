@@ -52,8 +52,8 @@
             </div>
           </div>
           <p class="err" id="f-err0" hidden></p>
-          <button class="btn btn--primary" style="width:100%" data-next="0"
-                  data-ym-goal="free_step1">Дальше</button>
+          {# Цель free_step1 шлёт free.js ПОСЛЕ проверки: атрибутом она срабатывала и на пустых полях. #}
+          <button class="btn btn--primary" style="width:100%" data-next="0">Дальше</button>
         </div>
       </div>
 
@@ -92,8 +92,8 @@
             <div class="ctl"><textarea class="input input--optional" id="f-text" rows="2"
                  maxlength="2000" placeholder="{{ texts.FREE_TEXT_PLACEHOLDER }}"></textarea></div>
           </div>
-          <button class="btn btn--primary" style="width:100%" data-next="2"
-                  data-ym-goal="free_summary">Показать, на что посмотреть</button>
+          {# Цель free_summary шлёт free.js, когда сервер ПРИНЯЛ ответы. #}
+          <button class="btn btn--primary" style="width:100%" data-next="2">Показать, на что посмотреть</button>
         </div>
       </div>
 

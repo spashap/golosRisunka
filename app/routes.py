@@ -602,8 +602,9 @@ def order_submit():
 
 @bp.post("/track/form-started")
 def track_form_started():
-    """Маяк из JS: пользователь начал заполнять форму (гранулярность воронки)."""
-    track_event("form_started")
+    """Маяк из JS: пользователь начал заполнять форму (гранулярность воронки).
+    Путь — страница формы, а не адрес маяка: иначе событие лежало на /track/form-started."""
+    track_event("form_started", path="/order")
     return "", 204
 
 

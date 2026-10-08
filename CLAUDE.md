@@ -28,6 +28,7 @@ venv\Scripts\python.exe scripts\free_lab.py --matrix             # офлайн-
 venv\Scripts\python.exe scripts\free_lab.py --texts              # все сборки §5 фремиума + пары с оверрайдом
 venv\Scripts\python.exe scripts\free_retention_check.py          # проверка удаления фото по сроку хранения
 venv\Scripts\python.exe scripts\analytics_selftest.py            # самопроверка аналитики (копия БД, 30 проверок)
+venv\Scripts\python.exe scripts\ads_api_selftest.py              # самопроверка API рекламы + атрибуции клик->лид->продажа (копия БД)
 venv\Scripts\python.exe scripts\metrika_goals_sync.py --dry-run  # завести цели из config/goals.py в Метрике
 venv\Scripts\python.exe scripts\regenerate_report.py ORDER_ID   # ручной перезапуск заказа
 venv\Scripts\python.exe scripts\generate_report.py IMG [IMG2] --context C1.txt [C2.txt] [--common X.txt] [-o DIR]
@@ -160,6 +161,14 @@ release.bat "msg"                                               # релиз о�
   достраиваются по самым дальним достигнутым (вложенность), НАБЛЮДЕНИЯ (скролл/секции) —
   никогда не достраиваются. «Оплатил» берётся из ЗАКАЗА (`orders.visit_id`+`paid_at`), а не из
   события: оплату подтверждает вебхук без браузера. Проверка после правок — `scripts/analytics_selftest.py`.
+- **API РЕКЛАМЫ `/api/ads/v1` (с 09.10)** — для Claude Code партнёра, который ведёт Директ/Meta:
+  он присылает расход/клики до «день × кампания × объявление × фраза» и забирает воронку по ним.
+  Код: `app/ads_api.py` (эндпоинты, токен `ADS_API_TOKEN` в СЕРВЕРНОМ .env, 24+ символов, иначе 404),
+  `app/ads.py` (ЕДИНСТВЕННОЕ место определений и атрибуции: результат — последнему рекламному клику
+  посетителя за 30 дней, в день клика; возврат после паузы — не новый клик). Админка «Реклама»
+  (`/admin/ads`) показывает тот же отчёт. API не отдаёт персональных данных — не добавлять туда
+  почты/имена. Инструкция партнёру — `projectSpec/ads/ADS-PARTNER-HANDOFF.md` (не коммитить:
+  репо публичный). После правок — `scripts/ads_api_selftest.py`.
 - **Яндекс-API** (`app/metrika.py`, токен `YANDEX_OAUTH_TOKEN` в СЕРВЕРНОМ `.env`, гейт
   `metrika.enabled()`): Management API — завести цели из реестра (`scripts/metrika_goals_sync.py`,
   идемпотентно, `--dry-run`), Reporting API — расход Директа по кампаниям (наша база его знать

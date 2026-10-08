@@ -31,7 +31,7 @@ VISIT_MAX_AGE = 30 * 60          # окно визита; продлеваетс
 # Пути, которые НЕ являются просмотром страницы: маяки, поллинг, статика, служебное.
 # Считать их «страницами визита» — значит объявить ожидание разбора активным чтением.
 NON_PAGE_PREFIXES = ("/static/", "/t/e", "/track/", "/free/status/", "/free/img/",
-                     "/pay/yookassa/", "/cabinet/drawing/", "/admin",
+                     "/pay/yookassa/", "/cabinet/drawing/", "/admin", "/api/",
                      "/favicon.ico", "/robots.txt", "/sitemap.xml")
 
 # Поисковики и соцсети для классификации канала по referer.
@@ -45,6 +45,9 @@ _SOCIAL_HOSTS = ("vk.com", "vk.ru", "t.me", "telegram", "ok.ru", "instagram.",
                  "facebook.", "youtube.", "pinterest.", "dzen.ru", "zen.yandex")
 # Рекламные метки. yclid ставит сам Директ, поэтому он и есть точный признак «реклама».
 _AD_MEDIUMS = ("cpc", "ppc", "paid", "cpm", "banner", "ads", "direct")
+# Реклама Meta: своего признака клика (как yclid) мы не храним, поэтому решают метки.
+# Раньше канала 'meta' не было вовсе: строка Meta в расходах дашборда всегда была нулём.
+_META_SOURCES = ("meta", "facebook", "fb", "instagram", "ig")
 
 
 def _clean(v: str | None, limit: int = 120) -> str | None:
@@ -52,18 +55,23 @@ def _clean(v: str | None, limit: int = 120) -> str | None:
 
 
 def classify_channel(utm: dict | None, yclid: str | None,
-                     referer: str | None) -> str:
+                     referer: str | None, fbclid: bool = False) -> str:
     """Канал визита. Порядок проверок = порядок надёжности признака."""
     if yclid:
         return "ads"
     if utm:
         medium = (utm.get("utm_medium") or "").lower()
         source = (utm.get("utm_source") or "").lower()
-        if medium in _AD_MEDIUMS or "direct" in source:
+        paid = medium in _AD_MEDIUMS or medium.startswith("paid")   # paid_social, paidsocial
+        if paid and source in _META_SOURCES:
+            return "meta"
+        if paid or "direct" in source:
             return "ads"
         if any(s in source for s in ("vk", "telegram", "tg", "instagram", "ok")):
             return "social"
         return "utm"
+    if fbclid:                     # клик из Meta без меток: fbclid ставит сама Meta
+        return "meta"
     if not referer:
         return "direct"
     host = referer.split("//", 1)[-1].split("/", 1)[0].lower()
@@ -120,6 +128,7 @@ def before_request() -> None:
     # Метки ЭТОГО визита (последнее касание) — отдельно от первого касания.
     g.utm_now = utm_in_url or None
     g.yclid = _clean(request.args.get("yclid") or request.args.get("gclid"), 64)
+    g.fbclid = bool(request.args.get("fbclid"))
 
 
 def _is_page_view(response) -> bool:
@@ -174,7 +183,7 @@ def _touch_visit(page: bool) -> None:
         ref = _clean(request.referrer, 300)
         utm_now = getattr(g, "utm_now", None)
         yclid = getattr(g, "yclid", None)
-        channel = classify_channel(utm_now, yclid, ref)
+        channel = classify_channel(utm_now, yclid, ref, getattr(g, "fbclid", False))
         if channel == "internal" and not utm_now and not yclid:
             # Вернулся после паузы >30 мин со страницы сайта: это тот же человек с тем же
             # источником, а не «внутренний» переход. Наследуем канал и метки прошлого визита.

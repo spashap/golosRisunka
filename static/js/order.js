@@ -254,6 +254,9 @@
   var submitBtn = form.querySelector('button[type="submit"]');
   form.addEventListener("submit", function (e) {
     if (e.defaultPrevented || !submitBtn) return;
+    // Цель — только для отправки, которую не остановила ни одна проверка (раньше
+    // атрибут на форме срабатывал и на заблокированной опечаткой email).
+    if (window.ymGoal) { window.ymGoal("order_submit_form"); }
     setTimeout(function () {          // после всех других обработчиков
       submitBtn.disabled = true;
       submitBtn.textContent = "Отправляем…";

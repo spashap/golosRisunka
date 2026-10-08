@@ -22,6 +22,11 @@ YANDEX_METRIKA_ID = os.getenv("YANDEX_METRIKA_ID", "")
 # Права: metrika:read + metrika:write + webmaster:api. Пусто = интеграция выключена.
 YANDEX_OAUTH_TOKEN = os.getenv("YANDEX_OAUTH_TOKEN", "").strip()
 YANDEX_WEBMASTER_HOST_ID = os.getenv("YANDEX_WEBMASTER_HOST_ID", "").strip()
+# API для рекламного агента (/api/ads/v1, app/ads_api.py): расход и клики по кампаниям,
+# объявлениям и фразам + обратно отчёт по воронке. Только в СЕРВЕРНОМ .env, не в git
+# (репозиторий публичный). Пусто или короче 24 символов = API выключен (404).
+# Сгенерировать: python -c "import secrets; print(secrets.token_urlsafe(32))"
+ADS_API_TOKEN = os.getenv("ADS_API_TOKEN", "").strip()
 # Dev-чит: этому email на localhost код входа показывается прямо на странице
 DEV_LOGIN_CODE_EMAIL = "spashap@gmail.com"
 # ЮKassa: режим test/live + раздельные ключи (как в shepotZvezd, проверено в бою).

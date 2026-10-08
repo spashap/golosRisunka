@@ -245,6 +245,47 @@ CREATE TABLE IF NOT EXISTS ad_spend (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ad_spend_day ON ad_spend(day);
+-- Расход и клики от рекламного агента через API (app/ads_api.py). Одна строка =
+-- московский день × источник × кампания × объявление × фраза; '' = «без разбивки».
+-- POST /stats заменяет ВСЕ строки каждой присланной тройки (день, источник, кампания),
+-- поэтому повторная отправка отчёта не удваивает расход.
+CREATE TABLE IF NOT EXISTS ad_stats (
+    id INTEGER PRIMARY KEY,
+    day TEXT NOT NULL,                    -- 'YYYY-MM-DD' (московский день)
+    source TEXT NOT NULL,                 -- yandex / meta / …
+    campaign_id TEXT NOT NULL,
+    ad_id TEXT NOT NULL DEFAULT '',
+    keyword TEXT NOT NULL DEFAULT '',     -- нормализованная фраза (app/ads.norm_keyword)
+    impressions INTEGER,
+    clicks INTEGER,
+    cost_rub REAL NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL,
+    UNIQUE (day, source, campaign_id, ad_id, keyword)
+);
+CREATE INDEX IF NOT EXISTS idx_ad_stats_day ON ad_stats(day);
+-- Справочник кампаний от агента: имя и тестовая ячейка (free / paid) вместо голых id.
+CREATE TABLE IF NOT EXISTS ad_campaigns (
+    source TEXT NOT NULL,
+    campaign_id TEXT NOT NULL,
+    name TEXT,
+    cell TEXT,                            -- free / paid / other
+    landing TEXT,
+    status TEXT,                          -- active / paused / archived
+    notes TEXT,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (source, campaign_id)
+);
+-- Журнал обращений к API рекламы: кто что записал (и лимит частоты по нему же).
+CREATE TABLE IF NOT EXISTS ad_api_log (
+    id INTEGER PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    method TEXT,
+    path TEXT,
+    status INTEGER,
+    rows INTEGER,
+    note TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ad_api_log_at ON ad_api_log(created_at);
 CREATE TABLE IF NOT EXISTS service_heartbeat (
     name TEXT PRIMARY KEY,
     last_seen_at TEXT NOT NULL
@@ -356,6 +397,10 @@ def _migrate(conn: sqlite3.Connection) -> None:
     fcols = {r["name"] for r in conn.execute("PRAGMA table_info(free_analyses)")}
     if "is_test" not in fcols:
         conn.execute("ALTER TABLE free_analyses ADD COLUMN is_test INTEGER DEFAULT 0")
+    # Визит, в котором заполнена анкета: без него лид привязывался к рекламе только
+    # догадкой «последний визит этого посетителя» (app/ads.py — атрибуция к клику).
+    if "visit_id" not in fcols:
+        conn.execute("ALTER TABLE free_analyses ADD COLUMN visit_id TEXT")
     if settings.TEST_EMAILS:
         q = ",".join("?" * len(settings.TEST_EMAILS))
         emails = sorted(settings.TEST_EMAILS)

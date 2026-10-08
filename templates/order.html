@@ -68,7 +68,8 @@
     </div>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" id="order-form" data-ym-goal-submit="order_submit_form">
+    {# Цель order_submit_form шлёт order.js, когда отправку не остановила ни одна проверка. #}
+    <form method="post" enctype="multipart/form-data" id="order-form">
       {% if reused %}<input type="hidden" name="free_token" value="{{ reused.token }}">{% endif %}
       <input type="hidden" name="product" value="{{ product_code }}">
 

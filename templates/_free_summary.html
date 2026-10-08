@@ -70,8 +70,8 @@
          inputmode="email" autocomplete="email" placeholder="you@example.com"></div>
   </div>
 
-  <button class="btn btn--primary offer__cta" id="f-go"
-          data-ym-goal="free_upload_submit">{{ texts.UPLOAD_BUTTON }}</button>
+  {# Цель free_upload_submit шлёт free.js после проверки фото и почты. #}
+  <button class="btn btn--primary offer__cta" id="f-go">{{ texts.UPLOAD_BUTTON }}</button>
   <p class="offer__note">{{ offer.free_note }}</p>
   <p class="hint">{{ texts.UPLOAD_NOSPAM }} {{ texts.STORAGE_NOTICE }}</p>
   <p class="err" id="f-uperr" hidden></p>
