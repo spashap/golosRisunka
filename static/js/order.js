@@ -49,6 +49,13 @@
       var el = form.querySelector('[name="' + name + '"]');
       if (el && !el.value) el.value = data[name];
     });
+    // Свёрнутые необязательные поля: если в черновике там что-то есть — раскрыть,
+    // иначе введённое родителем «пропадёт» с глаз.
+    form.querySelectorAll("details.form-more").forEach(function (d) {
+      var filled = Array.prototype.some.call(d.querySelectorAll("input, textarea, select"),
+        function (el) { return el.type !== "hidden" && el.value; });
+      if (filled) { d.open = true; }
+    });
     // Черновик восстановлен = человек ВЕРНУЛСЯ к брошенной форме. Отдельный сигнал:
     // такой визит нельзя считать первым знакомством, и мерить его надо иначе.
     draftRestored = true;

@@ -507,8 +507,16 @@ def _render_order_form(values: dict, errors: dict, status: int = 200,
     code = request.args.get("product", values.get("product", "snapshot"))
     if code not in products or not products[code]["enabled"]:
         code = "snapshot"
+    # Пример отчёта над формой: по возрасту ребёнка из бесплатного разбора, иначе —
+    # сводный по двум рисункам (он лучше всего показывает, что такое 1–3 рисунка).
+    from config import free_texts as FT
+    sample_token = FT.SAMPLE_BY_BAND.get(FT.age_band(reused["age"])) \
+        if reused and reused.get("age") else "primer-2-risunka"
     return render_template(
         "order.html",
+        # Шапка формы — без навигации и бесплатного входа (см. _header.html).
+        header_focus=True,
+        sample_url=f"/r/{sample_token}",
         product_code=code,
         product=products[code],
         child_fields=CHILD_FIELDS,
@@ -536,7 +544,7 @@ def _free_prefill(token: str):
     values = {"child_name": row["child_name"]}
     if row["address_form"] in ("он", "она"):
         values["child_gender"] = "м" if row["address_form"] == "он" else "ж"
-    return ({"token": token, "name": row["child_name"],
+    return ({"token": token, "name": row["child_name"], "age": row["child_age"],
              "thumb": f"/free/img/{token}"}, values)
 
 

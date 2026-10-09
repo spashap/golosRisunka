@@ -131,10 +131,19 @@ def main() -> int:
     check("/free-check renders", "Бесплатная проверка детского рисунка" in fc)
     check("/free-check swaps the header CTA", 'data-ym-goal="header_cta_freecheck"' in fc
           and 'data-ym-goal="header_order"' not in fc)
-    for url in ("/", "/order"):
-        h = c.get(url).get_data(as_text=True)
-        check(f"header CTA unchanged on {url}", 'data-ym-goal="header_order"' in h)
-        check(f"nav item present on {url}", 'data-ym-goal="header_nav_check"' in h)
+    h = c.get("/").get_data(as_text=True)
+    check("header CTA on / leads to prices", 'href="/#ceny" data-ym-goal="header_order"' in h)
+    check("nav item present on /", 'data-ym-goal="header_nav_check"' in h)
+    # Форма заказа — шапка «в фокусе»: ни бесплатного входа, ни кнопки на саму себя (09.10).
+    h = c.get("/order").get_data(as_text=True)
+    check("order header has no free exits",
+          'data-ym-goal="header_nav_check"' not in h and 'data-ym-goal="header_free_mobile"' not in h)
+    check("order header has no self-link CTA", 'data-ym-goal="header_order"' not in h)
+    check("order header keeps login", 'data-ym-goal="header_login"' in h)
+    check("order form shows what you get + sample", "Что вы получите" in h
+          and 'data-ym-goal="order_sample_open"' in h)
+    check("optional fields folded", h.count('class="form-more"') >= 2
+          and 'name="d1_materials"' in h and 'name="d1_theme"' in h)
 
     print("5. funnels are nested where they must be")
     for vid, evs, dev, ch, sw in [

@@ -4,9 +4,17 @@
    наследует контекст вызывающего шаблона). Значения по умолчанию — те же, что были
    зашиты раньше, поэтому все существующие страницы рендерятся байт-в-байт как прежде.
    Нужно это ровно одной странице — /free-check: там платный призыв в шапке спорил бы
-   с единственной задачей страницы. #}
-{% set cta = header_cta | default({'href': '/order', 'text': 'Получить отчёт',
+   с единственной задачей страницы.
+
+   По умолчанию «Получить отчёт» ведёт к ЦЕНАМ И ПРИМЕРАМ на главной (/#ceny), а не в
+   форму (09.10): по нему кликают, ещё выбирая, и холодная форма их выбрасывала.
+
+   header_focus = шапка формы заказа: без навигации, без «Бесплатно» и без кнопки «Получить
+   отчёт» (она вела бы на ту же страницу). Данные 23.09–08.10: 6 из 14 ушедших с формы
+   ушли в «Бесплатную проверку» из шапки, один 4 раза перезагружал форму её же кнопкой. #}
+{% set cta = header_cta | default({'href': '/#ceny', 'text': 'Получить отчёт',
                                    'goal': 'header_order'}, true) %}
+{% set focus = header_focus | default(false) %}
 <header class="site-header">
   <div class="wrap site-header__row">
     <a class="logo" href="/" data-ym-goal="header_logo">
@@ -18,6 +26,7 @@
              alt="Голос рисунка — анализ детского рисунка по фото">
       </picture>
     </a>
+    {% if not focus %}
     <nav class="site-nav">
       <a href="/#primery" data-ym-goal="header_nav_examples">Примеры</a>
       <a href="/#kak" data-ym-goal="header_nav_how">Как это работает</a>
@@ -25,11 +34,16 @@
       <a href="/free-check" data-ym-goal="header_nav_check">Бесплатная проверка</a>
       <a href="/blog" data-ym-goal="header_nav_blog">Блог</a>
     </nav>
+    {% endif %}
     <div class="site-header__actions">
-      {# На телефоне навигации нет вовсе — а с ней и бесплатного входа с /order, /login, блога. #}
+      {% if not focus %}
+      {# На телефоне навигации нет вовсе — а с ней и бесплатного входа с /login, блога. #}
       <a class="site-header__free" href="/free-check" data-ym-goal="header_free_mobile">Бесплатно</a>
+      {% endif %}
       <a class="site-nav__login" href="/login" data-ym-goal="header_login">Войти</a>
+      {% if not focus %}
       <a class="btn" href="{{ cta.href }}" data-ym-goal="{{ cta.goal }}">{{ cta.text }}</a>
+      {% endif %}
     </div>
   </div>
 </header>

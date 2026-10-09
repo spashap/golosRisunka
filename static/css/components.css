@@ -322,6 +322,16 @@ html.dk .btn { color: #241A12; }
 .btn--ghost { background: none; border: 2px dashed var(--badge); color: var(--accent);
               border-radius: var(--radius-pill); padding: 12px 26px; font-weight: 700; }
 .btn--ghost:hover { border-color: var(--accent); background: var(--paper); color: var(--accent); }
+/* Свёрнутые необязательные поля формы (details/summary, без JS). */
+.form-more { margin: 4px 0 6px; }
+.form-more > summary {
+  cursor: pointer; list-style: none; color: var(--accent); font-weight: 600;
+  font-size: var(--fs-small); padding: 8px 0;
+}
+.form-more > summary::-webkit-details-marker { display: none; }
+.form-more > summary::before { content: "+ "; }
+.form-more[open] > summary::before { content: "– "; }
+.form-more[open] > summary { margin-bottom: 6px; }
 .add-row { margin: 6px 0 28px; }   /* воздух между кнопкой добавления и блоком email */
 .add-msg { margin: 10px 0 0; padding: 10px 16px; border-radius: 12px; font-size: 14px;
            background: color-mix(in srgb, #C0392B 8%, var(--paper));

@@ -62,6 +62,21 @@
       {% if product.old_price_rub %}<s style="color:var(--soft)">{{ product.old_price_rub }} ₽</s>{% endif %}
       <b style="color:var(--accent)">{{ product.price_rub }} ₽</b></p>
 
+    {# Что вы получите — ДО первого поля (09.10). Раньше форма начиналась сразу с вопросов,
+       и 14 из 16 открывших уходили, не тронув ни одного поля. Пункты — из админки
+       (products.json → features), те же, что в блоке цен на главной. #}
+    {% if not errors %}
+    <div class="form-card">
+      <h3>Что вы получите</h3>
+      <div class="check-list check-list--one"><ul>
+        {% for f in product.features %}<li>{{ f }}</li>{% endfor %}
+      </ul></div>
+      <p class="hint" style="margin:6px 0 0">
+        <a href="{{ sample_url }}" target="_blank" data-ym-goal="order_sample_open">Посмотреть пример отчёта →</a>
+        &nbsp;·&nbsp; Заполнение — около 2 минут, обязательных полей немного.</p>
+    </div>
+    {% endif %}
+
     {% if errors %}
     <div class="form-card" style="border: 2px solid var(--danger)">
       Проверьте выделенные поля — не всё заполнено корректно.
@@ -110,8 +125,19 @@
             <div class="hint" style="margin-top: 6px">Рисунок увидит только система анализа — мы не публикуем работы и не передаём их третьим лицам.</div>
           </div>
           <div class="form-grid-2">
-            {% for f in drawing_fields %}{{ render_field(f, "d" ~ i ~ "_", values, errors) }}{% endfor %}
+            {% for f in drawing_fields if f.required %}{{ render_field(f, "d" ~ i ~ "_", values, errors) }}{% endfor %}
           </div>
+          {# Необязательное — свёрнуто: полная форма с шестью вопросами на рисунок читалась
+             как анкета, и её пролистывали до конца и уходили. Раскрыто, если уже заполнено. #}
+          {% set pre = "d" ~ i ~ "_" %}
+          {% set ns = namespace(open=false) %}
+          {% for f in drawing_fields if not f.required %}{% if values.get(pre ~ f.key) or errors.get(pre ~ f.key) %}{% set ns.open = true %}{% endif %}{% endfor %}
+          <details class="form-more" {% if ns.open %}open{% endif %}>
+            <summary data-ym-goal="order_details_open">Добавить подробности — точнее отчёт (необязательно)</summary>
+            <div class="form-grid-2">
+              {% for f in drawing_fields if not f.required %}{{ render_field(f, pre, values, errors) }}{% endfor %}
+            </div>
+          </details>
         </div>
         {% endfor %}
       </div>
@@ -129,7 +155,11 @@
             <button type="button" class="es-no" id="email-suggest-no" data-ym-goal="order_email_fix_no">Нет, оставить</button>
           </span>
         </div>
-        {{ render_field(coupon_field, "", values, errors) }}
+        {# Открытое поле промокода отправляет людей искать промокод — и они не возвращаются. #}
+        <details class="form-more" {% if values.get('coupon') or errors.get('coupon') %}open{% endif %}>
+          <summary data-ym-goal="order_coupon_open">Есть промокод?</summary>
+          {{ render_field(coupon_field, "", values, errors) }}
+        </details>
         <button type="submit" class="btn btn--primary" style="width:100%" data-ym-goal="order_submit">
           Перейти к оплате — {{ product.price_rub }} ₽
         </button>
