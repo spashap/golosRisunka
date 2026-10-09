@@ -315,6 +315,50 @@ def main() -> int:
     check("/admin/ads diagnostics section renders", page.status_code == 200
           and "Почему не доходят до оплаты" in page.get_data(as_text=True))
 
+    print("10. handoff: publish -> encrypted file -> API")
+    import importlib.util
+    import os
+    from app import ads_handoff
+    spec_ = importlib.util.spec_from_file_location("pub", BASE_DIR / "scripts" / "ads_handoff_publish.py")
+    pub = importlib.util.module_from_spec(spec_)
+    spec_.loader.exec_module(pub)
+    hsrc = Path(tempfile.gettempdir()) / "golos_selftest_handoff.md"
+    hout = Path(tempfile.gettempdir()) / "golos_selftest_handoff.json"
+    for p_ in (hsrc, hout):
+        if p_.exists():
+            p_.unlink()
+    hsrc.write_text("# Handoff\n\nПервая версия.\n", encoding="utf-8")
+    os.environ["GR_ADS_TOKEN"] = TOKEN
+
+    def publish() -> dict:
+        sys.argv = ["pub", "--src", str(hsrc), "--out", str(hout)]
+        pub.main()
+        return json.loads(hout.read_text(encoding="utf-8"))
+    v1 = publish()
+    v1b = publish()
+    hsrc.write_text(hsrc.read_text(encoding="utf-8") + "\nВторая правка.\n", encoding="utf-8")
+    v2 = publish()
+    check("publish: v1, unchanged stays v1, edit -> v2",
+          v1["version"] == 1 and v1b["version"] == 1 and v2["version"] == 2,
+          f"{v1['version']} {v1b['version']} {v2['version']}")
+    check("source front matter rewritten", "handoff_version: 2" in hsrc.read_text(encoding="utf-8"))
+    check("published file has no plaintext", "Вторая" not in hout.read_text(encoding="utf-8"))
+    ads_handoff.HANDOFF_FILE = hout
+    hv = c.get("/api/ads/v1/handoff/version", headers=H).get_json()
+    check("GET /handoff/version", hv.get("version") == 2, str(hv))
+    md = c.get("/api/ads/v1/handoff?format=md", headers=H)
+    check("GET /handoff?format=md returns the exact file",
+          md.status_code == 200 and md.get_data(as_text=True) == hsrc.read_text(encoding="utf-8")
+          and md.headers.get("X-Handoff-Version") == "2")
+    check("ping carries handoff_version",
+          c.get("/api/ads/v1/ping", headers=H).get_json().get("handoff_version") == 2)
+    other = "another-token-" + "y" * 24
+    settings.ADS_API_TOKEN = other
+    r = c.get("/api/ads/v1/handoff", headers={"Authorization": "Bearer " + other})
+    check("rotated token -> 503 with a reason", r.status_code == 503
+          and "re-publish" in r.get_json().get("error", ""), str(r.status_code))
+    settings.ADS_API_TOKEN = TOKEN
+
     conn.close()
     print("")
     if FAILED:

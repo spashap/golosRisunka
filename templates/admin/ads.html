@@ -265,6 +265,10 @@
 {% endif %}
 
 <h2>Кампании</h2>
+<p class="hint">Инструкция агенту (handoff): {% if handoff %}опубликована версия <b>{{ handoff.version }}</b>
+  от {{ handoff.updated }} — агент забирает её сам через <code>GET /api/ads/v1/handoff</code>.
+  {% else %}ещё не опубликована.{% endif %} Обновить: поправить <code>projectSpec/ads/ADS-PARTNER-HANDOFF.md</code>,
+  <code>scripts/ads_handoff_publish.py</code>, релиз и деплой.</p>
 <p class="hint">Справочник ведёт агент (<code>PUT /api/ads/v1/campaigns</code>): имя и ячейка теста.</p>
 <div class="admin-scroll">
 <table class="dash-table">

@@ -245,6 +245,7 @@ def ads():
     return _render("admin.ads", "admin/ads.html", rep=rep, levels=ADS_LEVELS, level=level,
                    cell=cell, presets=presets, api_on=ads_api.enabled(),
                    diag=diag, scope=scope, stop_text=order_diag.stop_text,
+                   handoff=__import__("app.ads_handoff", fromlist=["meta"]).meta(),
                    field_label=order_diag.label,
                    log=ads_api.recent_log(db, 20),
                    campaigns=[dict(r) for r in db.execute(

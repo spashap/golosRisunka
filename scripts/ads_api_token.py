@@ -185,6 +185,11 @@ def main() -> int:
     print(f"    scp root@{host}:{out} .")
     print(f"Send your partner TWO files, privately: {out.name} (secret) and projectSpec/ads/{HANDOFF}.")
     print("Then delete the copy on the server if you like:  rm " + str(out))
+    if changed:
+        print("")
+        print("NEW TOKEN: the partner's handoff (GET /handoff) is encrypted with the old token.")
+        print("On your computer, put the new access file into projectSpec/ads/, then run")
+        print("scripts/ads_handoff_publish.py --force, commit, push and deploy.")
     return 0
 
 

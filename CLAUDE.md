@@ -29,6 +29,7 @@ venv\Scripts\python.exe scripts\free_lab.py --texts              # все сбо
 venv\Scripts\python.exe scripts\free_retention_check.py          # проверка удаления фото по сроку хранения
 venv\Scripts\python.exe scripts\analytics_selftest.py            # самопроверка аналитики (копия БД, 30 проверок)
 venv\Scripts\python.exe scripts\ads_api_selftest.py              # самопроверка API рекламы + атрибуции клик->лид->продажа (копия БД)
+venv\Scripts\python.exe scripts\ads_handoff_publish.py [--force]   # опубликовать инструкцию партнёру (зашифр. config/ads_handoff.json; потом релиз+деплой)
 venv/bin/python scripts/ads_api_token.py [--rotate]              # НА СЕРВЕРЕ: токен API рекламы в .env + рестарт web + проверка + файл доступа партнёру (~/golosrisunka-ads-access.md)
 venv\Scripts\python.exe scripts\metrika_goals_sync.py --dry-run  # завести цели из config/goals.py в Метрике
 venv\Scripts\python.exe scripts\regenerate_report.py ORDER_ID   # ручной перезапуск заказа
@@ -172,8 +173,13 @@ release.bat "msg"                                               # релиз о�
   `app/ads.py` (ЕДИНСТВЕННОЕ место определений и атрибуции: результат — последнему рекламному клику
   посетителя за 30 дней, в день клика; возврат после паузы — не новый клик). Админка «Реклама»
   (`/admin/ads`) показывает тот же отчёт. API не отдаёт персональных данных — не добавлять туда
-  почты/имена. Инструкция партнёру — `projectSpec/ads/ADS-PARTNER-HANDOFF.md` (не коммитить:
-  репо публичный). После правок — `scripts/ads_api_selftest.py`.
+  почты/имена. После правок — `scripts/ads_api_selftest.py`.
+  **Инструкция партнёру (handoff) раздаётся ЧЕРЕЗ API, не пересылкой (с 09.10):** правишь
+  открытый `projectSpec/ads/ADS-PARTNER-HANDOFF.md` (в .gitignore) → `scripts/ads_handoff_publish.py`
+  (сам поднимает handoff_version, шифрует в `config/ads_handoff.json` — ключ из ADS_API_TOKEN,
+  репо публичный) → релиз + деплой. Агент партнёра сверяет `GET /api/ads/v1/handoff/version` и
+  забирает `GET /handoff?format=md`. После `ads_api_token.py --rotate` — новый файл доступа в
+  `projectSpec/ads/` и `ads_handoff_publish.py --force`, иначе /handoff = 503.
   **Диагностика формы заказа** (`app/order_diag.py`, с 09.10): order.js шлёт снимки
   `order_form_state` (ТОЛЬКО имена полей, белый список `_ORDER_FIELD_RE` в routes — значения
   НЕ собирать никогда), 413 → `upload_too_large`, отказ платежа → `pay_canceled` с причиной

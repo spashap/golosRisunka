@@ -129,9 +129,42 @@ def _day_range():
 
 @bp_ads_api.get("/ping")
 def ping():
+    from app import ads_handoff
+    m = ads_handoff.meta() or {}
     _log(200)
     return jsonify({"ok": True, "api_version": API_VERSION, "site_version": settings.APP_VERSION,
-                    "today_msk": ads.today_msk().isoformat()})
+                    "today_msk": ads.today_msk().isoformat(),
+                    "handoff_version": m.get("version"), "handoff_updated": m.get("updated")})
+
+
+# --- Инструкция агенту (handoff) ---------------------------------------------------------
+
+@bp_ads_api.get("/handoff/version")
+def handoff_version():
+    """Дёшево и часто: сравнить с handoff_version своей копии; если больше — /handoff."""
+    from app import ads_handoff
+    m = ads_handoff.meta()
+    if not m:
+        return _err(404, "no handoff published yet")
+    _log(200)
+    return jsonify({"ok": True, **m})
+
+
+@bp_ads_api.get("/handoff")
+def handoff():
+    """Полный текст инструкции. ?format=md — чистый markdown (сохранить файлом как есть)."""
+    from flask import Response
+    from app import ads_handoff
+    try:
+        md = ads_handoff.content()
+    except ads_handoff.HandoffError as e:
+        return _err(503, str(e))
+    m = ads_handoff.meta()
+    _log(200, note=f"handoff v{m['version']}")
+    if request.args.get("format") == "md":
+        return Response(md, mimetype="text/markdown; charset=utf-8",
+                        headers={"X-Handoff-Version": str(m["version"])})
+    return jsonify({"ok": True, **m, "markdown": md})
 
 
 @bp_ads_api.get("/site")
