@@ -88,7 +88,8 @@ def main() -> int:
     version = prev_v if (a.force and prev.get("body_sha256") == body_sha) else max(src_v, prev_v + 1)
     updated = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=3))).strftime("%Y-%m-%d")
     full = with_front_matter(version, updated, body)
-    src.write_text(full, encoding="utf-8")                 # исходник = то, что получит агент
+    # исходник = байт-в-байт то, что получит агент (LF: иначе Windows пишет CRLF и sha не сойдётся)
+    src.write_text(full, encoding="utf-8", newline="\n")
 
     data = {"format": 1, "version": version, "updated": updated,
             "sha256": hashlib.sha256(full.encode("utf-8")).hexdigest(),

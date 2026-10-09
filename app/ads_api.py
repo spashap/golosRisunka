@@ -162,7 +162,7 @@ def handoff():
     m = ads_handoff.meta()
     _log(200, note=f"handoff v{m['version']}")
     if request.args.get("format") == "md":
-        return Response(md, mimetype="text/markdown; charset=utf-8",
+        return Response(md, mimetype="text/markdown",          # charset Flask добавит сам
                         headers={"X-Handoff-Version": str(m["version"])})
     return jsonify({"ok": True, **m, "markdown": md})
 
