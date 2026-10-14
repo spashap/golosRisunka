@@ -45,6 +45,7 @@ _TYPES = ("order_form_view", "form_started", "order_form_from_free", "order_form
           "click:order_block_incomplete", "click:order_file_too_big",
           "click:order_blocked_email_typo", "click:order_submit_form",
           "free_result_view", "click:sec_fr_offer", "click:free_to_order",
+          "click:sec_fr_teaser", "click:free_teaser_order",
           "click:free_sample_open", "click:header_order")
 _PAY_FAIL = ("pay_create_failed", "pay_no_confirmation", "pay_widget_error",
              "pay_widget_render_failed", "pay_status_timeout")
@@ -143,7 +144,7 @@ def build(db, d_from, d_to, scope: str = "all", source: str | None = None,
     pay_fail_kinds: dict[str, int] = {}
     device = {"mobile": {"viewed": 0, "created": 0, "paid": 0},
               "desktop": {"viewed": 0, "created": 0, "paid": 0}}
-    offer = {"result_views": 0, "offer_seen": 0, "sample_opened": 0, "to_order": 0,
+    offer = {"result_views": 0, "teaser_seen": 0, "offer_seen": 0, "sample_opened": 0, "to_order": 0,
              "header_order": 0, "form_from_free": 0}
     sessions: list[dict] = []
 
@@ -154,7 +155,9 @@ def build(db, d_from, d_to, scope: str = "all", source: str | None = None,
             offer["result_views"] += 1
             offer["offer_seen"] += "click:sec_fr_offer" in types
             offer["sample_opened"] += "click:free_sample_open" in types
-            offer["to_order"] += "click:free_to_order" in types
+            # Кнопка есть в двух местах: короткий оффер посредине (с 14.10) и финальный.
+            offer["teaser_seen"] += "click:sec_fr_teaser" in types
+            offer["to_order"] += bool(types & {"click:free_to_order", "click:free_teaser_order"})
             offer["header_order"] += "click:header_order" in types
         if "order_form_view" not in types:
             continue

@@ -31,7 +31,7 @@
 
 <link rel="preload" as="image" href="/static/img/hero-800.webp" type="image/webp" media="(max-width: 600px)" fetchpriority="high">
 <link rel="preload" as="image" href="/static/img/hero.webp" type="image/webp" media="(min-width: 601px)" fetchpriority="high">
-<link rel="stylesheet" href="/static/css/fonts.css?v=1.088">
+<link rel="stylesheet" href="/static/css/fonts.css?v=1.089">
 
 <style>/* ============================================================
    ДИЗАЙН-ТОКЕНЫ — ЕДИНСТВЕННЫЙ источник цветов/шрифтов/размеров.
@@ -1179,6 +1179,15 @@ html.dk .btn { color: #241A12; }
   background: var(--paper); border: 2px solid var(--accent);
   border-radius: var(--radius-card); box-shadow: var(--shadow-hard);
 }
+/* Короткий оффер посреди разбора: тише финального блока, но с той же кнопкой. */
+.free-teaser {
+  margin: 22px 0; padding: 16px 18px; border-radius: var(--radius-card);
+  background: var(--paper); border: 1px solid var(--accent);
+}
+.free-report .free-teaser__text { font-size: var(--fs-small); line-height: 1.55; margin: 0 0 12px; }
+.free-teaser__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.free-teaser__more { font-size: var(--fs-small); color: var(--accent); font-weight: 600; }
+@media (max-width: 480px) { .free-teaser__actions .btn { width: 100%; } }
 .free-sell__title { margin: 12px 0 12px; }
 .free-sell__lead { font-size: var(--fs-lead); line-height: 1.5; margin: 0 0 14px; }
 .free-sell .btn--primary { margin-top: 6px; }
@@ -1435,7 +1444,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
   style="position:absolute; left:-9999px;" alt=""></div></noscript>
 
 
-<script src="/static/js/track.js?v=1.088"></script>
+<script src="/static/js/track.js?v=1.089"></script>
 </head>
 <body>
 
@@ -2440,7 +2449,7 @@ body.report .rate { max-width: 640px; margin: 28px auto 40px; }
     <a href="/privacy">Политика конфиденциальности</a> · <a href="/terms">Оферта</a> ·
     <a href="/contacts">Контакты</a> · <a href="/blog">Блог</a><br>
     golosrisunka.ru
-    <span class="foot-ver">V1.088</span>
+    <span class="foot-ver">V1.089</span>
   </div>
 </footer>
 

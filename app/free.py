@@ -496,8 +496,14 @@ def send_free_email(db, analysis_id: int) -> bool:
     link = f"{settings.PUBLIC_BASE_URL}/free/r/{row['token']}"
     cabinet = login_link_for(db, email=row["email"])
     if row["status"] == "done":
+        # Оффер в письме (14.10): разбор открывают по ссылке из письма, а до финала
+        # страницы доходят единицы. Не рассылка — то же письмо с разбором.
+        address = row["address_form"] or "он"
+        price = settings.get_products().get("snapshot", {}).get("price_rub", 0)
         html = render_email("free_ready.html", child_name=row["child_name"],
-                            result_url=link, cabinet_link=cabinet)
+                            result_url=link, cabinet_link=cabinet,
+                            name_gen=T.genitive(row["child_name"], address), price=price,
+                            order_url=f"{settings.PUBLIC_BASE_URL}/order?free={row['token']}")
         subject = f"Разбор рисунка — {settings.SITE_NAME}"
     else:
         # Разбора ещё нет — письмо «ваш разбор готов» здесь было бы враньём.

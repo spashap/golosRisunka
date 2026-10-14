@@ -83,6 +83,19 @@
       </div>
       {% endfor %}
 
+      {# Короткий оффер посреди разбора (14.10): до финального блока доходили единицы.
+         На раскраске не показываем — там просим другой рисунок, а не деньги. #}
+      {% if not is_coloring %}
+      <div class="free-teaser" data-track-section="fr_teaser">
+        <p class="free-teaser__text">{{ cta.teaser }}</p>
+        <div class="free-teaser__actions">
+          <a class="btn btn--primary" href="/order?free={{ token }}"
+             data-ym-goal="free_teaser_order">{{ cta.button }}</a>
+          <a class="free-teaser__more" href="#offer" data-ym-goal="free_teaser_more">{{ cta.teaser_more }} ↓</a>
+        </div>
+      </div>
+      {% endif %}
+
       {% if a.portrait_hint %}<p>{{ a.portrait_hint }}</p>{% endif %}
       <p><b>Спросите {{ name_acc }} сегодня:</b> <i>{{ a.question_to_child }}</i></p>
       <p><b>Чего этот лист не показывает.</b> {{ a.unknown_next }}</p>

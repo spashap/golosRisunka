@@ -233,6 +233,22 @@ def main() -> int:
     check("offer sits before the rating widget",
           page.find('data-track-section="fr_offer"') < page.find("feedback") or "feedback" not in page)
     check("offer bridge uses the concern", "тёмными цветами" in page)
+    ti = page.find('data-track-section="fr_teaser"')
+    check("short offer sits mid-page, before the full offer",
+          0 < ti < page.find('data-track-section="fr_offer"')
+          and page.find("free_teaser_order") > ti and "портрет Маши" in page[ti:ti + 600])
+    import app.free as _F
+    _sent = []
+    _orig = _F.send_email
+    _F.send_email = lambda to, subj, html, **k: _sent.append(html)
+    try:
+        _F.send_free_email(conn, conn.execute("SELECT id FROM free_analyses WHERE token = 'st_res'")
+                           .fetchone()["id"])
+    finally:
+        _F.send_email = _orig
+    check("ready email carries the offer with this drawing",
+          bool(_sent) and "/order?free=st_res" in _sent[0] and "портрет Маши" in _sent[0]
+          and "{" not in _sent[0].split("<body", 1)[-1])
     check("sample proof shown (if samples exist locally)", "free-proof" in page or not
           __import__("app.samples", fromlist=["get_samples"]).get_samples())
 

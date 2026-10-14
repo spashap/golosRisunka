@@ -495,6 +495,12 @@ SELLING_READY = ("Этот рисунок уже загружен. В форме
 # элемент доверия, который у нас есть.
 SELLING_GUARANTEE = "Не понравится — вернём деньги в течение 7 дней."
 RESULT_CTA_BUTTON = "Собрать портрет {name} — {price} ₽"
+# Короткий оффер в СЕРЕДИНЕ разбора, сразу под трактовкой и голосованием (14.10): из 21
+# рекламного родителя с готовым разбором до финального оффера доскроллили 3. Полный
+# оффер остаётся внизу; здесь — одна фраза, цена и два пути: купить или посмотреть, что внутри.
+TEASER_TEXT = ("Это разбор одного листа. Полный отчёт собирает портрет {name_gen} по 1–3 "
+               "рисункам: характер, любимые темы, настроение и что с этим делать дома.")
+TEASER_MORE = "Что внутри полного отчёта"
 
 # дополнительные формы для продающего блока
 _SELLING_FORMS = {
@@ -550,6 +556,8 @@ def selling_block(name: str, address_form: str = "он", concern_key: str = "neu
         "guarantee": SELLING_GUARANTEE,
         "price_note": SELLING_PRICE_NOTE,
         "button": RESULT_CTA_BUTTON.format(name=genitive(name, address_form), price=price),
+        "teaser": TEASER_TEXT.format(name_gen=genitive(name, address_form)),
+        "teaser_more": TEASER_MORE,
         "price": price,
         "old_price": old_price,
     }

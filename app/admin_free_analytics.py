@@ -264,7 +264,7 @@ def page_data(db, since: str) -> dict:
         ("Открыли готовый разбор", _visitors(db, "type = ?", ("free_result_view",), since),
          "free_result_view"),
         ("Нажали «заказать отчёт»",
-         _visitors(db, "type = ?", (CLICK + "free_to_order",), since), "продающий блок"),
+         _visitors(db, "type IN (?, ?)", (CLICK + "free_to_order", CLICK + "free_teaser_order"), since), "продающий блок"),
     ])
 
     # Воронка по анкетам: одна строка = один пройденный опрос. Оценка трактовки в
@@ -342,7 +342,7 @@ def page_data(db, since: str) -> dict:
     engagement = {
         "voted": n_voted,
         "voted_pct": f"{n_voted / n_done * 100:.0f}%" if n_done else "—",
-        "to_order_clicks": _visitors(db, "type = ?", (CLICK + "free_to_order",), since),
+        "to_order_clicks": _visitors(db, "type IN (?, ?)", (CLICK + "free_to_order", CLICK + "free_teaser_order"), since),
         "retry_clicks": _visitors(db, "type = ?", (CLICK + "free_retry",), since),
         "limit_hits": _visitors(db, "type = ?", (CLICK + "free_limit_open",), since),
     }

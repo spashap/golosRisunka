@@ -190,6 +190,8 @@ def main() -> int:
         print("NEW TOKEN: the partner's handoff (GET /handoff) is encrypted with the old token.")
         print("On your computer, put the new access file into projectSpec/ads/, then run")
         print("scripts/ads_handoff_publish.py --force, commit, push and deploy.")
+        print("SAME TOKEN ON shepotzvezd.ru (owner's decision 09.10): run its token sync script")
+        print("on this server, restart its backend and re-publish ITS handoff too.")
     return 0
 
 

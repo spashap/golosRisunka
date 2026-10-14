@@ -180,6 +180,9 @@ release.bat "msg"                                               # релиз о�
   репо публичный) → релиз + деплой. Агент партнёра сверяет `GET /api/ads/v1/handoff/version` и
   забирает `GET /handoff?format=md`. После `ads_api_token.py --rotate` — новый файл доступа в
   `projectSpec/ads/` и `ads_handoff_publish.py --force`, иначе /handoff = 503.
+  **Тот же токен у shepotzvezd.ru** (решение заказчика 09.10): там своя реализация того же
+  контракта (концепт и стартовый промпт — `C:\projects\shepotZvezd\adds\`). Ротация здесь →
+  синхронизировать токен в бэкенд shepotzvezd его скриптом и переопубликовать ОБА handoff.
   **Диагностика формы заказа** (`app/order_diag.py`, с 09.10): order.js шлёт снимки
   `order_form_state` (ТОЛЬКО имена полей, белый список `_ORDER_FIELD_RE` в routes — значения
   НЕ собирать никогда), 413 → `upload_too_large`, отказ платежа → `pay_canceled` с причиной
